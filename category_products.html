@@ -1,0 +1,245 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "secondary": "#5e5e5e",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed-variant": "#464747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-primary-container": "#848484",
+                    "inverse-primary": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-surface-variant": "#4c4546",
+                    "surface-container": "#eeeeee",
+                    "on-primary-fixed-variant": "#474747",
+                    "on-primary-fixed": "#1b1b1b",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "secondary-fixed": "#e4e2e2",
+                    "surface-variant": "#e2e2e2",
+                    "on-secondary-container": "#626263",
+                    "on-tertiary-container": "#838484",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#1a1c1c",
+                    "surface-container-high": "#e8e8e8",
+                    "inverse-on-surface": "#f0f1f1",
+                    "secondary-container": "#e1dfdf",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "outline-variant": "#cfc4c5",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "tertiary-fixed": "#e2e2e2",
+                    "primary-fixed": "#e2e2e2",
+                    "surface-dim": "#dadada",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "surface": "#f9f9f9",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#2f3131",
+                    "outline": "#7e7576",
+                    "tertiary": "#000000",
+                    "primary": "#000000",
+                    "primary-container": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#454747"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "component-padding-x": "20px",
+                    "gutter": "16px",
+                    "stack-sm": "8px",
+                    "container-margin": "24px",
+                    "component-padding-y": "16px",
+                    "stack-lg": "24px",
+                    "section-gap": "40px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg-mobile": ["Plus Jakarta Sans"],
+                    "title-lg": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f9f9f9;
+            width: 390px;
+            height: 844px;
+            margin: 0 auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface">
+<!-- Top App Bar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-6 py-4 bg-surface dark:bg-background docked full-width top-0 z-50">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary dark:text-on-background cursor-pointer hover:opacity-80 transition-opacity active:scale-95 duration-200">menu</span>
+</div>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</h1>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary dark:text-on-background cursor-pointer hover:opacity-80 transition-opacity active:scale-95 duration-200">notifications</span>
+</div>
+</header>
+<main class="pb-24">
+<!-- Category Title & Action Row -->
+<section class="px-6 mt-4 mb-6">
+<div class="flex flex-col gap-4">
+<h2 class="text-display-lg-mobile font-display-lg-mobile text-primary tracking-tight">Running Shoes</h2>
+<div class="flex items-center justify-between">
+<div class="flex gap-stack-sm">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.04)] rounded-full hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span class="text-label-lg font-label-lg">Filter</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.04)] rounded-full hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">sort</span>
+<span class="text-label-lg font-label-lg">Sort</span>
+</button>
+</div>
+<span class="text-label-sm font-label-sm text-secondary">24 Results</span>
+</div>
+</div>
+</section>
+<!-- 2x2 Product Grid -->
+<section class="px-6 grid grid-cols-2 gap-x-4 gap-y-6">
+<!-- Product Card 1 -->
+<div class="flex flex-col gap-stack-sm">
+<div class="relative aspect-square bg-surface-container-lowest rounded-[18px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-center p-4">
+<img class="w-full h-auto object-contain" data-alt="A professional studio product shot of a high-performance crimson red running sneaker. The shoe is positioned at a dynamic angle against a clean, brilliant white background. Soft cinematic lighting highlights the mesh texture and aerodynamic curves, embodying a luxury boutique aesthetic. The atmosphere is minimalist, focused, and high-fashion, with absolute monochrome depth in the environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgt-0VtgnlJLsd-YgvT1CLxSYZU_n2W7Iq3C1dhhrP5SYJuKTzO236IGlofNfk-VGfvFuVufCSVlu-GXGZe0sXkYPDE-engYTR1owIuIPMUmVWVod5rjlp4wNTdrZKdQazIEI24Mb3Q7BM7FR27sXSVC6PZYYy89IWXRpcw9F1aGvjXi4m0_fQ2wPvV3PoMavvD3ouJXz21-QLJyBPcTTOGGR-NR7HsVunYkH7y_txlvdZH1fdc_k71SnwPbXLwt0VGyYJ2Q70M3IR">
+<button class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm rounded-full">
+<span class="material-symbols-outlined text-primary text-[20px]">favorite</span>
+</button>
+</div>
+<div class="px-1">
+<h3 class="text-title-lg font-title-lg text-primary truncate">Zoom Pegasus 40</h3>
+<div class="flex items-baseline gap-1 mt-0.5">
+<p class="text-headline-md font-headline-md text-primary">$130</p>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="flex flex-col gap-stack-sm">
+<div class="relative aspect-square bg-surface-container-lowest rounded-[18px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-center p-4">
+<img class="w-full h-auto object-contain" data-alt="Premium athletic running shoe in a sleek carbon black and silver colorway, centered perfectly in a minimalist white studio space. High-key lighting creates soft, diffused shadows beneath the shoe, emphasizing its modern silhouette and tech-forward design. The visual style is exclusive and precise, utilizing extreme whitespace to elevate the product as a high-end luxury item." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD50qKP0jKX8cRWJ8EEaqyDApCRcwlaUyZK_rDeBjTq5_ZtXWEadOxe56ggEv6zQE3SHGQBtJhKq-vi40VezyFjPiDMLNZnuJ6PKNwy2hG6lLXFEA4C3W4yAoG99TPYGkPTwoYZfkkc1-kZmk1n7Llp7mxNMwEJPryYdusE_-yx9fzfXdJZAvLPd9lVg5nD34Vttu-SKR0_I-LErankd-GqhGSmI42tvTvxyyyez-Xh4ZW2-UtKT5WXc3GOSiRc6lLeRH-nZQtidoAL">
+<button class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm rounded-full">
+<span class="material-symbols-outlined text-primary text-[20px]">favorite</span>
+</button>
+</div>
+<div class="px-1">
+<h3 class="text-title-lg font-title-lg text-primary truncate">Ultraboost Light</h3>
+<div class="flex items-baseline gap-1 mt-0.5">
+<p class="text-headline-md font-headline-md text-primary">$190</p>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="flex flex-col gap-stack-sm">
+<div class="relative aspect-square bg-surface-container-lowest rounded-[18px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-center p-4">
+<img class="w-full h-auto object-contain" data-alt="High-end white and neon lime racing sneaker designed for elite performance. The sneaker is showcased against a stark, high-contrast white background with professional gallery lighting. The composition is geometric and balanced, highlighting the innovative sole technology and premium materials. The overall mood is sophisticated and avant-garde, typical of a boutique digital experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC9nA5n2pIe77gDH7Da4c8EAQff3_ql9yYZs7GpEMY-c6vDVzcdkni26TRxIqQlisYC25U_0roEAN5Lxpttb1INpiMXSJaul2CnZomzQG4ylNzhAX1HBO9TVmNdYMZqYpLUcXQIKY4NKoiPstKA6k610lPHZtwlou5gs6uDhGrbjyLpkxuI1Is3sHt_vyim4Zs9LKz-anxSwn-mLXblp4ezI_CRQJkG6WIIw6-5nDYJolJT_7v1AwdTanGbg2Ulrx3O1Bn79PJZg6F">
+<button class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm rounded-full">
+<span class="material-symbols-outlined text-primary text-[20px]">favorite</span>
+</button>
+</div>
+<div class="px-1">
+<h3 class="text-title-lg font-title-lg text-primary truncate">Adizero Pro 3</h3>
+<div class="flex items-baseline gap-1 mt-0.5">
+<p class="text-headline-md font-headline-md text-primary">$250</p>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="flex flex-col gap-stack-sm">
+<div class="relative aspect-square bg-surface-container-lowest rounded-[18px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-center p-4">
+<img class="w-full h-auto object-contain" data-alt="Minimalist design of a luxury electric blue running shoe featured on a pristine white background. The studio lighting is bright and modern, creating a high-fidelity look that focuses on the precision stitching and sleek form. The product is the primary visual driver, framed by significant breathing room to convey exclusivity and high-fashion sophistication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkj6mVyLclGPqmNhXrQ3gV8ihqn4QtF9qCK7qxB2NF_Em2PeBaxfk7UF5PlD-v14YBxqKQow_Q7O191HD-38uJt3kPrHmhnHsKEn6tmcg7LN6eAqV8r9iESdko8EURTnH6X9uyTJ72p_7FSLrY25LGgWTZqLbWvUXW1fZooHBOZn0LDc0J8KE5B5TCmjTcfMaPvrOpDsyGKQIhQ1O2DDXuHL6AHQ9QcmqFOF-aAH5LQljxiNH7BlVWNq-EM_gtp0nOXg0lkfqjpW81">
+<button class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm rounded-full">
+<span class="material-symbols-outlined text-primary text-[20px]">favorite</span>
+</button>
+</div>
+<div class="px-1">
+<h3 class="text-title-lg font-title-lg text-primary truncate">FuelCell Rebel</h3>
+<div class="flex items-baseline gap-1 mt-0.5">
+<p class="text-headline-md font-headline-md text-primary">$140</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Shared Component) -->
+<nav class="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<!-- Active Search Destination -->
+<a class="flex items-center justify-center text-primary dark:text-on-background scale-110 active:scale-90 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">search</span>
+</a>
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors" href="#">
+<span class="material-symbols-outlined">favorite</span>
+</a>
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+</a>
+</nav>
+<script src="js/app.js"></script>
+<script src="js/product_flow.js"></script>
+<script src="js/discovery_engine.js"></script>
+</body></html>

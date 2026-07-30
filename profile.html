@@ -1,0 +1,259 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f9f9f9;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-bright": "#f9f9f9",
+                        "secondary": "#5e5e5e",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "on-secondary-fixed-variant": "#464747",
+                        "surface-container-low": "#f3f3f4",
+                        "on-primary-container": "#848484",
+                        "inverse-primary": "#c6c6c6",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9f9",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "on-surface-variant": "#4c4546",
+                        "surface-container": "#eeeeee",
+                        "on-primary-fixed-variant": "#474747",
+                        "on-primary-fixed": "#1b1b1b",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1c",
+                        "secondary-fixed": "#e4e2e2",
+                        "surface-variant": "#e2e2e2",
+                        "on-secondary-container": "#626263",
+                        "on-tertiary-container": "#838484",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#1a1c1c",
+                        "surface-container-high": "#e8e8e8",
+                        "inverse-on-surface": "#f0f1f1",
+                        "secondary-container": "#e1dfdf",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "outline-variant": "#cfc4c5",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "tertiary-fixed": "#e2e2e2",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-dim": "#dadada",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1a1c1c",
+                        "surface": "#f9f9f9",
+                        "surface-tint": "#5e5e5e",
+                        "inverse-surface": "#2f3131",
+                        "outline": "#7e7576",
+                        "tertiary": "#000000",
+                        "primary": "#000000",
+                        "primary-container": "#1b1b1b",
+                        "on-tertiary-fixed-variant": "#454747"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "component-padding-x": "20px",
+                        "gutter": "16px",
+                        "stack-sm": "8px",
+                        "container-margin": "24px",
+                        "component-padding-y": "16px",
+                        "stack-lg": "24px",
+                        "section-gap": "40px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-lg": ["Plus Jakarta Sans"],
+                        "label-lg": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                        "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col items-center">
+<div class="w-[390px] min-h-[844px] bg-surface relative flex flex-col">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 z-40 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-on-background hover:opacity-80 transition-opacity cursor-pointer" data-icon="menu">menu</span>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</h1>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary dark:text-on-background hover:opacity-80 transition-opacity cursor-pointer" data-icon="notifications">notifications</span>
+</div>
+</header>
+<!-- Profile Header Section -->
+<main class="flex-1 overflow-y-auto pb-[100px]">
+<section class="px-container-margin pt-stack-lg pb-stack-lg">
+<h2 class="text-display-lg-mobile font-display-lg-mobile text-primary mb-stack-lg">Profile</h2>
+<!-- Profile Card: High-end Minimalist Bento Style -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-container flex flex-col items-center text-center">
+<div class="relative mb-stack-md">
+<div class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container-high shadow-lg">
+<img alt="John Doe" class="w-full h-full object-cover" data-alt="A professional portrait of a stylish man in his late 20s with a sharp haircut and subtle stubble. He is wearing a minimalist black designer hoodie against a clean, high-key white background. The lighting is soft and cinematic, highlighting the luxury aesthetic of the marketplace. The overall mood is sophisticated and exclusive, maintaining a premium monochromatic visual style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp8l-DQeutbTbAOBI1kYR0cpXHt0sdPECh0AvkiKrTfD59PznejjManw9krU2caE73KycGftZJJQHggUpbw3gpUzJzEk7-hl240Q9lSzpY5GPDfuFCJo2O_w4nuqy-4fyRxo86Ua-C6ZKpR29sbrXy4NEJfMQFzGQrRhKKvy9QSeRWYGDNvhrIfqlKmnMACRRsLRffmsZaIrf4h8Zmt-LnVTbA0yl1URiitL2MPqh55L8VBa_hRP6tZ4cFUm2j8MX4Q085M_IGYair">
+</div>
+<div class="absolute bottom-1 right-1 bg-primary text-on-primary p-1.5 rounded-full flex items-center justify-center border-2 border-surface-container-lowest">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span>
+</div>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface">John Doe</h3>
+<div class="mt-2 px-4 py-1 bg-primary text-on-primary rounded-full">
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Premium Member</span>
+</div>
+</div>
+</section>
+<!-- Navigation Links -->
+<section class="px-container-margin flex flex-col gap-2">
+<div class="flex flex-col gap-1">
+<!-- My Orders -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_bag">shopping_bag</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">My Orders</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Wishlist -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="favorite">favorite</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">Wishlist</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Addresses -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">Addresses</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Payment Methods -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="credit_card">credit_card</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">Payment Methods</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Settings -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">Settings</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="h-[1px] bg-surface-container my-stack-md mx-4"></div>
+<!-- Help & Support -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="help">help</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">Help &amp; Support</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- About Us -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer border border-transparent hover:border-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-low group-hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="info">info</span>
+</div>
+<span class="text-title-lg font-title-lg text-on-surface">About Us</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Logout -->
+<div class="group flex items-center justify-between p-4 bg-surface hover:bg-error-container/10 rounded-xl transition-colors cursor-pointer border border-transparent">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-error-container/5 group-hover:bg-error-container/20 transition-colors">
+<span class="material-symbols-outlined text-error" data-icon="logout">logout</span>
+</div>
+<span class="text-title-lg font-title-lg text-error">Logout</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-[390px] h-[844px] pointer-events-none">
+<div class="absolute bottom-0 w-full h-[84px] bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8 pointer-events-auto">
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</div>
+<div class="flex items-center justify-center text-primary dark:text-on-background scale-110 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+</div>
+</nav>
+</div>
+<script src="js/app.js"></script>
+<script src="js/user_account_engine.js"></script>
+</body></html>

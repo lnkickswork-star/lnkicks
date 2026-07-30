@@ -1,0 +1,235 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "secondary": "#5e5e5e",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed-variant": "#464747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-primary-container": "#848484",
+                    "inverse-primary": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-surface-variant": "#4c4546",
+                    "surface-container": "#eeeeee",
+                    "on-primary-fixed-variant": "#474747",
+                    "on-primary-fixed": "#1b1b1b",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "secondary-fixed": "#e4e2e2",
+                    "surface-variant": "#e2e2e2",
+                    "on-secondary-container": "#626263",
+                    "on-tertiary-container": "#838484",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#1a1c1c",
+                    "surface-container-high": "#e8e8e8",
+                    "inverse-on-surface": "#f0f1f1",
+                    "secondary-container": "#e1dfdf",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "outline-variant": "#cfc4c5",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "tertiary-fixed": "#e2e2e2",
+                    "primary-fixed": "#e2e2e2",
+                    "surface-dim": "#dadada",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "surface": "#f9f9f9",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#2f3131",
+                    "outline": "#7e7576",
+                    "tertiary": "#000000",
+                    "primary": "#000000",
+                    "primary-container": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#454747"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "component-padding-x": "20px",
+                    "gutter": "16px",
+                    "stack-sm": "8px",
+                    "container-margin": "24px",
+                    "component-padding-y": "16px",
+                    "stack-lg": "24px",
+                    "section-gap": "40px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg-mobile": ["Plus Jakarta Sans"],
+                    "title-lg": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest">
+<!-- Top App Bar -->
+<header class="docked full-width top-0 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4 z-50">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-on-background hover:opacity-80 transition-opacity" data-icon="menu">menu</span>
+<span class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</span>
+</div>
+<span class="material-symbols-outlined text-primary dark:text-on-background hover:opacity-80 transition-opacity" data-icon="notifications">notifications</span>
+</header>
+<main class="min-h-screen pb-[120px] pt-4">
+<!-- Search Input Section -->
+<section class="px-container-margin mt-stack-md">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-secondary" data-icon="search">search</span>
+<input class="w-full bg-[#F5F5F5] border-none rounded-full py-[18px] pl-12 pr-4 text-body-lg font-body-lg focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-secondary" placeholder="Search sneakers..." type="text">
+</div>
+</section>
+<!-- Recent Searches Section -->
+<section class="mt-section-gap px-container-margin">
+<div class="flex justify-between items-center mb-stack-md">
+<h2 class="text-title-lg font-title-lg text-primary">Recent Searches</h2>
+<button class="text-label-lg font-label-lg text-secondary hover:opacity-80 transition-opacity">Clear All</button>
+</div>
+<div class="space-y-stack-md">
+<div class="flex items-center justify-between py-2 border-b border-[#EEEEEE] group active:scale-95 transition-transform">
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-secondary" data-icon="history">history</span>
+<span class="text-body-lg font-body-lg text-on-background">Air Jordan 1 High '85</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity" data-icon="close">close</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-[#EEEEEE] group active:scale-95 transition-transform">
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-secondary" data-icon="history">history</span>
+<span class="text-body-lg font-body-lg text-on-background">Travis Scott Fragment</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity" data-icon="close">close</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-[#EEEEEE] group active:scale-95 transition-transform">
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-secondary" data-icon="history">history</span>
+<span class="text-body-lg font-body-lg text-on-background">Yeezy Slide Bone</span>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity" data-icon="close">close</span>
+</div>
+</div>
+</section>
+<!-- Popular Searches Section -->
+<section class="mt-section-gap px-container-margin">
+<h2 class="text-title-lg font-title-lg text-primary mb-stack-md">Popular Searches</h2>
+<div class="flex flex-wrap gap-stack-sm">
+<button class="bg-[#F5F5F5] hover:bg-primary hover:text-white text-on-background text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">Running Shoes</button>
+<button class="bg-primary text-white text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">Nike</button>
+<button class="bg-[#F5F5F5] hover:bg-primary hover:text-white text-on-background text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">Yeezy</button>
+<button class="bg-[#F5F5F5] hover:bg-primary hover:text-white text-on-background text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">Retro High</button>
+<button class="bg-[#F5F5F5] hover:bg-primary hover:text-white text-on-background text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">Dunk Low</button>
+<button class="bg-[#F5F5F5] hover:bg-primary hover:text-white text-on-background text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">New Balance 2002R</button>
+<button class="bg-[#F5F5F5] hover:bg-primary hover:text-white text-on-background text-label-lg font-label-lg px-stack-md py-3 rounded-full transition-all duration-200">Limited Edition</button>
+</div>
+</section>
+<!-- Featured Collections (Bento Style) -->
+<section class="mt-section-gap px-container-margin">
+<h2 class="text-title-lg font-title-lg text-primary mb-stack-md">Featured Trends</h2>
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="col-span-2 relative h-[180px] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-transform">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-fashion photograph of a rare collectible sneaker floating in a minimal, high-contrast studio setting. The lighting is sophisticated, using deep shadows and bright highlights to accentuate the premium textures of leather and suede. The overall aesthetic is monochrome and luxurious, perfectly aligned with a high-end luxury marketplace for enthusiasts." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe-CPZjAJ4tJemBcopnQefh-Gzv-zfzlUuWyEV0zH6MdJvtSS4LzoNVfudOcRjppUW9fsrj2zli6FHz3-8X2Q73vVDeiyfcPlanyOgMoFatKOc_nD9yrw2kjVIWt15wWbm2AFKOr0e5x6wiWPS_zJWvjEvgwg_ruvQl8ctf2-pPC-Ev-IZgxrs_oGFCh2u_9ZqkWA-JUV79jjqoHcVJ1F8fFb0iMUvmIEM07vGfGJPMEc2ASy3MNDg0vDSBGS22iVC9FIftE0mGQxh">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-stack-md">
+<span class="text-white text-headline-md font-headline-md">Hype Releases</span>
+<span class="text-white/80 text-label-sm font-label-sm">Spring 2024</span>
+</div>
+</div>
+<div class="relative h-[160px] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-transform">
+<img class="w-full h-full object-cover" data-alt="A bright, minimalist product shot of a classic lifestyle sneaker on a pristine white background. The soft, diffused lighting creates an airy and modern feel, emphasizing the clean lines and premium materials. The image captures a sense of sophisticated simplicity suitable for a luxury fashion digital experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo-z2dO5-EiHmXvG8RPcXn1HrAB85K5ox0pg4dTnqgob22p5nrDG5fMYCr5dzAZG_g1fEe-tFB3HawoiQ51RjvSFwneL3qIahV25WtMuIYN1vZbYcyN7ZKD74JQvQv8KiyFZvtZgHJ8cZpXHebGRXxNvPyt9BMRyGaXEesy0EPwi-Hb1grqMzwd2jUlqYlnyNzkTo5pTWtFYdhemAe-w_RDuVhkkTRIg7HFIlfzeKAUPREYFRkaItVLFFOzkHO1CqF8eQ8thyR8OAJ">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex flex-col justify-end p-stack-md">
+<span class="text-white text-title-lg font-title-lg">Essentials</span>
+</div>
+</div>
+<div class="relative h-[160px] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-transform">
+<img class="w-full h-full object-cover" data-alt="Detailed close-up of a colorful, high-performance athletic sneaker featuring vibrant accents. The shot uses a shallow depth of field against a clean, architectural background to highlight the precision of the design. High-key lighting maintains the professional, premium minimalist aesthetic of the marketplace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy6s4hMaTqsxzt4IbH1Nl7f0Pe4MXFvKOYAX8fl0rAZYr38yAiJiLlDWs6tTO4LXIeAJedvzDk1xSTfgI05mCBZbQrsw46MSK0s2vJXIYRiPsaEkDbsPmMU-C2Huuqqs8LcGXREZK587qomwzcHwH0QtGRUPme0EmFKqrtWFLD7L7G_DZs4J1Dl6yVN5FqP1peUFllEugYel_s41JX0L9CwudYR7TaiPnDtJwVoriWufPZjOd_W8T9-w84b0AV1CMM7uwpb_u9fDIu">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex flex-col justify-end p-stack-md">
+<span class="text-white text-title-lg font-title-lg">Performance</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors active:scale-90 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex items-center justify-center text-primary dark:text-on-background scale-110 active:scale-90 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined font-bold" data-icon="search" style="font-variation-settings: 'FILL' 1;">search</span>
+</a>
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors active:scale-90 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</a>
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors active:scale-90 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</a>
+</nav>
+<script src="js/app.js"></script>
+<script src="js/product_flow.js"></script>
+<script src="js/discovery_engine.js"></script>
+</body></html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Hide scrollbars for the mobile frame feel */
+    ::-webkit-scrollbar { display: none; }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-highest": "#e2e2e2",
+            "surface-bright": "#f9f9f9",
+            "secondary": "#5e5e5e",
+            "on-error-container": "#93000a",
+            "primary-fixed-dim": "#c6c6c6",
+            "on-secondary-fixed-variant": "#464747",
+            "surface-container-low": "#f3f3f4",
+            "on-primary-container": "#848484",
+            "inverse-primary": "#c6c6c6",
+            "error-container": "#ffdad6",
+            "background": "#f9f9f9",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-primary": "#ffffff",
+            "tertiary-fixed-dim": "#c6c6c7",
+            "on-surface-variant": "#4c4546",
+            "surface-container": "#eeeeee",
+            "on-primary-fixed-variant": "#474747",
+            "on-primary-fixed": "#1b1b1b",
+            "error": "#ba1a1a",
+            "on-background": "#1a1c1c",
+            "secondary-fixed": "#e4e2e2",
+            "surface-variant": "#e2e2e2",
+            "on-secondary-container": "#626263",
+            "on-tertiary-container": "#838484",
+            "on-tertiary": "#ffffff",
+            "tertiary-container": "#1a1c1c",
+            "surface-container-high": "#e8e8e8",
+            "inverse-on-surface": "#f0f1f1",
+            "secondary-container": "#e1dfdf",
+            "on-error": "#ffffff",
+            "on-secondary-fixed": "#1b1c1c",
+            "outline-variant": "#cfc4c5",
+            "on-tertiary-fixed": "#1a1c1c",
+            "tertiary-fixed": "#e2e2e2",
+            "primary-fixed": "#e2e2e2",
+            "surface-dim": "#dadada",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary": "#ffffff",
+            "on-surface": "#1a1c1c",
+            "surface": "#f9f9f9",
+            "surface-tint": "#5e5e5e",
+            "inverse-surface": "#2f3131",
+            "outline": "#7e7576",
+            "tertiary": "#000000",
+            "primary": "#000000",
+            "primary-container": "#1b1b1b",
+            "on-tertiary-fixed-variant": "#454747"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "component-padding-x": "20px",
+            "gutter": "16px",
+            "stack-sm": "8px",
+            "container-margin": "24px",
+            "component-padding-y": "16px",
+            "stack-lg": "24px",
+            "section-gap": "40px",
+            "stack-md": "16px"
+          },
+          "fontFamily": {
+            "headline-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg-mobile": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "800"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+            "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+            "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface">
+<!-- iPhone 14/15 Viewport Wrapper -->
+<div class="relative w-[390px] h-[844px] bg-surface overflow-hidden flex flex-col">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4 z-50">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary dark:text-on-background hover:opacity-80 transition-opacity cursor-pointer">menu</span>
+</div>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</h1>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary dark:text-on-background hover:opacity-80 transition-opacity cursor-pointer">notifications</span>
+</div>
+</header>
+<!-- Success Content Area -->
+<main class="flex-grow flex flex-col items-center justify-center px-container-margin text-center">
+<!-- Large Centered Green Checkmark Icon -->
+<div class="mb-stack-lg flex items-center justify-center w-24 h-24 rounded-full bg-green-50">
+<span class="material-symbols-outlined text-[64px] text-green-600" style="font-variation-settings: 'wght' 300;">check_circle</span>
+</div>
+<!-- Headline -->
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile text-primary mb-stack-sm">Order Placed Successfully!</h2>
+<!-- Order ID -->
+<p class="text-body-md font-body-md text-secondary mb-section-gap">Order ID: #LNK-98234105</p>
+<!-- Decorative Sneaker Silhouette (Asymmetric high-end touch) -->
+<div class="relative w-full h-48 mb-section-gap">
+<img alt="Premium Sneaker" class="w-full h-full object-contain mix-blend-multiply opacity-10 scale-125 rotate-[-12deg]" data-alt="A side view of a premium, high-fashion luxury sneaker presented in a minimalist studio setting. The lighting is soft and diffused, creating a high-key aesthetic with gentle shadows on a clean white surface. The sneaker features intricate textures and a sophisticated monochromatic white-on-white color palette. The overall mood is exclusive, modern, and elite, fitting for a luxury fashion marketplace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChV_1jW7bkx-FB0ij5PMEmNZ_CEJL9Gmaj5UeJbqvbiqmDdXETJCezmGE9Kzgdpc14aUSpT_3ySQPYgvWDJ-mz-OyjoZY8VcgpDEGL9hr8KkNmz18__aIiszYIx8w8oHx7Jp4ZxSRLA4XP6KPx-1LTCaL-cwnODaMpN34pUaO2M3yKb1Q7R5QebWmNsBqLj8ltBzKXkvhTkUCgv9sRfmfOYAIYyHsNqwIcK-SxWFkz2BudsZSjJB6jhtfDZUA_M8kH7ZiRR6ifExd-">
+</div>
+<!-- Action Buttons -->
+<div class="w-full space-y-stack-md">
+<!-- Primary Action -->
+<button class="w-full bg-primary text-on-primary font-label-lg text-label-lg py-[18px] rounded-full shadow-[0px_10px_30px_rgba(0,0,0,0.08)] active:scale-95 transition-transform">
+          Continue Shopping
+        </button>
+<!-- Secondary Action -->
+<button class="w-full bg-transparent border border-outline-variant text-primary font-label-lg text-label-lg py-[18px] rounded-full active:scale-95 transition-transform">
+          View Order
+        </button>
+</div>
+</main>
+<!-- Bottom Navigation Bar Suppressed for Transactional Success Screen -->
+<!-- Following the UX Goal: Hide the shell to prioritize the content canvas on success screens -->
+<!-- Subtle Footer Branding -->
+<footer class="pb-stack-lg text-center">
+<p class="text-label-sm font-label-sm text-on-secondary-fixed-variant opacity-40">Thank you for shopping at LNKICKS.</p>
+</footer>
+</div>
+<script src="js/app.js"></script>
+<script src="js/cart_checkout_engine.js"></script>
+</body></html>

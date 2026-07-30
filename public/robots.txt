@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /order-success/
+
+Sitemap: https://www.lnkicks.com/sitemap.xml

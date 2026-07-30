@@ -1,0 +1,242 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-container-highest": "#e2e2e2",
+                  "surface-bright": "#f9f9f9",
+                  "secondary": "#5e5e5e",
+                  "on-error-container": "#93000a",
+                  "primary-fixed-dim": "#c6c6c6",
+                  "on-secondary-fixed-variant": "#464747",
+                  "surface-container-low": "#f3f3f4",
+                  "on-primary-container": "#848484",
+                  "inverse-primary": "#c6c6c6",
+                  "error-container": "#ffdad6",
+                  "background": "#f9f9f9",
+                  "secondary-fixed-dim": "#c7c6c6",
+                  "on-primary": "#ffffff",
+                  "tertiary-fixed-dim": "#c6c6c7",
+                  "on-surface-variant": "#4c4546",
+                  "surface-container": "#eeeeee",
+                  "on-primary-fixed-variant": "#474747",
+                  "on-primary-fixed": "#1b1b1b",
+                  "error": "#ba1a1a",
+                  "on-background": "#1a1c1c",
+                  "secondary-fixed": "#e4e2e2",
+                  "surface-variant": "#e2e2e2",
+                  "on-secondary-container": "#626263",
+                  "on-tertiary-container": "#838484",
+                  "on-tertiary": "#ffffff",
+                  "tertiary-container": "#1a1c1c",
+                  "surface-container-high": "#e8e8e8",
+                  "inverse-on-surface": "#f0f1f1",
+                  "secondary-container": "#e1dfdf",
+                  "on-error": "#ffffff",
+                  "on-secondary-fixed": "#1b1c1c",
+                  "outline-variant": "#cfc4c5",
+                  "on-tertiary-fixed": "#1a1c1c",
+                  "tertiary-fixed": "#e2e2e2",
+                  "primary-fixed": "#e2e2e2",
+                  "surface-dim": "#dadada",
+                  "surface-container-lowest": "#ffffff",
+                  "on-secondary": "#ffffff",
+                  "on-surface": "#1a1c1c",
+                  "surface": "#f9f9f9",
+                  "surface-tint": "#5e5e5e",
+                  "inverse-surface": "#2f3131",
+                  "outline": "#7e7576",
+                  "tertiary": "#000000",
+                  "primary": "#000000",
+                  "primary-container": "#1b1b1b",
+                  "on-tertiary-fixed-variant": "#454747"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "component-padding-x": "20px",
+                  "gutter": "16px",
+                  "stack-sm": "8px",
+                  "container-margin": "24px",
+                  "component-padding-y": "16px",
+                  "stack-lg": "24px",
+                  "section-gap": "40px",
+                  "stack-md": "16px"
+          },
+          "fontFamily": {
+                  "headline-md": ["Plus Jakarta Sans"],
+                  "label-sm": ["Plus Jakarta Sans"],
+                  "body-md": ["Plus Jakarta Sans"],
+                  "headline-lg": ["Plus Jakarta Sans"],
+                  "body-lg": ["Plus Jakarta Sans"],
+                  "display-lg-mobile": ["Plus Jakarta Sans"],
+                  "title-lg": ["Plus Jakarta Sans"],
+                  "label-lg": ["Plus Jakarta Sans"],
+                  "display-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+                  "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                  "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                  "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                  "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                  "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                  "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                  "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                  "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      background-color: #f9f9f9;
+      color: #1a1c1c;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex items-center justify-center min-h-screen">
+<main class="w-[390px] h-[844px] bg-background relative flex flex-col overflow-hidden shadow-2xl">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4 z-10">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95">
+<span class="material-symbols-outlined text-primary dark:text-on-background">arrow_back</span>
+</button>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">Cancellation Policy</h1>
+</div>
+<button class="hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-on-background">help_outline</span>
+</button>
+</header>
+<div class="flex-1 overflow-y-auto px-6 pt-6 pb-24">
+<!-- Hero/Status Section -->
+<section class="mb-section-gap">
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-container">
+<div class="flex items-center gap-4 mb-4">
+<div class="bg-primary text-on-primary w-12 h-12 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">timer</span>
+</div>
+<div>
+<p class="text-label-lg font-label-lg text-primary uppercase tracking-widest">Window</p>
+<h2 class="text-headline-md font-headline-md">30-Minute Grace Period</h2>
+</div>
+</div>
+<p class="text-body-md font-body-md text-secondary leading-relaxed">
+            Orders can be cancelled instantly within the first 30 minutes of purchase through your account dashboard without any penalties.
+          </p>
+</div>
+</section>
+<!-- Guidelines Grid -->
+<section class="mb-section-gap">
+<h3 class="text-title-lg font-title-lg mb-stack-md">Cancellation Guidelines</h3>
+<div class="space-y-gutter">
+<!-- Guideline 1 -->
+<div class="flex gap-stack-md group">
+<div class="mt-1">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</div>
+<div>
+<h4 class="text-label-lg font-label-lg text-on-background mb-1">Pre-Shipment</h4>
+<p class="text-body-md font-body-md text-secondary">If your order has not been picked up by the courier (usually within 2-4 hours), cancellation may still be possible via customer support.</p>
+</div>
+</div>
+<!-- Guideline 2 -->
+<div class="flex gap-stack-md group">
+<div class="mt-1">
+<span class="material-symbols-outlined text-primary">cancel</span>
+</div>
+<div>
+<h4 class="text-label-lg font-label-lg text-on-background mb-1">Post-Shipment</h4>
+<p class="text-body-md font-body-md text-secondary">Once an order has been marked as 'Shipped', it cannot be cancelled. You must wait for delivery and initiate a return.</p>
+</div>
+</div>
+<!-- Guideline 3 -->
+<div class="flex gap-stack-md group">
+<div class="mt-1">
+<span class="material-symbols-outlined text-primary">payments</span>
+</div>
+<div>
+<h4 class="text-label-lg font-label-lg text-on-background mb-1">Refund Processing</h4>
+<p class="text-body-md font-body-md text-secondary">Refunds are initiated immediately upon cancellation. Credits typically appear on your statement within 3-5 business days.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Visual Process Step -->
+<section class="mb-section-gap">
+<div class="relative w-full h-48 rounded-xl overflow-hidden mb-stack-md">
+<img alt="Secure digital payment processing" class="w-full h-full object-cover grayscale brightness-75" data-alt="A clean, high-contrast digital workspace showing a professional hand interacting with a sleek smartphone showing a confirmed transaction checkmark. The lighting is bright and minimal, reflecting a luxury high-end marketplace aesthetic with soft shadows. The overall mood is sophisticated, secure, and technologically advanced, dominated by whites and deep blacks." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0p0HrD1vx7pIEfksfUTrXpTMVjAf2QktraVtvjWrTbrOnTVZ5KifHU_J1B8jvBA3LsrGhsU1VPCMk9R1CZyB9DKGX8ypHEjolqaRzOUClJLY6XLonF_W9bLYniwwXBAdSe3PxYFYUm9CcMMoKzmJ4g_hz_aAuL23Oh8KVr8iQVUz7pY5Rz-vmFv823KWHRCaZoy9zSiyzXArrCzpnhJjY967FWNbFaAiCY09e5HZa3Yb0jGVsj-tSdC4RCzjgumWSY7ERbvvZjkdQ">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+<p class="text-on-primary text-title-lg font-title-lg">Fast, Automated Refunds</p>
+</div>
+</div>
+</section>
+<!-- Action Section -->
+<section class="mb-stack-lg">
+<h3 class="text-title-lg font-title-lg mb-stack-md">How to request</h3>
+<div class="bg-surface-container p-5 rounded-xl border border-outline-variant space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-body-md">1. Go to "My Orders"</span>
+<span class="material-symbols-outlined text-secondary text-sm">arrow_forward_ios</span>
+</div>
+<hr class="border-outline-variant">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-body-md">2. Select the specific order</span>
+<span class="material-symbols-outlined text-secondary text-sm">arrow_forward_ios</span>
+</div>
+<hr class="border-outline-variant">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-body-md">3. Tap "Cancel Order" button</span>
+<span class="material-symbols-outlined text-secondary text-sm">arrow_forward_ios</span>
+</div>
+</div>
+</section>
+<!-- Primary Action -->
+<div class="mt-4">
+<button class="w-full bg-primary text-on-primary py-[18px] rounded-full text-label-lg font-label-lg uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">
+          View My Recent Orders
+        </button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">home</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</div>
+<!-- Profile Active for My Orders context -->
+<div class="flex items-center justify-center text-primary dark:text-on-background scale-110">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+</nav>
+</main>
+<script src="js/app.js"></script>
+</body></html>

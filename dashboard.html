@@ -1,0 +1,315 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-bright": "#f9f9f9",
+                        "secondary": "#5e5e5e",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "on-secondary-fixed-variant": "#464747",
+                        "surface-container-low": "#f3f3f4",
+                        "on-primary-container": "#848484",
+                        "inverse-primary": "#c6c6c6",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9f9",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "on-surface-variant": "#4c4546",
+                        "surface-container": "#eeeeee",
+                        "on-primary-fixed-variant": "#474747",
+                        "on-primary-fixed": "#1b1b1b",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1c",
+                        "secondary-fixed": "#e4e2e2",
+                        "surface-variant": "#e2e2e2",
+                        "on-secondary-container": "#626263",
+                        "on-tertiary-container": "#838484",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#1a1c1c",
+                        "surface-container-high": "#e8e8e8",
+                        "inverse-on-surface": "#f0f1f1",
+                        "secondary-container": "#e1dfdf",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "outline-variant": "#cfc4c5",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "tertiary-fixed": "#e2e2e2",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-dim": "#dadada",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1a1c1c",
+                        "surface": "#f9f9f9",
+                        "surface-tint": "#5e5e5e",
+                        "inverse-surface": "#2f3131",
+                        "outline": "#7e7576",
+                        "tertiary": "#000000",
+                        "primary": "#000000",
+                        "primary-container": "#1b1b1b",
+                        "on-tertiary-fixed-variant": "#454747"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "component-padding-x": "20px",
+                        "gutter": "16px",
+                        "stack-sm": "8px",
+                        "container-margin": "24px",
+                        "component-padding-y": "16px",
+                        "stack-lg": "24px",
+                        "section-gap": "40px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-lg": ["Plus Jakarta Sans"],
+                        "label-lg": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                        "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md flex justify-center items-start min-h-screen">
+<main class="w-[390px] min-h-[844px] bg-background relative overflow-hidden shadow-2xl flex flex-col">
+<!-- TopAppBar (From JSON) -->
+<header class="bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4 sticky top-0 z-40">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-on-background cursor-pointer hover:opacity-80 transition-opacity">menu</span>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-on-background cursor-pointer hover:opacity-80 transition-opacity">notifications</span>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto px-6 pt-6 pb-24 space-y-stack-lg">
+<!-- Dashboard Header -->
+<section>
+<p class="text-label-lg font-label-lg text-secondary">Overview</p>
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile text-primary">Admin Terminal</h2>
+</section>
+<!-- Metrics Bento Grid -->
+<section class="grid grid-cols-2 gap-gutter">
+<!-- Sales -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<span class="material-symbols-outlined text-primary text-[20px]">payments</span>
+<p class="text-label-sm font-label-sm text-secondary mt-2">Total Sales</p>
+<p class="text-title-lg font-title-lg text-primary">$128,430</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px] text-primary">trending_up</span>
+<span class="text-[10px] font-bold text-primary">+12.5%</span>
+</div>
+</div>
+<!-- Orders -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<span class="material-symbols-outlined text-primary text-[20px]">shopping_basket</span>
+<p class="text-label-sm font-label-sm text-secondary mt-2">Orders</p>
+<p class="text-title-lg font-title-lg text-primary">1,248</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px] text-primary">trending_up</span>
+<span class="text-[10px] font-bold text-primary">+8.2%</span>
+</div>
+</div>
+<!-- Customers -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<span class="material-symbols-outlined text-primary text-[20px]">group</span>
+<p class="text-label-sm font-label-sm text-secondary mt-2">Customers</p>
+<p class="text-title-lg font-title-lg text-primary">852</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px] text-primary">trending_up</span>
+<span class="text-[10px] font-bold text-primary">+5.1%</span>
+</div>
+</div>
+<!-- Revenue -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<span class="material-symbols-outlined text-primary text-[20px]">account_balance_wallet</span>
+<p class="text-label-sm font-label-sm text-secondary mt-2">Revenue</p>
+<p class="text-title-lg font-title-lg text-primary">$42,910</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px] text-primary">trending_up</span>
+<span class="text-[10px] font-bold text-primary">+14.2%</span>
+</div>
+</div>
+</section>
+<!-- Analytics Chart -->
+<section class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-title-lg font-title-lg text-primary">Performance</h3>
+<span class="text-label-sm font-label-sm text-secondary px-2 py-1 bg-surface-container rounded-lg">Last 7 Days</span>
+</div>
+<div class="h-40 flex items-end gap-2 px-2">
+<div class="flex-1 bg-surface-container-high h-[40%] rounded-t-sm transition-all hover:bg-primary"></div>
+<div class="flex-1 bg-surface-container-high h-[60%] rounded-t-sm transition-all hover:bg-primary"></div>
+<div class="flex-1 bg-surface-container-high h-[85%] rounded-t-sm transition-all hover:bg-primary"></div>
+<div class="flex-1 bg-surface-container-high h-[55%] rounded-t-sm transition-all hover:bg-primary"></div>
+<div class="flex-1 bg-primary h-[95%] rounded-t-sm"></div>
+<div class="flex-1 bg-surface-container-high h-[70%] rounded-t-sm transition-all hover:bg-primary"></div>
+<div class="flex-1 bg-surface-container-high h-[80%] rounded-t-sm transition-all hover:bg-primary"></div>
+</div>
+<div class="flex justify-between mt-2 px-2">
+<span class="text-[10px] text-secondary font-bold">MON</span>
+<span class="text-[10px] text-secondary font-bold">TUE</span>
+<span class="text-[10px] text-secondary font-bold">WED</span>
+<span class="text-[10px] text-secondary font-bold">THU</span>
+<span class="text-[10px] text-secondary font-bold">FRI</span>
+<span class="text-[10px] text-secondary font-bold">SAT</span>
+<span class="text-[10px] text-secondary font-bold">SUN</span>
+</div>
+</section>
+<!-- Recent Orders -->
+<section class="space-y-stack-md">
+<div class="flex justify-between items-end">
+<h3 class="text-title-lg font-title-lg text-primary">Recent Orders</h3>
+<span class="text-label-sm font-label-sm text-primary cursor-pointer">View All</span>
+</div>
+<!-- Order Item 1 -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A high-end luxury sneaker in a minimalist studio setting with sharp directional lighting. The product is a sleek, black leather athletic shoe with clean white accents, resting on a reflective white surface. The background is a pure, neutral gray, emphasizing the premium craftmanship and modern aesthetic of the footwear." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1JrRfjlSQCTsvtAQ1SWxifYCFB_CDzXkVunKjQSZp3yjPj5y3wKOi82KXWYW1sFObf_NJDX4dk_yLWGs0kcaIsH9wDOMW9oGSvNeIGYtzAGozSL_yXQeY5OQmzJk8dGSxfGlhfHd5HbkLgie0Rz51DPSQbgyPx1ixpAYsPYjV5UcAEhAynaygutFSQ1hYhnsZbLPDJWpNEUkynRwqJrkAsI5hfszIS_uM40HLhdnB-yRmXkxV0VI8jOz0Sw8Umu48pOk4xNT9MbcA">
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-lg font-label-lg text-primary truncate">Jordan 1 High 'OG'</p>
+<p class="text-[10px] text-secondary font-medium">Order #LK-9283 • 2m ago</p>
+</div>
+<div class="text-right">
+<p class="text-label-lg font-label-lg text-primary">$450.00</p>
+<p class="text-[10px] text-primary font-bold">PAID</p>
+</div>
+</div>
+<!-- Order Item 2 -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A futuristic athletic sneaker with a vibrant green and black color palette, displayed in a high-fashion digital showroom. The shoe features mesh textures and architectural soles. The lighting is crisp and bright, creating a clean white-mode aesthetic that highlights the shoe's intricate design and luxury appeal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMGrgAsOZmFgdb0bybYeGriGn-MA41DKRwTSdmCpxA2buriESBmqILhPCc8iozUYpZ4ET3NaPGjk2uEPXfjThBN8J5IowqVdYigVXl3nH3kxInnGELO9F6tQ_uEsk_kQba8EoQI4rVk3YIcaNjLsdy0VclCbTa0UAR5iYxq_st4F1P-Dae_ESjZ7b2MFfgwc5np7iGKwImwWtVIDK4Z_GOyDX_WRor7n-ZSA-tyQ9KOy7zKtE1It9h1yEOCQXhLH6XGxNyguDxhtwn">
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-lg font-label-lg text-primary truncate">Dunk Low 'Green Glow'</p>
+<p class="text-[10px] text-secondary font-medium">Order #LK-9282 • 15m ago</p>
+</div>
+<div class="text-right">
+<p class="text-label-lg font-label-lg text-primary">$320.00</p>
+<p class="text-[10px] text-primary font-bold">PAID</p>
+</div>
+</div>
+<!-- Order Item 3 -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A sleek white and pastel pink designer sneaker presented in a minimalist, high-contrast gallery environment. Soft shadows ground the product against a pristine white background. The lighting is diffused and natural, highlighting the premium leather materials and sophisticated color scheme of the exclusive luxury sneaker." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuiDuWi86nnpjCbk0iy9JFZdP2jJukRmMHbeWTk3McNc6dKs-kU8Pxlc_ftDOPwzW42LylHiTC-rcI1Tbgb8jGwppRSmw1Gt8Gi697vE4286bkWS7DtOP7kNjaa0aanvtQlYtBU-_YrLydJAO1D3CnBP5oRmO33aK954eNS2F1bFSpfObk06HWund_ARHoOUReV_C7CQLB8GZ9F13_TmLVt_hH2XQgA2-wEgQlunXFJSmieo7iTRJF6_rzOcyK1sC70goYdnJ1gI9p">
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-lg font-label-lg text-primary truncate">Air Max 1 'Magma'</p>
+<p class="text-[10px] text-secondary font-medium">Order #LK-9281 • 1h ago</p>
+</div>
+<div class="text-right">
+<p class="text-label-lg font-label-lg text-primary">$210.00</p>
+<p class="text-[10px] text-primary font-bold">PAID</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Navigation Drawer (Overlay simulated) - Initially Hidden state but structured -->
+<div class="hidden absolute inset-0 z-50 flex">
+<div class="bg-surface dark:bg-background h-full w-80 rounded-r-xl shadow-xl flex flex-col py-8 border-r border-outline-variant">
+<div class="px-8 mb-8 flex flex-col gap-2">
+<div class="w-16 h-16 rounded-full bg-surface-container overflow-hidden">
+<img alt="John Doe" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPXrNuJPkuQC-8dJku1y5nRezfcGfp5gRvqaaeAs29-XOJV7UMnbwF3kQ49r7z1YgjTPZlt0qj4Vw0IYtjPF8I1QKYGtpcZm3ek6-bBUzQ93DdOalfVecEAPB5ZSD-tbXvnSGQemftPc8hip-WoOY719aDFVe1GsATBg8IVYaBQqqlJdsOiooLiguoI56IeJKMNjttFBkuBwRH0rn4A4l6yA8IwKBJ8eoxjcTKepYGwqYdZx995Xt7crKG8lHNs67bZlFaB-PVcsbH">
+</div>
+<div>
+<h4 class="text-title-lg font-title-lg text-primary">John Doe</h4>
+<p class="text-body-md font-body-md text-secondary">Premium Member</p>
+<p class="text-[12px] text-secondary opacity-70">john.doe@gmail.com</p>
+</div>
+</div>
+<nav class="flex-1">
+<div class="bg-secondary-container dark:bg-secondary text-on-secondary-container rounded-lg mx-2 flex items-center gap-4 px-6 py-3 cursor-pointer opacity-70">
+<span class="material-symbols-outlined">home</span>
+<span class="text-body-md font-body-md">Home</span>
+</div>
+<div class="text-on-surface-variant dark:text-on-surface hover:bg-surface-container-low transition-colors mx-2 flex items-center gap-4 px-6 py-3 cursor-pointer mt-2">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-body-md font-body-md">Categories</span>
+</div>
+<div class="text-on-surface-variant dark:text-on-surface hover:bg-surface-container-low transition-colors mx-2 flex items-center gap-4 px-6 py-3 cursor-pointer mt-2">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="text-body-md font-body-md">My Orders</span>
+</div>
+<div class="text-on-surface-variant dark:text-on-surface hover:bg-surface-container-low transition-colors mx-2 flex items-center gap-4 px-6 py-3 cursor-pointer mt-2">
+<span class="material-symbols-outlined">favorite</span>
+<span class="text-body-md font-body-md">Wishlist</span>
+</div>
+<div class="text-on-surface-variant dark:text-on-surface hover:bg-surface-container-low transition-colors mx-2 flex items-center gap-4 px-6 py-3 cursor-pointer mt-2">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</div>
+</nav>
+<div class="px-2 mt-auto">
+<div class="text-on-surface-variant dark:text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-4 px-6 py-3 cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-body-md font-body-md">Logout</span>
+</div>
+</div>
+</div>
+<div class="flex-1 bg-black/20 backdrop-blur-sm"></div>
+</div>
+<!-- BottomNavBar (From JSON) -->
+<nav class="fixed bottom-0 w-[390px] h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
+<div class="flex items-center justify-center text-primary dark:text-on-background scale-110 cursor-pointer hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined">home</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</div>
+<div class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined">person</span>
+</div>
+</nav>
+</main>
+<script src="js/app.js"></script>
+</body></html>
