@@ -1,0 +1,281 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Custom scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "secondary": "#5e5e5e",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed-variant": "#464747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-primary-container": "#848484",
+                    "inverse-primary": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-surface-variant": "#4c4546",
+                    "surface-container": "#eeeeee",
+                    "on-primary-fixed-variant": "#474747",
+                    "on-primary-fixed": "#1b1b1b",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "secondary-fixed": "#e4e2e2",
+                    "surface-variant": "#e2e2e2",
+                    "on-secondary-container": "#626263",
+                    "on-tertiary-container": "#838484",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#1a1c1c",
+                    "surface-container-high": "#e8e8e8",
+                    "inverse-on-surface": "#f0f1f1",
+                    "secondary-container": "#e1dfdf",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "outline-variant": "#cfc4c5",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "tertiary-fixed": "#e2e2e2",
+                    "primary-fixed": "#e2e2e2",
+                    "surface-dim": "#dadada",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "surface": "#f9f9f9",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#2f3131",
+                    "outline": "#7e7576",
+                    "tertiary": "#000000",
+                    "primary": "#000000",
+                    "primary-container": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#454747"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "component-padding-x": "20px",
+                    "gutter": "16px",
+                    "stack-sm": "8px",
+                    "container-margin": "24px",
+                    "component-padding-y": "16px",
+                    "stack-lg": "24px",
+                    "section-gap": "40px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg-mobile": ["Plus Jakarta Sans"],
+                    "title-lg": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-surface min-h-screen flex flex-col items-center overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 z-40 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale 0.95 transition-transform text-primary dark:text-on-background">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</h1>
+</div>
+<button class="hover:opacity-80 transition-opacity active:scale 0.95 transition-transform text-primary dark:text-on-background">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-[390px] px-6 pt-4 pb-[100px] flex flex-col gap-6">
+<!-- Header Actions -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h2 class="text-display-lg-mobile font-display-lg-mobile text-primary">Inventory</h2>
+<span class="text-label-lg font-label-lg text-secondary">32 Items</span>
+</div>
+<!-- Add Product Button (Primary Action) -->
+<button class="w-full bg-primary text-on-primary py-[18px] rounded-full text-label-lg font-label-lg shadow-[0px_10px_30px_rgba(0,0,0,0.08)] flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                Add Product
+            </button>
+</div>
+<!-- Filter & Search Bar -->
+<div class="flex gap-stack-md items-center">
+<div class="flex-1 bg-surface-container-low h-12 rounded-xl flex items-center px-4 gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-full p-0" placeholder="Search inventory..." type="text">
+</div>
+<button class="w-12 h-12 bg-surface-container-low rounded-xl flex items-center justify-center text-primary active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+<!-- Product Grid (Asymmetric/Bento-ish List) -->
+<div class="flex flex-col gap-stack-lg">
+<!-- Item 1 -->
+<div class="group relative bg-white rounded-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-container flex gap-4 hover:shadow-[0px_10px_30px_rgba(0,0,0,0.06)] transition-all">
+<div class="w-24 h-24 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Product Image" class="w-full h-full object-cover" data-alt="A high-performance luxury sneaker in vibrant red and white, captured in a clean, minimalist studio setting with sharp lighting that emphasizes its sleek silhouette. The background is a crisp, modern off-white, reflecting a premium boutique aesthetic. The shoe's texture is detailed, showing high-end materials and precise stitching under professional bright-mode illumination." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa0Lt9Un3n8Z3ZqNsDT3Tg72zLCQrIoQgfUCRTeN6bdFS5Zp5zObcHOVtBtCZPD7azKVU_5peGNrr7Jb9uemAkOeGDq6bVqMvd0tJsI58m3nlvmT2UXuDkpUfPHikqDed1VUq5JoGhm3aborgGXUd_BafmiFqrlK35Ln2rwbFOROIVfqHcx2onNCW5Xxb07GSch7bkG4khBVLqiJX9A91mFeDXDoj-GbyO9jTiq4YZhr7QauxQLMuqDsrF1UvyczELS4Wk38nQLTgu">
+</div>
+<div class="flex flex-col justify-between py-1 flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-title-lg font-title-lg text-primary">Air Max Crimson</h3>
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="more_vert">more_vert</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="text-label-sm font-label-sm text-[#10b981]">In Stock</span>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-headline-md font-headline-md text-primary">$189.00</span>
+<span class="text-label-sm font-label-sm text-secondary">Qty: 42</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group relative bg-white rounded-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-container flex gap-4">
+<div class="w-24 h-24 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Product Image" class="w-full h-full object-cover" data-alt="Classic black and white high-top sneakers presented on a pure white background in a high-key lighting environment. The image is crisp and professional, showcasing the exclusive fashion-forward design with deep shadows and bright highlights. The mood is sophisticated and minimal, fitting for a luxury high-fidelity marketplace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB5SymQ6O1s-KPkRV2HbWLqdH9CrKieGDIXdQFc1RGRf7qNSuifIeHcvZ6OoptzXTttD6XWTDK_WrkvXB3q79cKZ7anBMh3TvVr84F7SZel7nTqBJS_rgAzIuSGYPhV6nOj5aoYb5mt5v-AbfHc2AV4JMyPB8lei4C0jpoUI7h5t0AZE8AWliLvqQmJDAsNsHORzZstbL6AA5bz539SKkALn5cMb6Sph9TO0tNXdPgCprKsMkRIq502rzwt_IYrtqNhvap36QmNX7A">
+</div>
+<div class="flex flex-col justify-between py-1 flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-title-lg font-title-lg text-primary">Urban High-Top</h3>
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="more_vert">more_vert</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="text-label-sm font-label-sm text-error">Out of Stock</span>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-headline-md font-headline-md text-primary">$210.00</span>
+<span class="text-label-sm font-label-sm text-secondary">Qty: 0</span>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="group relative bg-white rounded-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-container flex gap-4">
+<div class="w-24 h-24 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Product Image" class="w-full h-full object-cover grayscale opacity-80" data-alt="Designer sneakers with pastel accents and intricate textures displayed in a bright, clean minimalist gallery style. The lighting is soft and diffused, creating a serene and exclusive atmosphere that highlights the premium quality of the materials. The color palette is modern and sophisticated, dominated by whites and soft neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUofqcNsklYqEdqPLp4gpEQKpIbOVVwq8pR7uFDqOqbb7YMPpXnUxhiH8fh4TOYKkBgKb9twtnt0m3fa-Ttnrs2fo2ZCifbOk-c0_hQxamN3_W9B4m7srZyPC5Wi7sxke7vzagGpKHYkjID9WBiIyT4BO-3uDn-FXeW8gWaH5IcrIRZKzJDODPUG-zjZFcyod3o46iu-xKSnzM7Lj5fPMgGMGYcwaWxiFtjszvDF5eJZUIGDX8BqISlwUO0awiv89GSt7yCPdmKmRd">
+</div>
+<div class="flex flex-col justify-between py-1 flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-title-lg font-title-lg text-primary">Cloud Runner X</h3>
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="more_vert">more_vert</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
+<span class="text-label-sm font-label-sm text-[#f59e0b]">Low Stock</span>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-headline-md font-headline-md text-primary">$155.00</span>
+<span class="text-label-sm font-label-sm text-secondary">Qty: 8</span>
+</div>
+</div>
+</div>
+<!-- Item 4 (Asymmetric Layout for visual interest) -->
+<div class="bg-primary-container text-on-primary-container rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden">
+<div class="relative z-10">
+<span class="bg-white/10 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Featured Promotion</span>
+<h3 class="text-display-lg-mobile font-display-lg-mobile text-white mt-2 leading-tight">Yeezy Boost v2<br>Restock Incoming</h3>
+<p class="text-body-md text-white/70 mt-1">Prepare the inventory for the midnight drop.</p>
+</div>
+<div class="flex justify-between items-center z-10 mt-2">
+<button class="bg-white text-primary px-6 py-3 rounded-full text-label-lg font-label-lg active:scale-95 transition-transform">Manage Drop</button>
+<span class="material-symbols-outlined text-white text-[32px] opacity-40" data-icon="bolt">bolt</span>
+</div>
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+</div>
+<!-- Item 5 -->
+<div class="group relative bg-white rounded-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-container flex gap-4">
+<div class="w-24 h-24 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Product Image" class="w-full h-full object-cover" data-alt="A sleek lime green athletic shoe in a high-fashion, high-contrast digital lighting setup. The background is perfectly white, ensuring all attention is on the product's sharp lines and vibrant color. The lighting creates a sense of luxury and exclusivity, with soft shadows defining the shoe's shape in a modern, boutique-style layout." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrxgL1XayI24tGu9RW-lhYR5F2nGWg-RsB0T31yEckF4mJFwSIzUSbGNW9RjFJXtL7XSySyxhLqNnits0sMFB2ezQb1UzkCr_LsVwCo_Xrmj_3-k5l-WYhJ_dIHLXlWmLExcsgYCfbnLesgmSaaDSYmw3mcQpphA4nAfEsJKdlMkqh464AFQIm3L7QniSrts3_Wlm4JHNYEVsckuSE6-r8tNWgZ8LJGLclxbqhAllkJAl0rEUjckgMgtAMM3LGGPRpA4GsFK_Lj-Aq">
+</div>
+<div class="flex flex-col justify-between py-1 flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-title-lg font-title-lg text-primary">Neon Pace</h3>
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="more_vert">more_vert</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="text-label-sm font-label-sm text-[#10b981]">In Stock</span>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-headline-md font-headline-md text-primary">$140.00</span>
+<span class="text-label-sm font-label-sm text-secondary">Qty: 25</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex items-center justify-center text-primary dark:text-on-background scale-110 active:scale-90 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="search" style="font-variation-settings: 'FILL' 1;">search</span>
+</a>
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</a>
+<a class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</a>
+</nav>
+<script src="js/app.js"></script>
+</body></html>

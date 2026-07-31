@@ -1,0 +1,27 @@
+======================================================================
+LNKICKS BASELINE REGRESSION PROTECTION INVENTORY & ARCHITECTURAL LOCK
+======================================================================
+
+1. DESKTOP HOMEPAGE BASELINE (LOCKED)
+   - Route: / (Desktop Viewport >= 769px) / app/desktop/page.tsx
+   - DOM Structure: Full-bleed Hero Editorial, 3D Shoe Coverflow Stage, Watermark Section, Sticky Scroll-Reveal Footer.
+   - JS Behavior: Coverflow carousel scroll, sticky footer reveal, luxury hover states, cart badge counter.
+   - Typography: Playfair Display (Serif), Inter (Sans-serif).
+   - Colors: Primary #0A0A0A, Text #FFFFFF, Secondary #4A4A4A.
+
+2. MOBILE HOMEPAGE BASELINE (LOCKED)
+   - Route: / (Mobile Viewport <= 768px) / app/mobile/page.tsx
+   - DOM Structure: Fullscreen Onboarding Splash Screen, Greeting Header, Hot Deals Banner Slider, Next Drop Countdown Card, Categories Icon Row, Latest Drops Slider, Trending 2-Column Grid, Cylindrical Floating Pill Nav Bar.
+   - JS Behavior: Splash dismiss, live countdown timer (02:13:59:39), horizontal snap sliders, bottom nav active pill backdrop (#ffffff pill on Home 🏠).
+   - Typography: Oswald (Bold sans-serif), Inter.
+   - Colors: Background #F4F4F6, Pill #111111, Accent #FF3B30.
+
+3. CONTROLLED BATCH MIGRATION VERIFICATION
+   - Batch 1 (Catalog & Product Flow): categories, category-products, product-detail. [VERIFIED CLEAN]
+   - Batch 2 (Commerce Flow): cart, checkout, order-success. [VERIFIED CLEAN]
+   - Batch 3 (User Account & Orders): profile, my-orders, order-detail, addresses, payment-methods. [VERIFIED CLEAN]
+   - Batch 4 (Discovery & Search): search, filters, track-order, policies, admin suite. [VERIFIED CLEAN]
+
+======================================================================
+STATUS: 0 VISUAL REGRESSIONS | 0 BEHAVIORAL REGRESSIONS | HOMEPAGES 100% LOCKED
+======================================================================

@@ -1,0 +1,234 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "secondary": "#5e5e5e",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed-variant": "#464747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-primary-container": "#848484",
+                    "inverse-primary": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-surface-variant": "#4c4546",
+                    "surface-container": "#eeeeee",
+                    "on-primary-fixed-variant": "#474747",
+                    "on-primary-fixed": "#1b1b1b",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "secondary-fixed": "#e4e2e2",
+                    "surface-variant": "#e2e2e2",
+                    "on-secondary-container": "#626263",
+                    "on-tertiary-container": "#838484",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#1a1c1c",
+                    "surface-container-high": "#e8e8e8",
+                    "inverse-on-surface": "#f0f1f1",
+                    "secondary-container": "#e1dfdf",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "outline-variant": "#cfc4c5",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "tertiary-fixed": "#e2e2e2",
+                    "primary-fixed": "#e2e2e2",
+                    "surface-dim": "#dadada",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "surface": "#f9f9f9",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#2f3131",
+                    "outline": "#7e7576",
+                    "tertiary": "#000000",
+                    "primary": "#000000",
+                    "primary-container": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#454747"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "component-padding-x": "20px",
+                    "gutter": "16px",
+                    "stack-sm": "8px",
+                    "container-margin": "24px",
+                    "component-padding-y": "16px",
+                    "stack-lg": "24px",
+                    "section-gap": "40px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg-mobile": ["Plus Jakarta Sans"],
+                    "title-lg": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #FFFFFF;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4">
+<button class="text-primary dark:text-on-background hover:opacity-80 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</span>
+<button class="text-primary dark:text-on-background hover:opacity-80 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 mt-[72px] mb-[84px] px-container-margin py-stack-lg">
+<!-- Wishlist Header -->
+<div class="flex items-center justify-between mb-stack-lg">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Wishlist</h1>
+<span class="font-label-lg text-label-lg text-secondary">12 Items</span>
+</div>
+<!-- Bento-inspired Grid of Wishlist Items -->
+<div class="grid grid-cols-1 gap-gutter">
+<!-- Wishlist Card 1 -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] relative border border-surface-container">
+<div class="flex gap-stack-md">
+<div class="w-24 h-24 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Luxury Red Sneaker" class="w-full h-full object-cover" data-alt="A premium red designer sneaker presented against a clean, minimalist studio background. The lighting is high-key and professional, highlighting the luxury textures and sleek silhouette. The overall aesthetic is sophisticated and high-end, fitting a boutique sneaker marketplace with a focus on pristine whites and bold red accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUmQrAx-UvTyT5pdhL4G9hCccCZU-5lVHYk0V_GsJETHkG81v9tAh6x4MAYZhqw4rGLqBxF2_krldtLelgmNWadBjDdGbUs5XB2f3yNjl_qcSXcHh62hwiol8PV99x9-TYWM8ASipvok_BzEvQRfra4xYouotnh2tDfVfYPqLX-YRRBiRH6K0e8JvECm5NL34T9lmUxfYVqDnkVpiZ9JXML2CXpRQ0iIFJcFk9PCgBeOs0lXblOrlG3T5z-DeJSPyR1AZxwQclvNTj">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<h3 class="font-title-lg text-title-lg text-primary truncate">Velocity Elite Red</h3>
+<p class="font-body-md text-body-md text-secondary mb-1">Performance Series</p>
+<span class="font-headline-md text-headline-md text-primary">$285.00</span>
+</div>
+<button class="absolute top-4 right-4 text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+</div>
+<!-- Wishlist Card 2 -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] relative border border-surface-container">
+<div class="flex gap-stack-md">
+<div class="w-24 h-24 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="White Designer Sneaker" class="w-full h-full object-cover" data-alt="A pair of crisp white high-fashion sneakers displayed in a bright, ethereal gallery setting. The lighting is soft and diffused, casting gentle shadows that emphasize the high-quality leather craftsmanship. The image exudes a sense of exclusivity and modern minimalism, maintaining a clean monochrome palette with sharp details." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2gYQgseqmO8_hRbFx49YkchGHBrjPizG_NCW-Lr38NR3HKcFWdFvmDselj3oH7lyRshsvMY4qwTFMbMPv84B_sLpUVwKB61Od816fOwW6NLQlhvPQbCZFggOlziyZHVgvibFeEcluHQXBpws5nMJx0BLBjhQACppBkAL4CO5OHoeAzUGb57WYF_tmRBwenHZD2abS6tnSTS7u9A8csDpOPlM94LGu5c8HLCeheRw-2gjWf_ow05UrLN4r5LJj0E1U42Nw-0hvnptR">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<h3 class="font-title-lg text-title-lg text-primary truncate">Aura Ghost Low</h3>
+<p class="font-body-md text-body-md text-secondary mb-1">Lifestyle Luxury</p>
+<span class="font-headline-md text-headline-md text-primary">$410.00</span>
+</div>
+<button class="absolute top-4 right-4 text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+</div>
+<!-- Wishlist Card 3 -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] relative border border-surface-container">
+<div class="flex gap-stack-md">
+<div class="w-24 h-24 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Black Stealth Sneaker" class="w-full h-full object-cover" data-alt="Sleek black high-performance sneakers against a contrasting light gray minimalist backdrop. The image features dramatic but soft side-lighting that defines the aerodynamic shape and premium materials of the shoe. The aesthetic is dark, mysterious, and high-tech, aligning with a luxury sneaker brand's precision and sophistication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPTm3sSL4Rc12dXVxx3qNNMydJdz5mv1iu8nAUMMbbUJuLxft22nItGe-Ga4Tuu4_nDZUoFCLyeWC0qkk1uMwTPHyK3dEkT4IpJMraEFS8bY5lmkDjyRkRbhaZS5vwFjJ15KegL0kKGzz6YwvtnIZsZuZ0ym2e9V8epdzZHOgsW09Mv9obyDwDw7QPqS05j37E2V4ZTzR6K_uKdR2vQSxWa-JLqYDDzCJXAjAcX9bsFC3uYI3EN4BfE1_lGAJpxU1v19tw_V858iwR">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<h3 class="font-title-lg text-title-lg text-primary truncate">Obsidian Runner</h3>
+<p class="font-body-md text-body-md text-secondary mb-1">Stealth Edition</p>
+<span class="font-headline-md text-headline-md text-primary">$350.00</span>
+</div>
+<button class="absolute top-4 right-4 text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+</div>
+<!-- Wishlist Card 4 -->
+<div class="bg-surface-container-lowest p-component-padding-y rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] relative border border-surface-container">
+<div class="flex gap-stack-md">
+<div class="w-24 h-24 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Neon Pastel Sneaker" class="w-full h-full object-cover" data-alt="A trendy pastel-colored sneaker with vibrant accents showcased in a bright, modern interior space. The lighting is natural and airy, creating a fresh and youthful luxury vibe. The composition is clean and centered, focusing on the unique color blocking and high-end aesthetic of the boutique product." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGF8IXiTckDwiJ_rPBMRPy99VkRFvF2Tfpun4CCyGZsiIFzPtVwB3cT9Bs8VYzCN5agdcbgoxo0O9Ks8GSJj3qnS663eboi6Nhus3d5-_0UYvT3dhO75dfzXcc4GtuaO4K67Tsq9EnJU9_XkcoC8vhG3jMOv0BwD1i8VzYAe9NS5LuyEHhHVZCcKYxqdWBcIF8kJyt7FUt9VGTqEe0Rf-ptH_B4SbmKbwdv3ScaptBknIlM9p27ig400aLGrnPJvkNfpUWNGfAZ03n">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<h3 class="font-title-lg text-title-lg text-primary truncate">Prism Vapor Max</h3>
+<p class="font-body-md text-body-md text-secondary mb-1">Limited Release</p>
+<span class="font-headline-md text-headline-md text-primary">$520.00</span>
+</div>
+<button class="absolute top-4 right-4 text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Empty State Mockup Button -->
+<div class="mt-section-gap flex flex-col items-center">
+<button class="bg-primary text-on-primary font-label-lg text-label-lg px-stack-lg py-4 rounded-full w-full hover:opacity-90 transition-opacity shadow-[0px_10px_30px_rgba(0,0,0,0.08)]">
+                Add All to Cart
+            </button>
+<button class="mt-4 text-primary font-label-lg text-label-lg hover:underline transition-all">
+                Clear Wishlist
+            </button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
+<button class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</button>
+<button class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<!-- Active Item: Wishlist maps to Favorite -->
+<button class="flex items-center justify-center text-primary dark:text-on-background scale-110">
+<span class="material-symbols-outlined" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<button class="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+</nav>
+<script src="js/app.js"></script>
+<script src="js/product_flow.js"></script>
+<script src="js/cart_checkout_engine.js"></script>
+<script src="js/user_account_engine.js"></script>
+</body></html>

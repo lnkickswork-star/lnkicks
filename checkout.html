@@ -1,0 +1,221 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "secondary": "#5e5e5e",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed-variant": "#464747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-primary-container": "#848484",
+                    "inverse-primary": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-surface-variant": "#4c4546",
+                    "surface-container": "#eeeeee",
+                    "on-primary-fixed-variant": "#474747",
+                    "on-primary-fixed": "#1b1b1b",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "secondary-fixed": "#e4e2e2",
+                    "surface-variant": "#e2e2e2",
+                    "on-secondary-container": "#626263",
+                    "on-tertiary-container": "#838484",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#1a1c1c",
+                    "surface-container-high": "#e8e8e8",
+                    "inverse-on-surface": "#f0f1f1",
+                    "secondary-container": "#e1dfdf",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "outline-variant": "#cfc4c5",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "tertiary-fixed": "#e2e2e2",
+                    "primary-fixed": "#e2e2e2",
+                    "surface-dim": "#dadada",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "surface": "#f9f9f9",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#2f3131",
+                    "outline": "#7e7576",
+                    "tertiary": "#000000",
+                    "primary": "#000000",
+                    "primary-container": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#454747"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "component-padding-x": "20px",
+                    "gutter": "16px",
+                    "stack-sm": "8px",
+                    "container-margin": "24px",
+                    "component-padding-y": "16px",
+                    "stack-lg": "24px",
+                    "section-gap": "40px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg-mobile": ["Plus Jakarta Sans"],
+                    "title-lg": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "800"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- Top App Bar (Suppressing global nav shell due to transactional context) -->
+<header class="bg-surface flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="text-label-lg font-label-lg text-primary uppercase tracking-widest">Checkout</h1>
+</div>
+<div class="text-primary font-bold tracking-tighter text-headline-lg-mobile font-headline-lg-mobile">
+            LNKICKS
+        </div>
+</header>
+<main class="pt-20 pb-32 px-6 max-w-[390px] mx-auto min-h-screen">
+<!-- Delivery Section -->
+<section class="mt-stack-lg mb-section-gap">
+<div class="flex justify-between items-baseline mb-stack-md">
+<h2 class="text-title-lg font-title-lg text-primary">Delivery Address</h2>
+<button class="text-label-lg font-label-lg text-secondary border-b border-secondary hover:opacity-70 transition-opacity">Edit</button>
+</div>
+<div class="bg-surface-container-lowest p-component-padding-y px-component-padding-x rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-[#EEEEEE]">
+<div class="flex gap-stack-md items-start">
+<span class="material-symbols-outlined text-primary mt-1">location_on</span>
+<div>
+<p class="text-label-lg font-label-lg text-on-surface">Home</p>
+<p class="text-body-md font-body-md text-secondary mt-1 leading-relaxed">
+                            242 Madison Avenue, Suite 100<br>
+                            New York, NY 10016
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Payment Method Section -->
+<section class="mb-section-gap">
+<h2 class="text-title-lg font-title-lg text-primary mb-stack-md">Payment Method</h2>
+<div class="space-y-stack-md">
+<!-- UPI Option (Active) -->
+<label class="flex items-center justify-between bg-primary p-component-padding-y px-component-padding-x rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.08)] cursor-pointer">
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-on-primary">account_balance_wallet</span>
+<span class="text-label-lg font-label-lg text-on-primary">UPI (Google Pay / PhonePe)</span>
+</div>
+<div class="w-5 h-5 rounded-full border-2 border-on-primary flex items-center justify-center">
+<div class="w-2.5 h-2.5 bg-on-primary rounded-full"></div>
+</div>
+<input checked="" class="hidden" name="payment" type="radio">
+</label>
+<!-- Card Option -->
+<label class="flex items-center justify-between bg-surface-container-lowest p-component-padding-y px-component-padding-x rounded-xl border border-[#EEEEEE] cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-secondary">credit_card</span>
+<span class="text-label-lg font-label-lg text-secondary">Credit / Debit Card</span>
+</div>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant"></div>
+<input class="hidden" name="payment" type="radio">
+</label>
+<!-- Cash Option -->
+<label class="flex items-center justify-between bg-surface-container-lowest p-component-padding-y px-component-padding-x rounded-xl border border-[#EEEEEE] cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-secondary">payments</span>
+<span class="text-label-lg font-label-lg text-secondary">Cash on Delivery</span>
+</div>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant"></div>
+<input class="hidden" name="payment" type="radio">
+</label>
+</div>
+</section>
+<!-- Order Summary Section -->
+<section class="mb-stack-lg">
+<h2 class="text-title-lg font-title-lg text-primary mb-stack-md">Order Summary</h2>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-body-md font-body-md text-secondary">Subtotal (2 items)</span>
+<span class="text-body-md font-body-md text-on-surface">$340.00</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-md font-body-md text-secondary">Delivery Fee</span>
+<span class="text-body-md font-body-md text-on-surface">Free</span>
+</div>
+<div class="flex justify-between items-center pt-3 border-t border-[#EEEEEE]">
+<span class="text-title-lg font-title-lg text-primary">Total Amount</span>
+<span class="text-headline-md font-headline-md text-primary">$340.00</span>
+</div>
+</div>
+</section>
+<!-- Product Snapshot (Bento Style) -->
+<div class="grid grid-cols-2 gap-stack-sm mb-stack-lg">
+<div class="relative bg-surface-container-low rounded-xl overflow-hidden aspect-square">
+<img alt="Nike Air Jordan 1 Retro" class="w-full h-full object-cover" data-alt="A clean, studio-lit shot of a classic Nike Air Jordan 1 sneaker in a white and black colorway. The lighting is crisp and high-contrast, highlighting the premium leather textures. The background is a soft, minimalist light gray, maintaining the luxury marketplace aesthetic. The mood is sophisticated and focus is entirely on the craftsmanship of the shoe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvRoJHoa1dzuUussidA5H8cwUFljBq2pq2f90f26I1lOF1T9lrirBIT3tbQp4gO14YFyQ1tdPQSdZk5dtJ6b7dEZPL59CFdxCohVw0krLv18yhhSH8LA1X_6r9cNChi3faL_QsOlnThNLnkqLGoU7OySV02dchNIaXNZbJdTADEA5HtERkNh-G-FxOBpUgcfiswv2_FfTyARaFbhrelONmRjiJOY_-EB6XURv8F8HDI9UadC5JVnguPuvCTmxsyI0qupxB0TYn29JX">
+</div>
+<div class="relative bg-surface-container-low rounded-xl overflow-hidden aspect-square">
+<img alt="Adidas Yeezy Boost 350" class="w-full h-full object-cover" data-alt="Close-up of a premium minimalist sneaker with unique mesh patterns, captured in a brightly lit professional studio environment. The color palette is composed of muted neutral tones like cream and light grey. Soft diffused shadows fall beneath the shoe, emphasizing its sleek silhouette. The overall visual style is elegant, modern, and high-end." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8ju2vr52c9uh_UKH-1sqmtn2a1euUo8JJtinGzDSKJiO6X-ncAJJn0bPocVkc2dzlzFRq6Wo4Td55zWBAGZI0tzCI4T7yRjwHubg9K2-OJFVrMXnaCsW3zlRZ-zS3C7BJdE4bQe_xGTvavegxAgJYc-4YMaTmFkH9vzVorOBwqHRYnspjgUyJ6GtWjKKV5QB8s-GXwQ94qGEU6PrzIRgdtLQYHn6-FetzMP6RXAkRylec4pjMsxPuQvlaIJ0D2F0V9VSmC0xNHhqv">
+</div>
+</div>
+</main>
+<!-- Fixed Place Order Action -->
+<div class="fixed bottom-0 left-0 right-0 bg-surface px-6 pt-4 pb-8 shadow-[0px_-10px_30px_rgba(0,0,0,0.06)] max-w-[390px] mx-auto">
+<button class="w-full bg-primary text-on-primary py-[18px] rounded-full text-label-lg font-label-lg flex items-center justify-center gap-stack-sm hover:opacity-90 active:scale-95 transition-all">
+            Place Order
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<script src="js/app.js"></script>
+<script src="js/cart_checkout_engine.js"></script>
+</body></html>
