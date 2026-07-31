@@ -1,0 +1,77 @@
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Dependabot checks for outdated dependencies and opens PRs to bump them.
+# This config targets the npm ecosystem (the runtime stack of lnkicks) and
+# GitHub Actions workflow files.
+
+version: 2
+
+updates:
+  # ─── npm dependencies (package.json) ────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"      # Mondays (UTC)
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    versioning-strategy: "increase"   # bump the version in package.json
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "dependabot"
+    reviewers:
+      - "lnkickswork-star"
+    assignees:
+      - "lnkickswork-star"
+    groups:
+      # Group React ecosystem updates together (less PR noise)
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      # Group Next.js-related updates
+      next:
+        patterns:
+          - "next"
+          - "@next/*"
+      # Group TypeScript tooling
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/node"
+    ignore:
+      # Don't auto-bump major versions of next (breaking changes need manual review)
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      # Don't auto-bump major versions of react/react-dom
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  # ─── GitHub Actions workflows ───────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "dependabot"
+    reviewers:
+      - "lnkickswork-star"

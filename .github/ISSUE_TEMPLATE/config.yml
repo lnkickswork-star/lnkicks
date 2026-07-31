@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Contributing guide
+    url: https://github.com/lnkickswork-star/lnkicks/blob/main/CONTRIBUTING.md
+    about: Read the contributing guide before opening an issue or PR.
+  - name: 🔒 Security vulnerability
+    url: https://github.com/lnkickswork-star/lnkicks/security/advisories/new
+    about: Please report security vulnerabilities via GitHub Security Advisories — do not open a public issue.
+  - name: 💬 Discussions
+    url: https://github.com/lnkickswork-star/lnkicks/discussions
+    about: For questions, ideas, and general discussion, use GitHub Discussions.

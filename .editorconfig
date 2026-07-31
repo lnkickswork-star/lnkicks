@@ -1,0 +1,33 @@
+# EditorConfig — https://editorconfig.org
+# Keeps coding style consistent across editors and IDEs.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Python automation scripts in this repo use 4-space indentation.
+[*.py]
+indent_size = 4
+
+# Markdown files: preserve trailing whitespace (markdown line breaks rely on it).
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Makefiles require tabs.
+[Makefile]
+indent_style = tab
+
+# YAML files use 2 spaces (Next.js / GitHub Actions convention).
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON files use 2 spaces.
+[*.json]
+indent_size = 2

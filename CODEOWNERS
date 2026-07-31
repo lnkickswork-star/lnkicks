@@ -1,0 +1,34 @@
+# CODEOWNERS — https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Each line maps a path pattern to the GitHub username (or team) that owns it.
+# GitHub will automatically request review from the owner when their files change.
+#
+# Format:  <path-pattern>  @<username>  (or @<org>/<team>)
+
+# Default owner — fallback for every file not covered by a more specific rule.
+*                          @lnkickswork-star
+
+# Application source code (Next.js App Router)
+/app/                     @lnkickswork-star
+/app/**/page.tsx          @lnkickswork-star
+/app/**/layout.tsx        @lnkickswork-star
+/app/api/                 @lnkickswork-star
+
+# Python automation & build scripts
+/*.py                     @lnkickswork-star
+/scripts/                 @lnkickswork-star
+
+# Static assets & product imagery
+/*.png                    @lnkickswork-star
+/public/                  @lnkickswork-star
+
+# Configuration & infrastructure
+/package.json             @lnkickswork-star
+/next.config.js           @lnkickswork-star
+/tsconfig.json            @lnkickswork-star
+/.gitignore               @lnkickswork-star
+/.gitattributes           @lnkickswork-star
+
+# Security & community files — require explicit owner review
+/SECURITY.md              @lnkickswork-star
+/.github/                 @lnkickswork-star
