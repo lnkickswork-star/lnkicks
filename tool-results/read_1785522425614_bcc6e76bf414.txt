@@ -1,0 +1,457 @@
+     1→<!DOCTYPE html>
+     2→
+     3→<html lang="en"><head>
+     4→<meta charset="utf-8"/>
+     5→<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+     6→<title>Kicks Machine - Authentic Sneakers &amp; Luxury Handbags</title>
+     7→<!-- Tailwind CSS CDN -->
+     8→<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+     9→<!-- Google Fonts for Typography -->
+    10→<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    11→<style data-purpose="typography">
+    12→    body {
+    13→      font-family: 'Inter', sans-serif;
+    14→      background-color: #ffffff;
+    15→      color: #000000;
+    16→    }
+    17→    .font-serif-italic {
+    18→      font-style: italic;
+    19→    }
+    20→  </style>
+    21→<style data-purpose="custom-layout">
+    22→    /* Custom scrollbar for better UI */
+    23→    ::-webkit-scrollbar {
+    24→      width: 8px;
+    25→    }
+    26→    ::-webkit-scrollbar-track {
+    27→      background: #f1f1f1;
+    28→    }
+    29→    ::-webkit-scrollbar-thumb {
+    30→      background: #888;
+    31→    }
+    32→    ::-webkit-scrollbar-thumb:hover {
+    33→      background: #555;
+    34→    }
+    35→    .carousel-container {
+    36→      scrollbar-width: none;
+    37→      -ms-overflow-style: none;
+    38→    }
+    39→    .carousel-container::-webkit-scrollbar {
+    40→      display: none;
+    41→    }
+    42→  </style>
+    43→</head>
+    44→<body class="overflow-x-hidden">
+    45→<!-- BEGIN: AnnouncementBar -->
+    46→<div class="bg-[#121212] text-white py-2.5 text-center text-[10px] font-bold tracking-widest uppercase">
+    47→    FREE SHIPPING <span class="font-normal opacity-70">ON ALL PREPAID ORDERS</span>
+    48→</div>
+    49→<!-- END: AnnouncementBar -->
+    50→<!-- BEGIN: MainHeader -->
+    51→<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+    52→<div class="container mx-auto px-6 flex items-center justify-between h-20">
+    53→<!-- Logo Section -->
+    54→<div class="flex-shrink-0">
+    55→<a class="flex flex-col items-center group" href="/">
+    56→<span class="text-3xl font-black tracking-tighter leading-none group-hover:scale-105 transition-transform">KM</span>
+    57→<span class="text-[8px] tracking-[0.3em] font-bold mt-1">KICKS MACHINE</span>
+    58→</a>
+    59→</div>
+    60→<!-- Navigation Menu -->
+    61→<nav class="hidden lg:flex items-center space-x-10 text-[11px] font-bold uppercase tracking-wider">
+    62→<a class="hover:text-gray-500 transition-colors" href="#">Sneakers</a>
+    63→<a class="hover:text-gray-500 transition-colors" href="#">Luxury Footwear</a>
+    64→<a class="hover:text-gray-500 transition-colors" href="#">Bags</a>
+    65→<a class="hover:text-gray-500 transition-colors" href="#">Beauty</a>
+    66→<a class="hover:text-gray-500 transition-colors" href="#">Clothing</a>
+    67→<a class="hover:text-gray-500 transition-colors" href="#">Hype &amp; Care</a>
+    68→<a class="hover:text-gray-500 transition-colors" href="#">Track Your Order</a>
+    69→</nav>
+    70→<!-- Action Icons -->
+    71→<div class="flex items-center space-x-6">
+    72→<button class="p-1 hover:opacity-60 transition-opacity">
+    73→<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+    74→</button>
+    75→<button class="p-1 hover:opacity-60 transition-opacity">
+    76→<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+    77→</button>
+    78→<button class="p-1 relative hover:opacity-60 transition-opacity">
+    79→<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+    80→</button>
+    81→</div>
+    82→</div>
+    83→</header>
+    84→<!-- END: MainHeader -->
+    85→<main>
+    86→<!-- BEGIN: HeroBanner -->
+    87→<section class="px-4 py-4 lg:px-6">
+    88→<div class="relative w-full overflow-hidden rounded-[2rem] lg:rounded-[3rem] h-[500px] lg:h-[700px] bg-black">
+    89→<img alt="STOCKED &amp; LOADED" class="w-full h-full object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw"/>
+    90→<div class="absolute inset-0 flex flex-col justify-center items-end pr-10 lg:pr-32">
+    91→<div class="max-w-xl text-right">
+    92→<h2 class="text-5xl lg:text-8xl font-black leading-[0.9] uppercase mb-4 text-white">STOCKED &amp;<br/>LOADED</h2>
+    93→<p class="text-base lg:text-xl font-serif-italic mb-12 text-white/90">Finest collection of hyped and luxury.</p>
+    94→<a class="inline-block bg-white text-black px-12 py-5 text-sm lg:text-base font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors" href="#">Shop Now</a>
+    95→</div>
+    96→</div>
+    97→</div>
+    98→</section>
+    99→<!-- END: HeroBanner -->
+   100→<!-- BEGIN: TrendingSection -->
+   101→<section class="py-20 overflow-hidden">
+   102→<div class="container mx-auto px-6 mb-12 flex justify-between items-end">
+   103→<div>
+   104→<div class="flex items-center gap-2 mb-3">
+   105→<div class="w-8 h-[1px] bg-black"></div>
+   106→<span class="uppercase tracking-widest text-[10px] font-bold text-gray-400">Right Now</span>
+   107→</div>
+   108→<h2 class="text-4xl lg:text-6xl font-black uppercase">Trending <span class="font-serif-italic font-medium lowercase">this week</span></h2>
+   109→</div>
+   110→<button class="border-b-2 border-black pb-1 text-[10px] font-bold uppercase tracking-widest">View All</button>
+   111→</div>
+   112→<div class="flex gap-8 overflow-x-auto carousel-container px-6 lg:px-[15%] pb-10">
+   113→<!-- Item 1 (Small) -->
+   114→<div class="min-w-[280px] lg:min-w-[320px] opacity-40 scale-90 transition-all flex flex-col items-center">
+   115→<div class="w-full aspect-[4/3] bg-gray-50 rounded-3xl flex items-center justify-center p-8 mb-6">
+   116→<img class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg"/>
+   117→</div>
+   118→<div class="text-center">
+   119→<p class="uppercase text-[10px] tracking-widest font-bold text-gray-400 mb-1">KM</p>
+   120→<h3 class="font-bold text-sm uppercase">Dunk Low Rose</h3>
+   121→</div>
+   122→</div>
+   123→<!-- Featured (Active) -->
+   124→<div class="min-w-[450px] lg:min-w-[800px] bg-white rounded-[2.5rem] p-10 lg:p-16 border border-gray-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] flex flex-col lg:flex-row items-center gap-12">
+   125→<div class="w-full lg:w-3/5 order-2 lg:order-1">
+   126→<span class="uppercase text-[10px] tracking-widest font-bold text-gray-400">Kicks Machine</span>
+   127→<h3 class="text-2xl lg:text-4xl font-black mt-4 leading-tight uppercase">Kodak Charmera Keychain Digital Camera - Millennium</h3>
+   128→<div class="flex items-center gap-6 mt-8">
+   129→<span class="text-2xl font-black">Rs. 4,599.00</span>
+   130→<span class="text-gray-300 line-through text-lg">Rs. 6,999.00</span>
+   131→</div>
+   132→<button class="mt-10 bg-black text-white px-12 py-4 rounded-full font-bold uppercase text-[11px] tracking-widest hover:bg-gray-800 transition-colors">Buy Now</button>
+   133→</div>
+   134→<div class="w-full lg:w-2/5 flex justify-center order-1 lg:order-2">
+   135→<img alt="Kodak Keychain" class="w-full max-w-[350px] h-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoeDHgD4sdEolj1Q6YY0dFBFam5YpICGBA2dZIy1CsoaOAyvFhphvbL7FSkNTAYouunPHoG9hNcKTvSWYd8ErjQY04V5XGIz8bL0hISKMtP5b4D4Qd5BnVZyOH32cafz8bJ5ecFNv5utNkkIW5w6gGyQftyHuDaBBRAkh9yHhMJ0E1VeGuDflsHiijdR0pef1sF8riPx9Jszb6CVCfz413_6TGPUGpuRbUCa5_hkXTubgyzvTrBsJ7mg"/>
+   136→</div>
+   137→</div>
+   138→<!-- Item 3 (Small) -->
+   139→<div class="min-w-[280px] lg:min-w-[320px] opacity-40 scale-90 transition-all flex flex-col items-center">
+   140→<div class="w-full aspect-[4/3] bg-gray-50 rounded-3xl flex items-center justify-center p-8 mb-6">
+   141→<img class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw"/>
+   142→</div>
+   143→<div class="text-center">
+   144→<p class="uppercase text-[10px] tracking-widest font-bold text-gray-400 mb-1">KM</p>
+   145→<h3 class="font-bold text-sm uppercase">AJ1 Low Powder Blue</h3>
+   146→</div>
+   147→</div>
+   148→</div>
+   149→<div class="flex justify-center items-center gap-8 mt-4">
+   150→<button class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
+   151→<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+   152→</button>
+   153→<div class="flex items-center gap-3">
+   154→<span class="w-12 h-[3px] bg-black"></span>
+   155→<span class="w-12 h-[3px] bg-gray-100"></span>
+   156→<span class="w-12 h-[3px] bg-gray-100"></span>
+   157→</div>
+   158→<button class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
+   159→<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+   160→</button>
+   161→</div>
+   162→</section>
+   163→<!-- END: TrendingSection -->
+   164→<!-- BEGIN: TrustBadges -->
+   165→<section class="py-16 border-y border-gray-100">
+   166→<div class="container mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
+   167→<div class="flex items-center gap-5">
+   168→<div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center"><svg class="w-6 h-6" fill="currentColor" viewbox="0 0 24 24"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.44c-.31.17-.69.17-1 0l-7.97-4.44c-.31-.17-.53-.5-.53-.88v-9c0-.38.21-.71.53-.88l7.97-4.44c.31-.17.69-.17 1 0l7.97 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5L12 10.85l5.96-3.35L12 4.15z"></path></svg></div>
+   169→<div>
+   170→<p class="font-black text-2xl leading-none">50000+</p>
+   171→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">Unique SKUs</p>
+   172→</div>
+   173→</div>
+   174→<div class="flex items-center gap-5">
+   175→<div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center"><svg class="w-6 h-6" fill="currentColor" viewbox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path></svg></div>
+   176→<div>
+   177→<p class="font-black text-2xl leading-none italic uppercase">Verified</p>
+   178→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">Authenticity Guaranteed</p>
+   179→</div>
+   180→</div>
+   181→<div class="flex items-center gap-5">
+   182→<div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center"><svg class="w-6 h-6" fill="currentColor" viewbox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg></div>
+   183→<div>
+   184→<p class="font-black text-2xl leading-none">100,000+</p>
+   185→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">Customers Served</p>
+   186→</div>
+   187→</div>
+   188→<div class="flex items-center gap-5">
+   189→<div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center"><svg class="w-6 h-6" fill="currentColor" viewbox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"></path></svg></div>
+   190→<div>
+   191→<p class="font-black text-2xl leading-none italic uppercase">Shop</p>
+   192→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">In-Store Experience</p>
+   193→</div>
+   194→</div>
+   195→</div>
+   196→</section>
+   197→<!-- END: TrustBadges -->
+   198→<!-- BEGIN: InstantShipGrid -->
+   199→<section class="py-24 bg-[#fcfcfc]">
+   200→<div class="container mx-auto px-6">
+   201→<div class="flex flex-col items-center mb-16">
+   202→<h2 class="text-6xl lg:text-8xl font-black uppercase text-center tracking-tighter">Instant Ship</h2>
+   203→<div class="w-20 h-1.5 bg-black mt-6"></div>
+   204→</div>
+   205→<div class="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+   206→<!-- Product Item 1 -->
+   207→<div class="group cursor-pointer">
+   208→<div class="relative aspect-square overflow-hidden rounded-2xl bg-white border border-gray-100 mb-6">
+   209→<span class="absolute top-4 left-4 z-10 bg-black text-white text-[8px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Instant Ship</span>
+   210→<img alt="AJ1 Low" class="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw"/>
+   211→</div>
+   212→<div class="text-center px-2">
+   213→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-2">Kicks Machine</p>
+   214→<h3 class="font-bold text-sm mb-3 h-10 line-clamp-2 uppercase leading-snug">Air Jordan 1 Low Black Dark Powder Blue</h3>
+   215→<div class="flex flex-col items-center gap-1">
+   216→<div class="flex items-center gap-2">
+   217→<span class="text-red-600 text-[9px] font-black uppercase italic">From</span>
+   218→<span class="font-black text-lg">Rs. 8,899.00</span>
+   219→</div>
+   220→<span class="text-xs text-gray-300 line-through">Rs. 18,999.00</span>
+   221→</div>
+   222→</div>
+   223→</div>
+   224→<!-- Product Item 2 -->
+   225→<div class="group cursor-pointer">
+   226→<div class="relative aspect-square overflow-hidden rounded-2xl bg-white border border-gray-100 mb-6">
+   227→<span class="absolute top-4 left-4 z-10 bg-black text-white text-[8px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Instant Ship</span>
+   228→<img alt="Rose Whisper" class="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg"/>
+   229→</div>
+   230→<div class="text-center px-2">
+   231→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-2">Nike</p>
+   232→<h3 class="font-bold text-sm mb-3 h-10 line-clamp-2 uppercase leading-snug">Nike Dunk Low 'Rose Whisper' Sale</h3>
+   233→<div class="flex flex-col items-center gap-1">
+   234→<div class="flex items-center gap-2">
+   235→<span class="text-red-600 text-[9px] font-black uppercase italic">From</span>
+   236→<span class="font-black text-lg">Rs. 7,399.00</span>
+   237→</div>
+   238→<span class="text-xs text-gray-300 line-through">Rs. 12,999.00</span>
+   239→</div>
+   240→</div>
+   241→</div>
+   242→<!-- Product Item 3 -->
+   243→<div class="group cursor-pointer">
+   244→<div class="relative aspect-square overflow-hidden rounded-2xl bg-white border border-gray-100 mb-6">
+   245→<span class="absolute top-4 left-4 z-10 bg-black text-white text-[8px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Instant Ship</span>
+   246→<img alt="Yeezy Slide" class="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw"/>
+   247→</div>
+   248→<div class="text-center px-2">
+   249→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-2">Adidas Yeezy</p>
+   250→<h3 class="font-bold text-sm mb-3 h-10 line-clamp-2 uppercase leading-snug">Adidas Yeezy Slide Onyx Pure</h3>
+   251→<div class="flex flex-col items-center gap-1">
+   252→<div class="flex items-center gap-2">
+   253→<span class="text-red-600 text-[9px] font-black uppercase italic">From</span>
+   254→<span class="font-black text-lg">Rs. 10,499.00</span>
+   255→</div>
+   256→<span class="text-xs text-gray-300 line-through">Rs. 15,999.00</span>
+   257→</div>
+   258→</div>
+   259→</div>
+   260→<!-- Product Item 4 -->
+   261→<div class="group cursor-pointer">
+   262→<div class="relative aspect-square overflow-hidden rounded-2xl bg-white border border-gray-100 mb-6">
+   263→<span class="absolute top-4 left-4 z-10 bg-black text-white text-[8px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Instant Ship</span>
+   264→<img alt="Kodak Camera" class="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoeDHgD4sdEolj1Q6YY0dFBFam5YpICGBA2dZIy1CsoaOAyvFhphvbL7FSkNTAYouunPHoG9hNcKTvSWYd8ErjQY04V5XGIz8bL0hISKMtP5b4D4Qd5BnVZyOH32cafz8bJ5ecFNv5utNkkIW5w6gGyQftyHuDaBBRAkh9yHhMJ0E1VeGuDflsHiijdR0pef1sF8riPx9Jszb6CVCfz413_6TGPUGpuRbUCa5_hkXTubgyzvTrBsJ7mg"/>
+   265→</div>
+   266→<div class="text-center px-2">
+   267→<p class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-2">Kodak</p>
+   268→<h3 class="font-bold text-sm mb-3 h-10 line-clamp-2 uppercase leading-snug">Charmera Digital Camera Keychain</h3>
+   269→<div class="flex flex-col items-center gap-1">
+   270→<div class="flex items-center gap-2">
+   271→<span class="text-red-600 text-[9px] font-black uppercase italic">Special</span>
+   272→<span class="font-black text-lg">Rs. 4,599.00</span>
+   273→</div>
+   274→<span class="text-xs text-gray-300 line-through">Rs. 6,999.00</span>
+   275→</div>
+   276→</div>
+   277→</div>
+   278→</div>
+   279→<div class="flex justify-center mt-20">
+   280→<button class="bg-black text-white px-16 py-5 rounded-full font-bold uppercase text-[11px] tracking-[0.2em] flex items-center gap-4 hover:bg-gray-900 transition-all hover:pr-20">
+   281→            View All Collection 
+   282→            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+   283→</button>
+   284→</div>
+   285→</div>
+   286→</section>
+   287→<!-- END: InstantShipGrid -->
+   288→<!-- BEGIN: LuxuryHandbags -->
+   289→<section class="py-32 bg-white">
+   290→<div class="container mx-auto px-6">
+   291→<div class="text-center mb-16">
+   292→<h2 class="text-5xl lg:text-7xl font-black uppercase mb-10 tracking-tight">Luxury Handbags</h2>
+   293→<div class="flex flex-wrap justify-center gap-3">
+   294→<button class="bg-black text-white px-8 py-3.5 rounded-full font-bold text-[10px] uppercase tracking-widest">All Coach Bags</button>
+   295→<button class="bg-gray-100 text-black px-8 py-3.5 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Michael Kors</button>
+   296→<button class="bg-gray-100 text-black px-8 py-3.5 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Kate Spade</button>
+   297→<button class="bg-gray-100 text-black px-8 py-3.5 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Jacquemus</button>
+   298→</div>
+   299→</div>
+   300→<div class="flex gap-10 overflow-x-auto carousel-container pb-12">
+   301→<!-- Bag Card 1 -->
+   302→<div class="min-w-[300px] lg:min-w-[400px] group">
+   303→<div class="bg-[#f9f9f9] rounded-[2rem] p-10 relative overflow-hidden h-[450px] flex items-center justify-center">
+   304→<span class="absolute top-6 left-6 bg-[#b20000] text-white text-[9px] font-black px-4 py-1.5 uppercase rounded-sm z-10">Monsoon Sale</span>
+   305→<img alt="Coach Bag" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4eF8jmYcVEZ5zwW-ROO080WHnqib7f5VvXlt3XZ0MFT8MtyDOXmSpiwlk7xG-EjTHdxYdHnELWTaJqK5W7Kcrm9ApoNU-VhHxKglioFNQtW1d9QJjf2dOpEX0D2wQnEc3HWu91pKz0TiZLbIbxZA3zmQd_S598Q4k5p5gAhZCyjKzYORu6y5M3ffob-qaOB-ktal5X0b695fhSmkO5ZLGUJdhym_yd65ApeJFPKAP_lw3nFP4iK03dw"/>
+   306→</div>
+   307→<div class="mt-8 text-center">
+   308→<h3 class="text-lg font-black uppercase tracking-tight">Coach Tabby Shoulder Bag 26</h3>
+   309→<p class="mt-2 text-gray-500 font-bold text-sm">Rs. 42,999.00</p>
+   310→</div>
+   311→</div>
+   312→<!-- Repeat Bag Card -->
+   313→<div class="min-w-[300px] lg:min-w-[400px] group">
+   314→<div class="bg-[#f9f9f9] rounded-[2rem] p-10 relative overflow-hidden h-[450px] flex items-center justify-center">
+   315→<img alt="Coach Bag" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4eF8jmYcVEZ5zwW-ROO080WHnqib7f5VvXlt3XZ0MFT8MtyDOXmSpiwlk7xG-EjTHdxYdHnELWTaJqK5W7Kcrm9ApoNU-VhHxKglioFNQtW1d9QJjf2dOpEX0D2wQnEc3HWu91pKz0TiZLbIbxZA3zmQd_S598Q4k5p5gAhZCyjKzYORu6y5M3ffob-qaOB-ktal5X0b695fhSmkO5ZLGUJdhym_yd65ApeJFPKAP_lw3nFP4iK03dw"/>
+   316→</div>
+   317→<div class="mt-8 text-center">
+   318→<h3 class="text-lg font-black uppercase tracking-tight">Coach Signature Monogram Tote</h3>
+   319→<p class="mt-2 text-gray-500 font-bold text-sm">Rs. 38,499.00</p>
+   320→</div>
+   321→</div>
+   322→<!-- Repeat Bag Card -->
+   323→<div class="min-w-[300px] lg:min-w-[400px] group">
+   324→<div class="bg-[#f9f9f9] rounded-[2rem] p-10 relative overflow-hidden h-[450px] flex items-center justify-center">
+   325→<img alt="Coach Bag" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4eF8jmYcVEZ5zwW-ROO080WHnqib7f5VvXlt3XZ0MFT8MtyDOXmSpiwlk7xG-EjTHdxYdHnELWTaJqK5W7Kcrm9ApoNU-VhHxKglioFNQtW1d9QJjf2dOpEX0D2wQnEc3HWu91pKz0TiZLbIbxZA3zmQd_S598Q4k5p5gAhZCyjKzYORu6y5M3ffob-qaOB-ktal5X0b695fhSmkO5ZLGUJdhym_yd65ApeJFPKAP_lw3nFP4iK03dw"/>
+   326→</div>
+   327→<div class="mt-8 text-center">
+   328→<h3 class="text-lg font-black uppercase tracking-tight">Coach Leather Crossbody</h3>
+   329→<p class="mt-2 text-gray-500 font-bold text-sm">Rs. 29,999.00</p>
+   330→</div>
+   331→</div>
+   332→</div>
+   333→</div>
+   334→</section>
+   335→<!-- END: LuxuryHandbags -->
+   336→<!-- BEGIN: BrandsSection -->
+   337→<section class="py-24 bg-white border-t border-gray-50">
+   338→<div class="container mx-auto px-6 text-center">
+   339→<h2 class="text-5xl font-black mb-20 uppercase tracking-tighter">Brands at KM</h2>
+   340→<div class="flex flex-wrap justify-center items-center gap-x-16 gap-y-12 opacity-80 grayscale hover:grayscale-0 transition-all">
+   341→<span class="text-3xl font-black tracking-tighter italic">Dior</span>
+   342→<span class="text-4xl font-bold tracking-widest">crocs</span>
+   343→<span class="text-3xl font-black italic">NIKE <span class="not-italic">SB</span></span>
+   344→<span class="text-4xl font-light">On</span>
+   345→<span class="text-3xl font-bold tracking-widest">ASICS</span>
+   346→<span class="text-2xl font-black">JORDAN</span>
+   347→<span class="text-3xl font-bold uppercase tracking-widest">Converse</span>
+   348→<span class="text-3xl font-black">HOKA</span>
+   349→</div>
+   350→</div>
+   351→</section>
+   352→<!-- END: BrandsSection -->
+   353→<!-- BEGIN: StreetwearIndia -->
+   354→<section class="py-24 bg-[#fafafa]">
+   355→<div class="container mx-auto px-6 text-center">
+   356→<p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4">Home Grown</p>
+   357→<h2 class="text-5xl lg:text-7xl font-black mb-16 uppercase tracking-tighter">Streetwear in India</h2>
+   358→<div class="flex flex-wrap justify-center gap-4">
+   359→<button class="bg-black text-white px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest">Ayunk</button>
+   360→<button class="bg-white border border-gray-100 text-black px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50">SULLITT</button>
+   361→<button class="bg-white border border-gray-100 text-black px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50">Ctrl+P</button>
+   362→<button class="bg-white border border-gray-100 text-black px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50">LUMIÈRES</button>
+   363→<button class="bg-white border border-gray-100 text-black px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50">Sugga</button>
+   364→<button class="bg-white border border-gray-100 text-black px-12 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50">GOD OF EMOTIONS</button>
+   365→</div>
+   366→</div>
+   367→</section>
+   368→<!-- END: StreetwearIndia -->
+   369→<!-- BEGIN: Newsletter -->
+   370→<section class="py-40 bg-white">
+   371→<div class="container mx-auto px-6 max-w-4xl text-center">
+   372→<h2 class="text-6xl lg:text-9xl font-black tracking-tighter mb-8 leading-[0.85] uppercase">Sign up<br/>and save</h2>
+   373→<p class="text-lg lg:text-xl text-gray-400 font-medium mb-16">Be the first to know about Price Drops &amp; Exclusive Releases</p>
+   374→<form class="relative max-w-2xl mx-auto group">
+   375→<input class="w-full bg-gray-50 border-2 border-transparent rounded-[2rem] py-8 px-12 text-xl focus:border-black focus:ring-0 transition-all outline-none font-bold" placeholder="Enter your email" type="email"/>
+   376→<button class="absolute right-4 top-1/2 -translate-y-1/2 bg-black text-white w-16 h-16 rounded-full flex items-center justify-center hover:scale-110 transition-transform" type="submit">
+   377→<svg class="h-8 w-8" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg>
+   378→</button>
+   379→</form>
+   380→</div>
+   381→</section>
+   382→<!-- END: Newsletter -->
+   383→</main>
+   384→<!-- BEGIN: MainFooter -->
+   385→<footer class="bg-[#0a0a0a] text-white pt-32 pb-16">
+   386→<div class="container mx-auto px-6">
+   387→<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-32">
+   388→<!-- Brand Info -->
+   389→<div>
+   390→<nav class="flex flex-col space-y-5 text-gray-400 font-bold uppercase text-[11px] tracking-widest">
+   391→<a class="text-white hover:text-white transition-colors" href="#">Sneakers</a>
+   392→<a class="hover:text-white transition-colors" href="#">Luxury Footwear</a>
+   393→<a class="hover:text-white transition-colors" href="#">Bags</a>
+   394→<a class="hover:text-white transition-colors" href="#">Beauty</a>
+   395→<a class="hover:text-white transition-colors" href="#">Clothing</a>
+   396→<a class="hover:text-white transition-colors" href="#">Hype &amp; Care</a>
+   397→<a class="hover:text-white transition-colors" href="#">Track Your Order</a>
+   398→</nav>
+   399→</div>
+   400→<!-- Policy Links -->
+   401→<div>
+   402→<nav class="flex flex-col space-y-5 text-gray-400 font-bold uppercase text-[11px] tracking-widest">
+   403→<a class="hover:text-white transition-colors" href="#">Authenticity Guarantee</a>
+   404→<a class="hover:text-white transition-colors" href="#">Return &amp; Exchange Policy</a>
+   405→<a class="hover:text-white transition-colors" href="#">Terms and Conditions</a>
+   406→<a class="hover:text-white transition-colors" href="#">Shipping Policy</a>
+   407→<a class="hover:text-white transition-colors" href="#">Contact Us</a>
+   408→<a class="hover:text-white transition-colors" href="#">Privacy Policy</a>
+   409→</nav>
+   410→</div>
+   411→<!-- Categories -->
+   412→<div>
+   413→<h4 class="text-xl font-black mb-10 uppercase tracking-tighter">Categories</h4>
+   414→<nav class="flex flex-col space-y-4 text-gray-400 font-bold uppercase text-[10px] tracking-[0.15em]">
+   415→<a class="hover:text-white transition-colors" href="#">Sneakers</a>
+   416→<a class="hover:text-white transition-colors" href="#">Street Wear</a>
+   417→<a class="hover:text-white transition-colors" href="#">Care &amp; Accessories</a>
+   418→<a class="hover:text-white transition-colors" href="#">Rayban x Meta Glasses</a>
+   419→<a class="hover:text-white transition-colors" href="#">Sneaker Keychain</a>
+   420→<a class="hover:text-white transition-colors" href="#">Socks</a>
+   421→<a class="hover:text-white transition-colors" href="#">Care Package</a>
+   422→<a class="hover:text-white transition-colors" href="#">Blogs</a>
+   423→</nav>
+   424→</div>
+   425→<!-- Social & Newsletter -->
+   426→<div>
+   427→<div class="flex items-center gap-8 mb-12">
+   428→<a class="hover:text-gray-400 transition-colors" href="#">
+   429→<svg class="w-7 h-7" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441c.795 0 1.439-.645 1.439-1.441s-.644-1.44-1.439-1.44z"></path></svg>
+   430→</a>
+   431→<a class="hover:text-gray-400 transition-colors" href="#">
+   432→<svg class="w-8 h-8" fill="currentColor" viewbox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 4-8 4z"></path></svg>
+   433→</a>
+   434→</div>
+   435→<div class="relative">
+   436→<input class="w-full bg-white/5 border border-white/10 rounded-full py-5 px-8 text-sm focus:ring-1 focus:ring-white/50 outline-none transition-all placeholder:text-gray-600 font-bold" placeholder="Enter your email" type="email"/>
+   437→<button class="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+   438→<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+   439→</button>
+   440→</div>
+   441→</div>
+   442→</div>
+   443→<!-- About Paragraph -->
+   444→<div class="border-t border-white/10 pt-20">
+   445→<div class="max-w-6xl mx-auto text-center">
+   446→<p class="text-[11px] text-gray-500 leading-relaxed font-bold mb-16 uppercase tracking-wider">
+   447→<strong class="text-gray-300">Kicks Machine is India's destination for authentic sneakers, luxury bags, and streetwear.</strong> We stock 50+ authenticated brands including Nike, Air Jordan, Adidas, Yeezy, New Balance, On Running, Hoka, ASICS, Salomon, Converse, Gucci, Balenciaga, Dior, Louis Vuitton, Off-White, Alexander McQueen, Supreme, Essentials (Fear of God), Travis Scott, Trapstar, Palm Angels, Coach, Michael Kors, Prada, Marc Jacobs, Jacquemus, Loewe, Rhode, Glossier, Whoop, and Ray-Ban Meta. Every pair is verified through a 6 step in house check plus CheckCheck and LegitApp with a 100% money back guarantee. Free shipping on all prepaid orders across India, with Cash on Delivery available. Founded in 2021, bootstrapped, and trusted by 80,000+ customers. Flagship store on Rajpur Road, Dehradun, and online everywhere in India.
+   448→          </p>
+   449→<div class="text-[9px] uppercase tracking-[0.4em] text-gray-600 font-black">
+   450→            © 2024 KICKS MACHINE. ALL RIGHTS RESERVED.
+   451→          </div>
+   452→</div>
+   453→</div>
+   454→</div>
+   455→</footer>
+   456→<!-- END: MainFooter -->
+   457→</body></html>
