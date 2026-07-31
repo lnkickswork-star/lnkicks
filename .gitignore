@@ -1,2 +1,7 @@
 skills/
 node_modules/
+
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
