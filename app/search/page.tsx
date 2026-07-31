@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
@@ -14,7 +14,6 @@ export default function SearchPage() {
   const [query, setQuery] = useState(initialQuery);
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [selectedSize, setSelectedSize] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<string>('Featured');
   const [recentSearches, setRecentSearches] = useState<string[]>(['Jordan 1', 'Samba OG', 'Air Force 1', 'Yeezy']);
 
   const popularTags = ['Jordan 1 Low', 'Samba OG', 'Air Force 1 Black', 'New Balance 9060', 'Puma Velophasis', 'Dunk High'];
@@ -41,7 +40,6 @@ export default function SearchPage() {
     setQuery('');
     setSelectedBrand('All');
     setSelectedSize('All');
-    setSortBy('Featured');
   };
 
   return (

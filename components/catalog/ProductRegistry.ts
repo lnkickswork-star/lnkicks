@@ -1,37 +1,17 @@
 /* =========================================================
    LNKICKS CENTRALIZED PRODUCT REGISTRY & DATA MODEL
+   ---------------------------------------------------------
+   The `ProductItem` interface is retained here as a
+   backwards-compatible alias for the canonical `Product`
+   type in /types. New code should import from `@/types`.
    ========================================================= */
 
-export interface ProductItem {
-  id: string;
-  slug: string;
-  sku: string;
-  brand: string;
-  category: string;
-  name: string;
-  shortDescription: string;
-  price: number;
-  comparePrice?: number;
-  currency: string;
-  images: string[];
-  primaryImage: string;
-  hoverImage?: string;
-  availableSizes: string[];
-  availableColors: string[];
-  stockStatus: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  featured?: boolean;
-  newArrival?: boolean;
-  bestSeller?: boolean;
-  limitedEdition?: boolean;
-  rating: number;
-  reviewCount: number;
-  tags: string[];
-  seoTitle: string;
-  seoDescription: string;
-  canonicalURL: string;
-}
+import type { Product } from '@/types';
 
-export const PRODUCT_REGISTRY: ProductItem[] = [
+/** @deprecated Use `Product` from `@/types` instead. */
+export type ProductItem = Product;
+
+export const PRODUCT_REGISTRY: Product[] = [
   {
     id: 'prod-aj1-powder-blue',
     slug: 'air-jordan-1-low-black-powder-blue',

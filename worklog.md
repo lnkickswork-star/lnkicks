@@ -64,3 +64,147 @@ Stage Summary:
   root-level PNG files).
 - No git history rewritten. No force push. No authentication changes. No CI / workflow / community
   file modifications.
+
+---
+Task ID: phase-b-audit
+Agent: Explore (Sub Agent)
+Task: Audit use client necessity — categorize every app/**/page.tsx + special app files
+  (layout.tsx, error.tsx, loading.tsx, not-found.tsx, page.tsx) as CAT-RSC (convertible to
+  React Server Component) or CAT-CLIENT (must remain Client Component).
+
+Work Log:
+- Read prior worklog (arch-remediation-1) to understand that 41 static + 2 dynamic routes remain
+  after the duplicate-route purge, and that all page.tsx files currently carry `'use client'`.
+- Enumerated all 42 page.tsx files + 4 special app files (layout/error/loading/not-found) = 46
+  audited files.
+- Read each file in full and scanned for: useState/useEffect/useReducer/useRef/useContext,
+  useSearchParams/useRouter/usePathname/useParams, useApp(), onClick/onChange/onSubmit handlers,
+  and browser globals (window/localStorage/document/navigator).
+- Categorized each file. A page that renders a client component child (ResponsiveAppLayout,
+  ProductCard, Header, MobileFooter, AppProvider, JsonLd) without directly using client APIs
+  itself is classified CAT-RSC — Next.js App Router permits Server Components to render Client
+  Components.
+- Identified 18 CAT-CLIENT files (use client hooks/handlers/browser globals directly) and 28
+  CAT-RSC files (pure JSX, statically-rendered dangerouslySetInnerHTML, or RSC that renders
+  client-children only).
+- Noted that app/layout.tsx is ALREADY a Server Component (no 'use client' directive; uses
+  next/font + Metadata export; renders <AppProvider> client child).
+- Noted that app/error.tsx is REQUIRED to be a Client Component by Next.js convention (it
+  receives a `reset()` callback) and additionally uses onClick — stays CAT-CLIENT.
+- Did NOT modify any source files. Audit-only task.
+
+Stage Summary:
+- Files audited: 46 (42 page.tsx + layout.tsx + error.tsx + loading.tsx + not-found.tsx).
+- CAT-RSC (convertible to Server Component): 28 files.
+- CAT-CLIENT (must remain Client Component): 18 files.
+- Common CAT-CLIENT patterns: login/register/checkout/profile forms (useState + useRouter +
+  useApp + localStorage + onSubmit), search/track-order/order-success (useSearchParams),
+  cart/wishlist (useApp + onClick), mobile home (useApp + useState + onClick),
+  product detail (useState + useParams + onClick), root page.tsx (window/navigator detection
+  for mobile/desktop switch).
+- Common CAT-RSC patterns: 14 policy/admin mock pages that render a single
+  `dangerouslySetInnerHTML` static blob (shipping-policy, terms-conditions, edit-product,
+  cancellation-policy, customers-management, orders-management, notification-settings,
+  settings-panel, faqs, privacy-policy, return-refund-policy, reports-analytics, size-guide,
+  add-product, contact-us, order-detail, payment-methods, addresses), plus catalog/listing
+  pages that only render ResponsiveAppLayout + ProductCard + Link with static data
+  (products, category-products, categories, dashboard, help-support, products-management,
+  order-failed), plus loading.tsx and not-found.tsx.
+- Next action (out of scope for this audit): in a follow-up task, remove `'use client'` from
+  the 28 CAT-RSC files and run `npm run build` to verify no client-only API leaks. The
+  app/layout.tsx file requires no change (already RSC). The app/error.tsx file must keep
+  `'use client'` (Next.js requirement).
+- No files modified. No build/lint run.
+
+---
+Task ID: phase-2-enterprise-modernization
+Agent: Main (Principal Next.js Architect + Senior TypeScript Architect)
+Task: Phase 2 Enterprise Modernization — TypeScript strict mode, Server Components
+  conversion, mockup cleanup, repository cleanup, Git LFS audit.
+
+Work Log:
+- Phase A.1: Created /types directory with 9 shared interfaces (Product,
+  CatalogProduct, Category, User, UserAddress, CartItem, CartTotals, Order,
+  OrderItem, OrderStatus, PaymentMode, WishlistItem, Wishlist, SearchFilters,
+  SearchFacets, SearchResult, APIResponse<T>, RouteMeta, RouteLayout,
+  RouteCategory). Refactored ProductRegistry.ts, ProductCatalogRegistry.ts,
+  CategoryRegistry.ts, RouteRegistry.ts, AppContext.tsx to import from /types
+  with backwards-compatible aliases.
+- Phase A.2: Enabled TypeScript strict mode in tsconfig.json — strict: true,
+  noImplicitAny: true, strictNullChecks: true, noUnusedLocals: true,
+  noUnusedParameters: true, noFallthroughCasesInSwitch: true.
+- Phase A.3: Fixed all 9 resulting type errors — 7 unused imports (Link from
+  next/link in admin-login, help-support, products-management, register;
+  useEffect in search; sortBy useState in search; toggleWishlist/addToCart/
+  totalCartCount in mobile). Replaced useState<any[]> with useState<Order[]>
+  in my-orders/page.tsx (imported Order from @/types). Removed unused
+  catch-binding `e` in my-orders (now `catch {}`).
+- Phase B: Audited all 46 page/layout files via Explore agent. Identified
+  28 CAT-RSC candidates (no browser APIs / client hooks / event handlers)
+  and 18 CAT-CLIENT (must remain client). Removed 'use client' from 9
+  non-mockup RSC candidates: loading.tsx, not-found.tsx, dashboard,
+  help-support, products-management, products, categories, category-products,
+  order-failed. Removed 'use client' from 18 mockup pages (which were
+  RSC-compatible). Total 27 pages converted to RSC.
+- Phase C: Wrote scripts/phase_c_convert_mockups.py — a mechanical
+  HTML→JSX converter that handles: class→className, for→htmlFor,
+  kebab-case attrs→camelCase, void tag self-closing (img, input, br, hr,
+  meta, link, col, area, base, embed, source, track, wbr — NOT SVG path/
+  circle/rect/line/etc which can have explicit closing tags), style="..."
+  → style={{...}} object conversion with CSS key camelCasing, numeric
+  attr values (rows, cols, maxlength, etc.) → JS expressions, boolean
+  attrs (checked, selected, disabled, etc.) → boolean shorthand, HTML
+  comments → JSX comments, escaping of ' and " in text content (avoids
+  react/no-unescaped-entities), drop legacy <script src="js/..."> tags,
+  convert <img> to next/image (with unoptimized for external URLs).
+  Successfully converted all 18 dangerouslySetInnerHTML mockup pages to
+  real JSX (privacy-policy, terms-conditions, shipping-policy,
+  cancellation-policy, return-refund-policy, faqs, contact-us, size-guide,
+  add-product, edit-product, customers-management, orders-management,
+  notification-settings, settings-panel, payment-methods, addresses,
+  order-detail, reports-analytics). All <img> tags in the codebase are
+  now next/image (22 → 0).
+- Phase D.1: Moved 58 Python automation utilities from project root to
+  /scripts/ (consolidated with the 8 existing scripts from Phase 1 →
+  66 total Python scripts in /scripts/).
+- Phase D.2: Created /docs/ directory. Moved 4 .txt report files
+  (baseline_regression_inventory.txt, phase9_final_release_report.txt,
+  v4_enterprise_compliance_report.txt, verification_proof_report.txt).
+- Phase D.3: Created /prototypes/ directory. Moved 36 .html prototype
+  files (verified unused by Next.js app), the legacy /js/ client-side
+  scripts directory, and the mobile_screens/ directory of legacy HTML
+  screen mockups. Also moved gen.js (legacy HTML generator) to /scripts/.
+  Verified build does not reference any of these (Next.js only serves
+  from /public/).
+- Phase E: Wrote scripts/phase_e_git_lfs_audit.py. Audited all 15 PNG
+  files in /public/. **CRITICAL FINDING**: 15 of 15 PNG files are Git
+  LFS pointer files (131-byte ASCII text starting with
+  `version https://git-lfs.github.com/spec/v1`) instead of real binary
+  images. The expected binary sizes range from 357 KB to 679 KB. The
+  LFS store on GitHub is empty — the OAuth token used to push had
+  empty scopes, preventing LFS object uploads. The audit report is
+  saved at /docs/git-lfs-audit.md with three remediation options
+  (LOW/MEDIUM/HIGH risk). Per Phase E directive, no assets were
+  modified automatically.
+- Validation: npm install ✅, npm run lint ✅ (No ESLint warnings or
+  errors), npm run build ✅ (43 routes generated successfully).
+
+Stage Summary:
+- Files modified: 51 (5 registries + AppContext + tsconfig.json + 9 RSC
+  page conversions + 18 mockup page conversions + 5 page-level unused
+  import fixes + my-orders type fix + mobile/page.tsx unused var fix +
+  search/page.tsx unused state removal).
+- Files created: 13 (10 /types/*.ts files, 3 Python scripts: phase_b,
+  phase_c, phase_e).
+- Files moved: 99 (58 .py + 4 .txt + 36 .html + gen.js + js/ dir +
+  mobile_screens/ dir).
+- Directories created: 3 (/types, /docs, /prototypes).
+- Build: PASSES — 43 routes, 87.3 kB shared baseline (unchanged).
+- Lint: PASSES — zero warnings, zero errors.
+- TypeScript: PASSES — strict mode enabled, zero type errors.
+- Client bundle reduction: ~2-3 kB per converted RSC page (18 pages
+  went from 89-91 kB → 87.5 kB baseline). Pages with next/image
+  conversion added ~5 kB but became RSC.
+- HIGH-risk issue outstanding: 15 broken Git LFS pointers in /public/
+  (see /docs/git-lfs-audit.md). Production images will not render
+  until this is resolved. Requires user decision on remediation path.

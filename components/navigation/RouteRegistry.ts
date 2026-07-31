@@ -1,13 +1,12 @@
 /* =========================================================
    LNKICKS CANONICAL ROUTE REGISTRY & NAVIGATION MANAGER
+   ---------------------------------------------------------
+   The `RouteMeta` interface is re-exported from /types
+   so consumers can keep importing from this module.
    ========================================================= */
 
-export interface RouteMeta {
-  path: string;
-  title: string;
-  layout: 'desktop-locked' | 'mobile-locked' | 'responsive-app' | 'admin-layout';
-  category: 'core' | 'catalog' | 'commerce' | 'account' | 'support' | 'admin';
-}
+import type { RouteMeta } from '@/types';
+export type { RouteMeta } from '@/types';
 
 export const ROUTE_REGISTRY: Record<string, RouteMeta> = {
   HOME: { path: '/', title: 'LNKICKS — Stocked & Loaded', layout: 'desktop-locked', category: 'core' },

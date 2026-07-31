@@ -1,22 +1,18 @@
 /* =========================================================
    LNKICKS CENTRAL PRODUCT CATALOG REGISTRY
+   ---------------------------------------------------------
+   The `Product` interface is retained here as a
+   backwards-compatible alias for the canonical
+   `CatalogProduct` type in /types. New code should
+   import from `@/types`.
    ========================================================= */
 
-export interface Product {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  origPrice?: number;
-  badge?: string;
-  image: string;
-  sku: string;
-  gender: 'Men' | 'Women' | 'Unisex';
-  inStock: boolean;
-}
+import type { CatalogProduct } from '@/types';
 
-export const PRODUCT_CATALOG: Product[] = [
+/** @deprecated Use `CatalogProduct` from `@/types` instead. */
+export type Product = CatalogProduct;
+
+export const PRODUCT_CATALOG: CatalogProduct[] = [
   { id: 'jordan-1-powder-blue', name: 'Air Jordan 1 Low Black Powder Blue', brand: 'NIKE', category: 'Sneakers', price: 8899, origPrice: 18899, badge: 'NEW', image: 'jordan_powder_blue_nobg.png', sku: 'AJ1-PB-01', gender: 'Unisex', inStock: true },
   { id: 'samba-og-white', name: 'Samba OG Cloud White Core Black', brand: 'ADIDAS', category: 'Sneakers', price: 9499, origPrice: 16999, badge: 'HOT', image: 'samba_og_nobg.png', sku: 'SAMBA-OG-02', gender: 'Unisex', inStock: true },
   { id: 'nike-af1-black', name: 'Nike Air Force 1 Low Triple Black', brand: 'NIKE', category: 'Lifestyle', price: 6999, origPrice: 10999, badge: 'SALE', image: 'af1_black_nobg.png', sku: 'AF1-BLK-03', gender: 'Men', inStock: true },

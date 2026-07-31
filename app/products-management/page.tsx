@@ -1,7 +1,4 @@
-'use client';
-
 import React from 'react';
-import Link from 'next/link';
 import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
 import { PRODUCT_REGISTRY } from '@/components/catalog/ProductRegistry';
 

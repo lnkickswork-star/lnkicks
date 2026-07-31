@@ -1,17 +1,12 @@
 /* =========================================================
    LNKICKS CENTRAL CATEGORY REGISTRY & MODEL
+   ---------------------------------------------------------
+   The `Category` interface is re-exported from /types
+   so consumers can keep importing from this module.
    ========================================================= */
 
-export interface Category {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  image: string;
-  icon: string;
-  productCount: number;
-  featured?: boolean;
-}
+import type { Category } from '@/types';
+export type { Category } from '@/types';
 
 export const CATEGORY_REGISTRY: Category[] = [
   { id: 'cat-sneakers', slug: 'sneakers', name: 'Sneakers', description: 'Hyped drops, iconic silhouettes, and luxury athletic sneakers.', image: 'jordan_powder_blue_nobg.png', icon: '👟', productCount: 450, featured: true },

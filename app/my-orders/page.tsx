@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
+import type { Order } from '@/types';
 
 export default function MyOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     try {
@@ -26,7 +27,9 @@ export default function MyOrdersPage() {
           }
         ]);
       }
-    } catch (e) {}
+    } catch {
+      // localStorage parse failure — leave orders empty.
+    }
   }, []);
 
   return (
@@ -68,7 +71,7 @@ export default function MyOrdersPage() {
 
               {/* ORDER ITEMS LIST */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                {ord.items && ord.items.map((item: any, idx: number) => (
+                {ord.items && ord.items.map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#F8F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Image src={item.image ? (item.image.startsWith('/') ? item.image : `/${item.image}`) : '/jordan_powder_blue_nobg.png'} alt={item.name} width={45} height={45} style={{ maxHeight: '45px', width: 'auto', height: 'auto', objectFit: 'contain' }} />

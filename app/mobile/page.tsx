@@ -6,10 +6,11 @@ import Image from 'next/image';
 import { useApp } from '@/components/context/AppContext';
 
 export default function MobileHome() {
-  const { cart, toggleWishlist, addToCart } = useApp();
+  const { cart } = useApp();
   const [splashHidden, setSplashHidden] = useState(false);
 
-  const totalCartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  // Cart total is reserved for future mobile badge display.
+  void cart;
 
   return (
     <div style={{ background: '#0f0f0f', minHeight: '100vh', fontFamily: "var(--font-inter), sans-serif" }}>
