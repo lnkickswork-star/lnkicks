@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
 
 export default function MyOrdersPage() {
@@ -39,7 +40,7 @@ export default function MyOrdersPage() {
         <span style={{ color: '#111111', fontWeight: 600 }}>My Orders</span>
       </div>
 
-      <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '32px' }}>
+      <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '32px' }}>
         Order History ({orders.length})
       </h1>
 
@@ -51,7 +52,7 @@ export default function MyOrdersPage() {
               {/* ORDER HEADER BAR */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #EBEBEB', paddingBottom: '16px', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                  <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: '18px', fontWeight: 800, color: '#111111' }}>#{ord.orderId}</div>
+                  <div style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '18px', fontWeight: 800, color: '#111111' }}>#{ord.orderId}</div>
                   <div style={{ fontSize: '12px', color: '#777777', marginTop: '2px' }}>Placed on {ord.date}</div>
                 </div>
 
@@ -70,7 +71,7 @@ export default function MyOrdersPage() {
                 {ord.items && ord.items.map((item: any, idx: number) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#F8F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <img src={item.image ? (item.image.startsWith('/') ? item.image : `/${item.image}`) : '/jordan_powder_blue_nobg.png'} alt={item.name} style={{ maxHeight: '45px', width: 'auto', objectFit: 'contain' }} />
+                      <Image src={item.image ? (item.image.startsWith('/') ? item.image : `/${item.image}`) : '/jordan_powder_blue_nobg.png'} alt={item.name} width={45} height={45} style={{ maxHeight: '45px', width: 'auto', height: 'auto', objectFit: 'contain' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: '#111111' }}>{item.name}</div>
@@ -82,10 +83,10 @@ export default function MyOrdersPage() {
 
               {/* ACTION BUTTONS */}
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <Link href={`/track-order?orderId=${ord.orderId}`} style={{ padding: '10px 20px', background: '#111111', color: '#ffffff', borderRadius: '20px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', fontFamily: "'Oswald', sans-serif" }}>
+                <Link href={`/track-order?orderId=${ord.orderId}`} style={{ padding: '10px 20px', background: '#111111', color: '#ffffff', borderRadius: '20px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', fontFamily: "var(--font-oswald), sans-serif" }}>
                   TRACK ORDER
                 </Link>
-                <Link href={`/order-detail?orderId=${ord.orderId}`} style={{ padding: '10px 20px', background: '#F0F0F2', color: '#111111', borderRadius: '20px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', fontFamily: "'Oswald', sans-serif" }}>
+                <Link href={`/order-detail?orderId=${ord.orderId}`} style={{ padding: '10px 20px', background: '#F0F0F2', color: '#111111', borderRadius: '20px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', fontFamily: "var(--font-oswald), sans-serif" }}>
                   VIEW DETAILS
                 </Link>
               </div>
@@ -97,9 +98,9 @@ export default function MyOrdersPage() {
         /* EMPTY ORDERS STATE */
         <div style={{ textAlign: 'center', padding: '80px 20px', background: '#ffffff', borderRadius: '24px', border: '1px solid #EBEBEB' }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>📦</div>
-          <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>No Orders Placed Yet</h2>
+          <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>No Orders Placed Yet</h2>
           <p style={{ fontSize: '13px', color: '#777777', margin: '8px 0 24px' }}>Your recent purchases and drop orders will appear here.</p>
-          <Link href="/products" style={{ display: 'inline-block', padding: '14px 32px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 700, textDecoration: 'none', letterSpacing: '0.1em' }}>
+          <Link href="/products" style={{ display: 'inline-block', padding: '14px 32px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 700, textDecoration: 'none', letterSpacing: '0.1em' }}>
             START SHOPPING
           </Link>
         </div>

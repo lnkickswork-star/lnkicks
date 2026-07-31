@@ -33,7 +33,7 @@ export default function TrackOrderPage() {
         {/* HEADER BAR */}
         <div style={{ borderBottom: '1px solid #EBEBEB', paddingBottom: '20px', marginBottom: '32px' }}>
           <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#777777' }}>EXPRESS SHIPMENT TRACKING</div>
-          <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '28px', fontWeight: 800, color: '#111111', margin: '4px 0 0' }}>Order #{orderId}</h1>
+          <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '28px', fontWeight: 800, color: '#111111', margin: '4px 0 0' }}>Order #{orderId}</h1>
           <div style={{ fontSize: '13px', color: '#00875A', fontWeight: 700, marginTop: '6px' }}>Status: In Transit via BlueDart Express</div>
         </div>
 

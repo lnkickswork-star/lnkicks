@@ -12,7 +12,7 @@ export default function FiltersPage() {
   return (
     <ResponsiveAppLayout title="FILTERS">
       <div style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', border: '1px solid #EBEBEB', maxWidth: '600px', margin: '0 auto' }}>
-        <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '24px' }}>Filter Catalog</h1>
+        <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '24px' }}>Filter Catalog</h1>
 
         <div style={{ marginBottom: '24px' }}>
           <label style={{ fontSize: '12px', fontWeight: 700, color: '#111111', display: 'block', marginBottom: '10px' }}>BRAND</label>
@@ -42,7 +42,7 @@ export default function FiltersPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <Link href={`/search?q=${brand}`} style={{ flex: 1, padding: '16px', background: '#111111', color: '#ffffff', borderRadius: '30px', textAlign: 'center', fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 700, textDecoration: 'none' }}>
+          <Link href={`/search?q=${brand}`} style={{ flex: 1, padding: '16px', background: '#111111', color: '#ffffff', borderRadius: '30px', textAlign: 'center', fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 700, textDecoration: 'none' }}>
             APPLY FILTERS
           </Link>
         </div>

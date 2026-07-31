@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useApp } from '@/components/context/AppContext';
 
 export default function MobileHome() {
@@ -11,27 +12,27 @@ export default function MobileHome() {
   const totalCartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   return (
-    <div style={{ background: '#0f0f0f', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: '#0f0f0f', minHeight: '100vh', fontFamily: "var(--font-inter), sans-serif" }}>
       <div style={{ maxWidth: '440px', minHeight: '100vh', margin: '0 auto', background: '#F4F4F6', position: 'relative', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         
         {/* 1. FULLSCREEN SPLASH SCREEN */}
         {!splashHidden && (
           <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '440px', height: '100vh', background: '#F6F6F6', zIndex: 9999, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '50px 24px 30px', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', zIndex: 10 }}>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '0.12em', color: '#111111' }}>LNKICKS</div>
+              <div style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '0.12em', color: '#111111' }}>LNKICKS</div>
               <button onClick={() => setSplashHidden(true)} style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#777777', padding: '8px 16px', background: 'rgba(0,0,0,0.05)', borderRadius: '20px', border: 'none', cursor: 'pointer' }}>SKIP</button>
             </div>
 
             <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '20px 0', overflow: 'hidden' }}>
-              <img src="/jordan_powder_blue_nobg.png" alt="Nike Air Jordan 1" style={{ position: 'absolute', top: '4%', left: '6%', width: '215px', height: 'auto', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.22))', transform: 'rotate(-28deg)', zIndex: 3 }} />
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: '110px', fontWeight: 900, letterSpacing: '0.04em', color: '#111111', writingMode: 'vertical-rl', transform: 'rotate(180deg)', userSelect: 'none', pointerEvents: 'none', lineHeight: 0.9, opacity: 0.95, zIndex: 1 }}>LNKICKS</div>
-              <img src="/samba_og_nobg.png" alt="Adidas Samba OG" style={{ position: 'absolute', bottom: '6%', right: '4%', width: '225px', height: 'auto', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.22))', transform: 'rotate(24deg)', zIndex: 3 }} />
+              <Image src="/jordan_powder_blue_nobg.png" alt="Nike Air Jordan 1" width={215} height={215} priority style={{ position: 'absolute', top: '4%', left: '6%', width: '215px', height: 'auto', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.22))', transform: 'rotate(-28deg)', zIndex: 3 }} />
+              <div style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '110px', fontWeight: 900, letterSpacing: '0.04em', color: '#111111', writingMode: 'vertical-rl', transform: 'rotate(180deg)', userSelect: 'none', pointerEvents: 'none', lineHeight: 0.9, opacity: 0.95, zIndex: 1 }}>LNKICKS</div>
+              <Image src="/samba_og_nobg.png" alt="Adidas Samba OG" width={225} height={225} priority style={{ position: 'absolute', bottom: '6%', right: '4%', width: '225px', height: 'auto', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.22))', transform: 'rotate(24deg)', zIndex: 3 }} />
             </div>
 
             <div style={{ width: '100%', zIndex: 10 }}>
-              <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '36px', fontWeight: 800, lineHeight: 1.05, color: '#111111', letterSpacing: '-0.02em', marginBottom: '24px' }}>Start your<br/>sneaker journey</h1>
+              <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '36px', fontWeight: 800, lineHeight: 1.05, color: '#111111', letterSpacing: '-0.02em', marginBottom: '24px' }}>Start your<br/>sneaker journey</h1>
               <div onClick={() => setSplashHidden(true)} style={{ background: '#111111', borderRadius: '28px', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#ffffff', cursor: 'pointer', boxShadow: '0 12px 32px rgba(0,0,0,0.25)' }}>
-                <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: '18px', fontWeight: 700, letterSpacing: '0.06em' }}>Get Started</span>
+                <span style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '18px', fontWeight: 700, letterSpacing: '0.06em' }}>Get Started</span>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: 'rgba(255,255,255,0.7)' }}>&gt;&gt;&gt;</div>
               </div>
             </div>
@@ -45,7 +46,7 @@ export default function MobileHome() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: '14px', fontWeight: 500, color: '#777777', display: 'flex', alignItems: 'center', gap: '6px' }}>Hello, Sneakerhead <span style={{ fontSize: '16px' }}>👋</span></div>
-              <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: '2px' }}>LNKICKS</h1>
+              <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: '2px' }}>LNKICKS</h1>
             </div>
             <Link href="/profile" style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111111', boxShadow: '0 4px 14px rgba(0,0,0,0.05)', border: 'none', textDecoration: 'none' }}>
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -65,28 +66,28 @@ export default function MobileHome() {
 
           {/* HOT DEALS */}
           <div>
-            <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '22px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', display: 'flex', alignItems: 'center', gap: '8px' }}>Hot Deals 🔥</h2>
+            <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '22px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', display: 'flex', alignItems: 'center', gap: '8px' }}>Hot Deals 🔥</h2>
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', padding: '4px 0 12px', margin: '0 -20px', paddingLeft: '20px', paddingRight: '20px' }}>
               <div style={{ minWidth: '280px', height: '165px', borderRadius: '24px', background: 'linear-gradient(135deg, #111111 0%, #2a2a2a 100%)', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#ffffff', position: 'relative', flexShrink: 0 }}>
                 <div>
-                  <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800 }}>Get 20% off</div>
+                  <div style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800 }}>Get 20% off</div>
                   <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)' }}>Enjoy discounts across Adidas collection</div>
                 </div>
                 <Link href="/category-products?brand=ADIDAS" style={{ alignSelf: 'flex-start', padding: '8px 22px', background: '#ffffff', color: '#111111', fontSize: '12px', fontWeight: 700, borderRadius: '20px', textDecoration: 'none' }}>Reveal</Link>
-                <img src="/samba_og_nobg.png" alt="Adidas" style={{ position: 'absolute', right: '-15px', bottom: '-15px', width: '150px', height: 'auto', transform: 'rotate(-14deg)' }} />
+                <Image src="/samba_og_nobg.png" alt="Adidas" width={150} height={150} style={{ position: 'absolute', right: '-15px', bottom: '-15px', width: '150px', height: 'auto', transform: 'rotate(-14deg)' }} />
               </div>
             </div>
           </div>
 
           {/* NEXT DROP CARD */}
           <div style={{ background: '#ffffff', borderRadius: '28px', padding: '24px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', boxShadow: '0 6px 20px rgba(0,0,0,0.04)', marginTop: '10px', overflow: 'hidden' }}>
-            <div style={{ background: '#111111', color: '#ffffff', fontFamily: "'Oswald', sans-serif", fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em', padding: '5px 14px', borderRadius: '14px', marginBottom: '12px' }}>NEXT DROP</div>
-            <h3 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '26px', fontWeight: 800, color: '#111111', margin: 0 }}>DUNK HIGH 'DEEP ROYAL'</h3>
+            <div style={{ background: '#111111', color: '#ffffff', fontFamily: "var(--font-oswald), sans-serif", fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em', padding: '5px 14px', borderRadius: '14px', marginBottom: '12px' }}>NEXT DROP</div>
+            <h3 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '26px', fontWeight: 800, color: '#111111', margin: 0 }}>DUNK HIGH &apos;DEEP ROYAL&apos;</h3>
             <div style={{ fontSize: '13px', color: '#777777', marginTop: '4px', marginBottom: '12px' }}>Exclusively for LNKICKS Members</div>
             <div style={{ width: '100%', maxWidth: '240px', height: '110px', margin: '10px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              <img src="/jordan_powder_blue_nobg.png" alt="Dunk High" style={{ maxHeight: '100px', maxWidth: '100%', height: 'auto', objectFit: 'contain' }} />
+              <Image src="/jordan_powder_blue_nobg.png" alt="Dunk High" width={240} height={100} style={{ maxHeight: '100px', maxWidth: '100%', height: 'auto', objectFit: 'contain' }} />
             </div>
-            <Link href="/product-detail" style={{ background: '#111111', color: '#ffffff', fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', padding: '14px 36px', borderRadius: '30px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+            <Link href="/product/air-jordan-1-low-black-powder-blue" style={{ background: '#111111', color: '#ffffff', fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', padding: '14px 36px', borderRadius: '30px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
               <span>NOTIFY ME</span>
             </Link>
           </div>

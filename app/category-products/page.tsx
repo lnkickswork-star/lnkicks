@@ -21,7 +21,7 @@ export default function CategoryProductsPage() {
       {/* HEADER & FILTER BAR */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '28px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: 0 }}>Sneakers &amp; Apparel Catalog</h1>
+          <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '28px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: 0 }}>Sneakers &amp; Apparel Catalog</h1>
           <p style={{ fontSize: '13px', color: '#777777', margin: '4px 0 0' }}>Showing {PRODUCT_CATALOG.length} authentic products</p>
         </div>
 

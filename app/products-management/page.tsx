@@ -9,14 +9,14 @@ export default function ProductsManagementPage() {
   return (
     <ResponsiveAppLayout title="CATALOG MANAGEMENT">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
-        <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: 0 }}>Product Inventory</h1>
-        <button style={{ padding: '12px 24px', background: '#FF3B30', color: '#ffffff', borderRadius: '24px', fontFamily: "'Oswald', sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ ADD NEW PRODUCT</button>
+        <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: 0 }}>Product Inventory</h1>
+        <button style={{ padding: '12px 24px', background: '#FF3B30', color: '#ffffff', borderRadius: '24px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ ADD NEW PRODUCT</button>
       </div>
 
       <div style={{ background: '#ffffff', borderRadius: '24px', padding: '24px', border: '1px solid #EBEBEB', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #111111', color: '#111111', fontFamily: "'Oswald', sans-serif" }}>
+            <tr style={{ borderBottom: '2px solid #111111', color: '#111111', fontFamily: "var(--font-oswald), sans-serif" }}>
               <th style={{ padding: '12px' }}>SKU</th>
               <th style={{ padding: '12px' }}>PRODUCT NAME</th>
               <th style={{ padding: '12px' }}>BRAND</th>

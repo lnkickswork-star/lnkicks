@@ -45,11 +45,11 @@ export default function ProfilePage() {
         
         {/* HEADER USER CARD */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px', borderBottom: '1px solid #EBEBEB', paddingBottom: '24px' }}>
-          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#111111', color: '#ffffff', fontFamily: "'Oswald', sans-serif", fontSize: '28px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#111111', color: '#ffffff', fontFamily: "var(--font-oswald), sans-serif", fontSize: '28px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {name.charAt(0)}
           </div>
           <div>
-            <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>{name}</h1>
+            <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>{name}</h1>
             <div style={{ fontSize: '13px', color: '#777777', marginTop: '2px' }}>Member since January 2026</div>
           </div>
         </div>
@@ -72,10 +72,10 @@ export default function ProfilePage() {
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-            <button type="submit" style={{ flex: 1, padding: '14px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+            <button type="submit" style={{ flex: 1, padding: '14px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
               SAVE CHANGES
             </button>
-            <button type="button" onClick={handleLogout} style={{ padding: '14px 24px', background: '#FF3B30', color: '#ffffff', borderRadius: '30px', fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+            <button type="button" onClick={handleLogout} style={{ padding: '14px 24px', background: '#FF3B30', color: '#ffffff', borderRadius: '30px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
               LOGOUT
             </button>
           </div>

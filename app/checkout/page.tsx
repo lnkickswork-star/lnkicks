@@ -78,7 +78,7 @@ export default function CheckoutPage() {
         <span style={{ color: '#111111', fontWeight: 600 }}>Checkout</span>
       </div>
 
-      <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '32px' }}>
+      <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '32px' }}>
         Express Checkout
       </h1>
 
@@ -89,7 +89,7 @@ export default function CheckoutPage() {
           
           {/* STEP 1: SHIPPING ADDRESS */}
           <div style={{ background: '#ffffff', borderRadius: '24px', padding: '28px', border: '1px solid #EBEBEB' }}>
-            <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: '#111111', color: '#ffffff', width: '24px', height: '24px', borderRadius: '50%', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>
               Shipping Address
             </h2>
@@ -120,7 +120,7 @@ export default function CheckoutPage() {
 
           {/* STEP 2: PAYMENT METHOD */}
           <div style={{ background: '#ffffff', borderRadius: '24px', padding: '28px', border: '1px solid #EBEBEB' }}>
-            <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: '#111111', color: '#ffffff', width: '24px', height: '24px', borderRadius: '50%', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
               Payment Method
             </h2>
@@ -139,7 +139,7 @@ export default function CheckoutPage() {
 
         {/* RIGHT COLUMN: ORDER SUMMARY & PLACE ORDER CTA */}
         <div style={{ background: '#ffffff', borderRadius: '24px', padding: '28px', border: '1px solid #EBEBEB', boxShadow: '0 6px 20px rgba(0,0,0,0.04)' }}>
-          <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '20px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: '0 0 20px', borderBottom: '1px solid #EBEBEB', paddingBottom: '12px' }}>Payment Summary</h2>
+          <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '20px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', margin: '0 0 20px', borderBottom: '1px solid #EBEBEB', paddingBottom: '12px' }}>Payment Summary</h2>
 
           {/* COUPON INPUT */}
           <div style={{ marginBottom: '20px' }}>
@@ -177,7 +177,7 @@ export default function CheckoutPage() {
             <span>₹{total.toLocaleString('en-IN')}</span>
           </div>
 
-          <button type="submit" style={{ display: 'block', width: '100%', padding: '18px', background: '#FF3B30', color: '#ffffff', borderRadius: '30px', textAlign: 'center', fontFamily: "'Oswald', sans-serif", fontSize: '16px', fontWeight: 800, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
+          <button type="submit" style={{ display: 'block', width: '100%', padding: '18px', background: '#FF3B30', color: '#ffffff', borderRadius: '30px', textAlign: 'center', fontFamily: "var(--font-oswald), sans-serif", fontSize: '16px', fontWeight: 800, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
             PLACE ORDER →
           </button>
         </div>

@@ -14,7 +14,7 @@ export default function HelpSupportPage() {
   return (
     <ResponsiveAppLayout title="HELP & SUPPORT">
       <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-        <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '28px' }}>Customer Support Center</h1>
+        <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '28px' }}>Customer Support Center</h1>
 
         {/* FAQs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px' }}>
@@ -28,7 +28,7 @@ export default function HelpSupportPage() {
 
         {/* CONTACT BOX */}
         <div style={{ background: '#111111', borderRadius: '24px', padding: '32px', color: '#ffffff', textAlign: 'center' }}>
-          <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, margin: '0 0 8px' }}>Need Additional Support?</h2>
+          <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, margin: '0 0 8px' }}>Need Additional Support?</h2>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '24px' }}>Our customer service team is available Monday – Saturday (10 AM to 7 PM IST).</p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <a href="mailto:support@lnkicks.com" style={{ padding: '12px 28px', background: '#ffffff', color: '#111111', borderRadius: '24px', fontSize: '12px', fontWeight: 700, textDecoration: 'none' }}>EMAIL SUPPORT</a>

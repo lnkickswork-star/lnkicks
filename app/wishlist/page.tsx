@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
 import { useApp } from '@/components/context/AppContext';
 
@@ -17,7 +18,7 @@ export default function WishlistPage() {
         <span style={{ color: '#111111', fontWeight: 600 }}>My Wishlist</span>
       </div>
 
-      <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '32px' }}>
+      <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '32px' }}>
         Saved Items ({wishlist.length})
       </h1>
 
@@ -30,7 +31,7 @@ export default function WishlistPage() {
               </button>
 
               <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-                <img src={item.image ? (item.image.startsWith('/') ? item.image : `/${item.image}`) : '/jordan_powder_blue_nobg.png'} alt={item.name} style={{ maxHeight: '110px', width: 'auto', objectFit: 'contain' }} />
+                <Image src={item.image ? (item.image.startsWith('/') ? item.image : `/${item.image}`) : '/jordan_powder_blue_nobg.png'} alt={item.name} width={110} height={110} style={{ maxHeight: '110px', width: 'auto', height: 'auto', objectFit: 'contain' }} />
               </div>
 
               <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#111111', margin: '0 0 6px', minHeight: '34px' }}>{item.name}</h3>
@@ -46,9 +47,9 @@ export default function WishlistPage() {
         /* EMPTY WISHLIST STATE */
         <div style={{ textAlign: 'center', padding: '80px 20px', background: '#ffffff', borderRadius: '24px', border: '1px solid #EBEBEB' }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>❤️</div>
-          <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>Your Wishlist is Empty</h2>
+          <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>Your Wishlist is Empty</h2>
           <p style={{ fontSize: '13px', color: '#777777', margin: '8px 0 24px' }}>Save your favorite grails and drops by clicking the heart icon on any product.</p>
-          <Link href="/products" style={{ display: 'inline-block', padding: '14px 32px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 700, textDecoration: 'none', letterSpacing: '0.1em' }}>
+          <Link href="/products" style={{ display: 'inline-block', padding: '14px 32px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 700, textDecoration: 'none', letterSpacing: '0.1em' }}>
             EXPLORE PRODUCTS
           </Link>
         </div>

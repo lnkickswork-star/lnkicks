@@ -25,12 +25,12 @@ export const ResponsiveAppLayout: React.FC<{ children: React.ReactNode; title?: 
   // DESKTOP INTERNAL PAGE SHELL (Expands to 1440px full container, Desktop Luxury Header & Desktop Footer)
   if (!isMobile) {
     return (
-      <div style={{ background: '#FFFFFF', color: '#0A0A0A', fontFamily: "'Inter', sans-serif", minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ background: '#FFFFFF', color: '#0A0A0A', fontFamily: "var(--font-inter), sans-serif", minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         
         {/* DESKTOP HEADER */}
         <header style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(24px)', borderBottom: '1px solid #EBEBEB', padding: '0 80px', height: '72px', display: 'grid', gridTemplateColumns: '200px 1fr 200px', alignItems: 'center' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '26px', fontWeight: 700, color: '#0A0A0A' }}>LNKICKS</div>
+            <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: '26px', fontWeight: 700, color: '#0A0A0A' }}>LNKICKS</div>
             <div style={{ fontSize: '8.5px', fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8A8A8A' }}>STOCK &amp; LOADED</div>
           </Link>
           <ul style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '32px', listStyle: 'none', margin: 0, padding: 0 }}>
@@ -63,9 +63,9 @@ export const ResponsiveAppLayout: React.FC<{ children: React.ReactNode; title?: 
         <footer style={{ background: '#0A0A0A', color: '#ffffff', padding: '80px 80px 40px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '56px', borderBottom: '1px solid rgba(255,255,255,.07)', paddingBottom: '64px' }}>
             <div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '30px', fontWeight: 700 }}>LNKICKS</div>
+              <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: '30px', fontWeight: 700 }}>LNKICKS</div>
               <div style={{ fontSize: '8.5px', letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,.28)', marginBottom: '22px' }}>STOCK &amp; LOADED</div>
-              <p style={{ fontSize: '13.5px', color: 'rgba(255,255,255,.3)', maxWidth: '260px' }}>India's premier destination for authentic luxury sneakers and hype footwear.</p>
+              <p style={{ fontSize: '13.5px', color: 'rgba(255,255,255,.3)', maxWidth: '260px' }}>India&apos;s premier destination for authentic luxury sneakers and hype footwear.</p>
             </div>
             <div>
               <div style={{ fontSize: '10.5px', fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', marginBottom: '22px' }}>Navigation</div>
@@ -96,15 +96,15 @@ export const ResponsiveAppLayout: React.FC<{ children: React.ReactNode; title?: 
 
   // MOBILE INTERNAL PAGE SHELL (Mobile header, responsive container padding, cylindrical bottom navigation)
   return (
-    <div style={{ background: '#0f0f0f', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: '#0f0f0f', minHeight: '100vh', fontFamily: "var(--font-inter), sans-serif" }}>
       <div style={{ maxWidth: '440px', minHeight: '100vh', margin: '0 auto', background: '#F4F4F6', position: 'relative', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         
         {/* MOBILE INTERNAL HEADER */}
         <header style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', background: '#ffffff', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid #F0F0F0' }}>
-          <Link href="/mobile" style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', fontWeight: 700, color: '#111111', textDecoration: 'none' }}>
+          <Link href="/mobile" style={{ fontFamily: "var(--font-playfair), serif", fontSize: '22px', fontWeight: 700, color: '#111111', textDecoration: 'none' }}>
             LNKICKS
           </Link>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', color: '#111111' }}>
+          <div style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', color: '#111111' }}>
             {title}
           </div>
           <Link href="/cart" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#F6F6F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111111', textDecoration: 'none', position: 'relative' }}>

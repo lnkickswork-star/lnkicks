@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
 import { ProductCard } from '@/components/ui/ProductCard';
@@ -37,14 +38,14 @@ export default function ProductDetailPage() {
             <span style={{ position: 'absolute', top: '16px', left: '16px', background: '#FF3B30', color: '#ffffff', fontSize: '10px', fontWeight: 800, padding: '4px 12px', borderRadius: '12px' }}>
               AUTHENTIC
             </span>
-            <img src={activeImg} alt={product.name} style={{ maxHeight: '300px', width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 16px 32px rgba(0,0,0,0.15))' }} />
+            <Image src={activeImg} alt={product.name} width={300} height={300} priority style={{ maxHeight: '300px', width: 'auto', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 16px 32px rgba(0,0,0,0.15))' }} />
           </div>
 
           {/* THUMBNAILS */}
           <div style={{ display: 'flex', gap: '12px' }}>
             {product.images.map((img, i) => (
               <div key={i} onClick={() => setActiveImg(img)} style={{ width: '80px', height: '80px', borderRadius: '16px', background: '#ffffff', border: activeImg === img ? '2px solid #111111' : '1px solid #EBEBEB', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '8px' }}>
-                <img src={img} alt="Thumbnail" style={{ maxHeight: '60px', width: 'auto', objectFit: 'contain' }} />
+                <Image src={img} alt="Thumbnail" width={60} height={60} style={{ maxHeight: '60px', width: 'auto', height: 'auto', objectFit: 'contain' }} />
               </div>
             ))}
           </div>
@@ -53,7 +54,7 @@ export default function ProductDetailPage() {
         {/* RIGHT COLUMN: PURCHASE PANEL & DETAILS */}
         <div>
           <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#777777' }}>{product.brand}</div>
-          <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, color: '#111111', margin: '4px 0 12px', lineHeight: 1.1 }}>{product.name}</h1>
+          <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, color: '#111111', margin: '4px 0 12px', lineHeight: 1.1 }}>{product.name}</h1>
           
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px' }}>
             <span style={{ fontSize: '24px', fontWeight: 900, color: '#FF3B30' }}>₹{product.price.toLocaleString('en-IN')}</span>
@@ -92,10 +93,10 @@ export default function ProductDetailPage() {
 
           {/* PURCHASE BUTTONS (UI ONLY) */}
           <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
-            <button style={{ flex: 1, padding: '16px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "'Oswald', sans-serif", fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
+            <button style={{ flex: 1, padding: '16px', background: '#111111', color: '#ffffff', borderRadius: '30px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
               ADD TO CART
             </button>
-            <button style={{ flex: 1, padding: '16px', background: '#FF3B30', color: '#ffffff', borderRadius: '30px', fontFamily: "'Oswald', sans-serif", fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
+            <button style={{ flex: 1, padding: '16px', background: '#FF3B30', color: '#ffffff', borderRadius: '30px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
               BUY NOW
             </button>
           </div>
@@ -112,10 +113,10 @@ export default function ProductDetailPage() {
 
       {/* RELATED PRODUCTS SECTION */}
       <div style={{ borderTop: '1px solid #EBEBEB', paddingTop: '48px' }}>
-        <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '24px' }}>You Might Also Like</h2>
+        <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, textTransform: 'uppercase', color: '#111111', marginBottom: '24px' }}>You Might Also Like</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
           {PRODUCT_REGISTRY.slice(1, 5).map((p) => (
-            <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : undefined} image={p.primaryImage} />
+            <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : undefined} image={p.primaryImage} slug={p.slug} />
           ))}
         </div>
       </div>

@@ -19,8 +19,8 @@ export default function ProductsPage() {
       {/* COLLECTION BANNER */}
       <div style={{ background: '#111111', borderRadius: '24px', padding: '36px 32px', color: '#ffffff', marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: '12px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#FF3B30', marginBottom: '6px' }}>LNKICKS COLLECTION</div>
-          <h1 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>Authentic Luxury Footwear</h1>
+          <div style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '12px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#FF3B30', marginBottom: '6px' }}>LNKICKS COLLECTION</div>
+          <h1 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '32px', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>Authentic Luxury Footwear</h1>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginTop: '8px', marginBottom: 0 }}>Showing {PRODUCT_REGISTRY.length} authentic products</p>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function ProductsPage() {
       {/* ADAPTIVE PRODUCT GRID (4-col Desktop / 2-col Mobile) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
         {PRODUCT_REGISTRY.map((p) => (
-          <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : p.limitedEdition ? 'LIMITED' : p.bestSeller ? 'HOT' : undefined} image={p.primaryImage} />
+          <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : p.limitedEdition ? 'LIMITED' : p.bestSeller ? 'HOT' : undefined} image={p.primaryImage} slug={p.slug} />
         ))}
       </div>
 
@@ -57,7 +57,7 @@ export default function ProductsPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '48px' }}>
         <button style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #E0E0E0', background: '#ffffff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Prev</button>
         <button style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', background: '#111111', color: '#ffffff', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>1</button>
-        <button style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #E0E0E0', background: '#ffffff', fontSize: '12px', fontWeight 600, cursor: 'pointer' }}>2</button>
+        <button style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #E0E0E0', background: '#ffffff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>2</button>
         <button style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #E0E0E0', background: '#ffffff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Next</button>
       </div>
     </ResponsiveAppLayout>

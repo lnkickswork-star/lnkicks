@@ -66,7 +66,7 @@ export default function SearchPage() {
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '14px', fontWeight: 500, color: '#111111', background: 'transparent' }} 
             />
           </div>
-          <button type="submit" style={{ padding: '12px 24px', background: '#111111', color: '#ffffff', borderRadius: '24px', fontFamily: "'Oswald', sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
+          <button type="submit" style={{ padding: '12px 24px', background: '#111111', color: '#ffffff', borderRadius: '24px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
             SEARCH
           </button>
         </div>
@@ -119,15 +119,15 @@ export default function SearchPage() {
       {filteredProducts.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
           {filteredProducts.map((p) => (
-            <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : undefined} image={p.primaryImage} />
+            <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : undefined} image={p.primaryImage} slug={p.slug} />
           ))}
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '80px 20px', background: '#ffffff', borderRadius: '24px', border: '1px solid #EBEBEB' }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>🔍</div>
-          <h2 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>No Products Found</h2>
-          <p style={{ fontSize: '13px', color: '#777777', margin: '8px 0 24px' }}>We couldn't find any sneakers matching "{query}". Try checking your spelling or reset filters.</p>
-          <button onClick={resetFilters} style={{ padding: '12px 28px', background: '#111111', color: '#ffffff', borderRadius: '24px', fontFamily: "'Oswald', sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+          <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>No Products Found</h2>
+          <p style={{ fontSize: '13px', color: '#777777', margin: '8px 0 24px' }}>We couldn&apos;t find any sneakers matching &quot;{query}&quot;. Try checking your spelling or reset filters.</p>
+          <button onClick={resetFilters} style={{ padding: '12px 28px', background: '#111111', color: '#ffffff', borderRadius: '24px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             VIEW ALL PRODUCTS
           </button>
         </div>
