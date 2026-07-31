@@ -1,3 +1,7 @@
+# Workspace internal — do not track
+skills/
+upload/
+
 # === From remote main ===
 # Dependencies
 node_modules/
