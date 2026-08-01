@@ -120,3 +120,100 @@ export const TRENDING_PRODUCTS: SliderProduct[] = [
   },
 ];
 
+/* ──────────────────────────────────────────────────────────────────────
+ *  DESIGNER SNEAKERS — luxury maison showcase (Gucci, Amiri, Balenciaga,
+ *  Louis Vuitton, Dior, Margiela, Off-White, McQueen, Saint Laurent,
+ *  Bottega Veneta). Premium floating-product slider with arrows beside
+ *  the heading. NO badges. NO category pills. ONE Add to Cart CTA.
+ * ────────────────────────────────────────────────────────────────────── */
+export const DESIGNER_SNEAKERS: SliderProduct[] = [
+  {
+    id: 'ds-amiri-skeleton',
+    brand: 'Amiri',
+    name: 'Amiri Skeleton Runner Black Leather',
+    price: 'Rs. 88,999',
+    priceValue: 88999,
+    comparePrice: 'Rs. 1,14,499',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7ce9504e74c9.jpg',
+    href: '/product/amiri-skeleton-runner',
+  },
+  {
+    id: 'ds-margiela-german',
+    brand: 'Maison Margiela',
+    name: "Margiela Replica German Trainer",
+    price: 'Rs. 74,999',
+    priceValue: 74999,
+    comparePrice: 'Rs. 92,000',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0111bfeab797.jpg',
+    href: '/product/margiela-replica-german-trainer',
+  },
+  {
+    id: 'ds-offwhite-ooo',
+    brand: 'Off-White',
+    name: "Off-White OOO Canvas Sneaker",
+    price: 'Rs. 52,999',
+    priceValue: 52999,
+    comparePrice: 'Rs. 68,000',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/38d3b39730f6.jpg',
+    href: '/product/off-white-ooo-canvas',
+  },
+  {
+    id: 'ds-mcqueen-oversized',
+    brand: 'Alexander McQueen',
+    name: "Alexander McQueen Oversized White",
+    price: 'Rs. 62,499',
+    priceValue: 62499,
+    comparePrice: 'Rs. 78,000',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3026e549e391.jpg',
+    href: '/product/mcqueen-oversized-white',
+  },
+  {
+    id: 'ds-balenciaga-speed',
+    brand: 'Balenciaga',
+    name: "Balenciaga Speed Sock Knit Black",
+    price: 'Rs. 70,999',
+    priceValue: 70999,
+    comparePrice: 'Rs. 89,000',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/6b9d02b45f61.jpg',
+    href: '/product/balenciaga-speed-sock-knit',
+  },
+  {
+    id: 'ds-sl-06',
+    brand: 'Saint Laurent',
+    name: "Saint Laurent SL/06 Court Sneaker",
+    price: 'Rs. 67,999',
+    priceValue: 67999,
+    comparePrice: 'Rs. 82,000',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/85d97f07ea43.jpg',
+    href: '/product/saint-laurent-sl06-court',
+  },
+  {
+    id: 'ds-bottega-track',
+    brand: 'Bottega Veneta',
+    name: "Bottega Veneta Track Sneaker",
+    price: 'Rs. 89,999',
+    priceValue: 89999,
+    comparePrice: 'Rs. 1,10,000',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/89e79109c536.jpg',
+    href: '/product/bottega-veneta-track',
+  },
+  {
+    id: 'ds-dior-b23',
+    brand: 'Dior',
+    name: "Dior B23 High-Top Oblique Sneaker",
+    price: 'Rs. 1,28,000',
+    priceValue: 128000,
+    comparePrice: 'Rs. 1,55,000',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBoeDHgD4sdEolj1Q6YY0dFBFam5YpICGBA2dZIy1CsoaOAyvFhphvbL7FSkNTAYouunPHoG9hNcKTvSWYd8ErjQY04V5XGIz8bL0hISKMtP5b4D4Qd5BnVZyOH32cafz8bJ5ecFNv5utNkkIW5w6gGyQftyHuDaBBRAkh9yHhMJ0E1VeGuDflsHiijdR0pef1sF8riPx9Jszb6CVCfz413_6TGPUGpuRbUCa5_hkXTubgyzvTrBsJ7mg',
+    href: '/product/dior-b23-high-top-sneaker',
+  },
+];
+

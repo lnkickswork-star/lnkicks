@@ -9,6 +9,7 @@ import TrustBadges from '@/components/desktop/TrustBadges';
 import InstantShipGrid from '@/components/desktop/InstantShipGrid';
 import TrendingSection from '@/components/desktop/TrendingSection';
 import LuxuryShoes from '@/components/desktop/LuxuryShoes';
+import DesignerSneakersSection from '@/components/desktop/DesignerSneakersSection';
 import BrandsSection from '@/components/desktop/BrandsSection';
 import Newsletter from '@/components/desktop/Newsletter';
 import MainFooter from '@/components/desktop/MainFooter';
@@ -25,9 +26,12 @@ import MainFooter from '@/components/desktop/MainFooter';
  *   6. InstantShipGrid  — 4-col premium sneaker grid
  *   7. TrendingSection  — premium floating-product slider (Trending This Week)
  *   8. LuxuryShoes      — LV / Gucci / Prada / Balenciaga / Dior carousel
- *   9. BrandsSection    — single infinite marquee of 11 brand wordmarks
- *  10. Newsletter       — "Sign up and save" email capture
- *  11. MainFooter       — premium dark footer w/ newsletter block
+ *   9. DesignerSneakersSection — premium floating-product slider with arrows
+ *      beside the "Designer Sneakers" title (Amiri / Margiela / Off-White /
+ *      McQueen / Balenciaga / Saint Laurent / Bottega / Dior)
+ *  10. BrandsSection    — single infinite marquee of 11 brand wordmarks
+ *  11. Newsletter       — "Sign up and save" email capture
+ *  12. MainFooter       — premium dark footer w/ newsletter block
  *
  * Architecture:
  *  - Inline styles to match existing project conventions (no Tailwind)
@@ -58,6 +62,7 @@ export default function DesktopHome() {
         <InstantShipGrid />
         <TrendingSection />
         <LuxuryShoes />
+        <DesignerSneakersSection />
         <BrandsSection />
         <Newsletter />
       </main>
