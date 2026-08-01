@@ -1,32 +1,23 @@
 'use client';
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import MobileSplash from '@/components/mobile/MobileSplash';
-import MobileLuxuryBar from '@/components/mobile/MobileLuxuryBar';
 import MobileHeader from '@/components/mobile/MobileHeader';
 import MobileMenuDrawer from '@/components/mobile/MobileMenuDrawer';
 import MobileSearch from '@/components/mobile/MobileSearch';
 import MobileBrandShortcuts from '@/components/mobile/MobileBrandShortcuts';
-import MobileHero from '@/components/mobile/MobileHero';
-import MobileProductSlider from '@/components/mobile/MobileProductSlider';
+import MobilePopularShoes from '@/components/mobile/MobilePopularShoes';
+import MobileNewArrivals from '@/components/mobile/MobileNewArrivals';
 import {
   MOBILE_TRENDING,
-  MOBILE_LUXURY,
-  MOBILE_DESIGNER,
+  MOBILE_RECOMMENDED,
 } from '@/components/mobile/mobileProducts';
 import { theme } from '@/lib/mobile/theme/theme';
 import { safeArea } from '@/lib/mobile/utils/safeArea';
 
 // ── Lazy-loaded below-fold sections ─────────────────────────────────
-// Initial viewport (Splash + LuxuryBar + Header + Search + BrandShortcuts +
-// Hero + Trending) renders eagerly. Everything below the fold lazy-loads
-// on demand via React.lazy + Suspense, reducing initial JS bundle by ~40%
-// and improving LCP / TBT on slow 3G mobile networks.
-const MobileLatestDrops = lazy(() => import('@/components/mobile/MobileLatestDrops'));
-const MobileFeaturedCollection = lazy(
-  () => import('@/components/mobile/MobileFeaturedCollection'),
-);
-const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
+// Initial viewport (Header + Search + BrandShortcuts + PopularShoes +
+// NewArrivals) renders eagerly. Below-the-fold sections lazy-load on
+// demand, reducing initial JS bundle and improving LCP on 3G mobile.
 const MobileCategories = lazy(() => import('@/components/mobile/MobileCategories'));
 const MobileBrands = lazy(() => import('@/components/mobile/MobileBrands'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
@@ -39,30 +30,25 @@ const MobileServiceWorkerRegister = lazy(
 /**
  * MobileHome — production mobile homepage for LN KICKS.
  *
- * Premium white + black + soft grey theme. NO blue, NO colorful gradients.
- * Apple / Nike / GOAT / END Clothing inspired minimal luxury aesthetic.
+ * Premium white + matte-black + soft grey theme. NO blue, NO colorful
+ * gradients. Apple / Nike / GOAT / END Clothing inspired minimal luxury
+ * aesthetic — adapted from a reference mobile shopping app screenshot.
  *
- * Section order (per Phase 1 spec):
- *   1. MobileSplash          — fullscreen luxury splash (auto-dismiss 4s)
- *   2. MobileLuxuryBar       — slim rotating announcement bar
- *   3. MobileHeader          — Menu / LNKICKS / Wishlist / Cart / Profile
- *   4. MobileSearch          — premium search pill
- *   5. MobileBrandShortcuts  — horizontal scrolling brand chips
- *   6. MobileHero            — black editorial hero with floating sneaker
- *   7. MobileProductSlider (Trending)  — floating-product slider
- *   8. MobileLatestDrops     — 2-column new arrivals grid
- *   9. MobileFeaturedCollection — 3-card horizontal curated edit
- *  10. MobileProductSlider (Luxury)    — floating-product slider
- *  11. MobileProductSlider (Designer)  — floating-product slider
- *  12. MobileRecommended     — Recommended For You (2-col grid with ratings)
- *  13. MobileCategories      — circular category rail
- *  14. MobileBrands          — infinite marquee of brand wordmarks
- *  15. MobileNewsletter      — black email-capture card
- *  16. MobileFooter          — minimal link footer
- *  17. MobileBottomNav       — floating 5-item bottom nav
+ * Section order (per reference-inspired rebuild):
+ *   1. MobileHeader          — Menu / LNKICKS / Wishlist / Cart / Profile
+ *   2. MobileSearch          — premium pill search bar
+ *   3. MobileBrandShortcuts  — horizontal capsule brand pills (10 brands)
+ *   4. MobilePopularShoes    — 2-col product grid with + add-to-cart
+ *   5. MobileNewArrivals     — large featured product card
+ *   6. MobileRecommended     — 2-col recommended grid (kept)
+ *   7. MobileCategories      — circular category rail (kept, lazy)
+ *   8. MobileBrands          — brand wordmark marquee (kept, lazy)
+ *   9. MobileNewsletter      — black email-capture card (kept, lazy)
+ *  10. MobileFooter          — minimal link footer (kept, lazy)
+ *  11. MobileBottomNav       — floating nav with center FAB (lazy)
  *
  * Architecture:
- *  - Pure white background, black primary buttons, soft grey borders
+ *  - Pure white background, matte black primary buttons, soft grey surfaces
  *  - Inline styles + styled-jsx (no Tailwind) — matches desktop convention
  *  - Inter + Oswald via next/font/google (already wired in app/layout.tsx)
  *  - External CDN image URLs (LFS pointers in /public/ are broken)
@@ -78,6 +64,8 @@ const MobileServiceWorkerRegister = lazy(
  * Mounted by `app/page.tsx` (server component) when the User-Agent
  * indicates a mobile browser. The URL is always `/` — there is no
  * public `/mobile` route.
+ *
+ * Desktop Homepage is LOCKED — not modified by this file.
  */
 
 /** Lightweight skeleton placeholder shown while lazy chunks load. */
@@ -111,21 +99,11 @@ function SectionSkeleton({ height = 240 }: { height?: number }) {
   );
 }
 
-export default function MobileHome() {
-  const [splashHidden, setSplashHidden] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+/** Lazy-loaded Recommended grid (kept from previous architecture). */
+const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
 
-  // Lock body scroll while splash is visible
-  useEffect(() => {
-    if (!splashHidden) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [splashHidden]);
+export default function MobileHome() {
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Close drawer on Escape key (keyboard accessibility)
   useEffect(() => {
@@ -136,6 +114,23 @@ export default function MobileHome() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
+
+  // Featured new arrival — pick the first TRENDING product (already a
+  // verified CDN image + valid href). Could be parameterized later.
+  const featuredArrival = MOBILE_TRENDING[0];
+
+  // Popular Shoes — 4 products in a 2x2 grid. Mix of TRENDING + RECOMMENDED
+  // gives brand variety (Air Jordan, Nike, Adidas, New Balance).
+  const popularShoes = [
+    MOBILE_TRENDING[0],
+    MOBILE_TRENDING[1],
+    MOBILE_TRENDING[2],
+    MOBILE_RECOMMENDED[3],
+  ].map((p) => ({
+    ...p,
+    // Ensure every popular card has a rating (mix-in from RECOMMENDED)
+    rating: p.rating ?? 4.7,
+  }));
 
   return (
     <div
@@ -186,114 +181,72 @@ export default function MobileHome() {
           boxShadow: theme.shadows.hairline,
         }}
       >
-        {/* 1. Splash */}
-        {!splashHidden && <MobileSplash onDone={() => setSplashHidden(true)} />}
-
-        {/* 2. Luxury status bar */}
-        <MobileLuxuryBar />
-
-        {/* 3. Sticky header (Menu / LNKICKS / Wishlist / Cart / Profile) */}
+        {/* 1. Sticky header (Menu / LNKICKS / Wishlist / Cart / Profile) */}
         <MobileHeader onMenuClick={() => setMenuOpen(true)} />
 
-        {/* 4. Main scrollable content */}
+        {/* 2. Main scrollable content */}
         <main
           id="main-content"
           style={{
-            paddingTop: theme.spacing.gutter,
+            paddingTop: theme.spacing.lg,
             // Bottom nav clearance includes safe-area-inset-bottom
             paddingBottom: safeArea.bottomNavClearance,
             display: 'flex',
             flexDirection: 'column',
-            gap: theme.spacing.hairline,
+            gap: 0,
           }}
         >
-          {/* 4. Search */}
+          {/* 2a. Search */}
           <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
             <MobileSearch />
           </div>
 
-          {/* 5. Quick Brand Shortcuts */}
+          {/* 2b. Quick Brand Shortcuts */}
           <MobileBrandShortcuts />
 
-          {/* 6. Hero */}
-          <div style={{ padding: `${theme.spacing.xl}px ${theme.spacing.pad}px 0` }}>
-            <MobileHero />
-          </div>
+          {/* 2c. Popular Shoes — 2-col grid with + add-to-cart */}
+          <MobilePopularShoes products={popularShoes} />
 
-          {/* 7. Trending — eager-loaded (above the fold on most devices) */}
-          <MobileProductSlider
-            title="Trending"
-            eyebrow="This Week"
-            products={MOBILE_TRENDING}
-            seeAllHref="/products?filter=trending"
-            cardWidth={180}
-          />
+          {/* 2d. New Arrivals — large featured product */}
+          <MobileNewArrivals product={featuredArrival} />
 
-          {/* 8. Latest Drops — lazy */}
-          <Suspense fallback={<SectionSkeleton height={420} />}>
-            <MobileLatestDrops />
-          </Suspense>
-
-          {/* 9. Featured Collection — lazy */}
-          <Suspense fallback={<SectionSkeleton height={320} />}>
-            <MobileFeaturedCollection />
-          </Suspense>
-
-          {/* 10. Luxury Shoes — eager (MobileProductSlider is already in bundle) */}
-          <MobileProductSlider
-            title="Luxury"
-            eyebrow="Maison Edit"
-            products={MOBILE_LUXURY}
-            seeAllHref="/category/luxury"
-            cardWidth={200}
-          />
-
-          {/* 11. Designer Sneakers — eager */}
-          <MobileProductSlider
-            title="Designer"
-            eyebrow="Curated"
-            products={MOBILE_DESIGNER}
-            seeAllHref="/category/designer"
-            cardWidth={190}
-          />
-
-          {/* 12. Recommended For You — lazy */}
+          {/* 2e. Recommended For You — lazy (kept from previous architecture) */}
           <Suspense fallback={<SectionSkeleton height={520} />}>
             <MobileRecommended />
           </Suspense>
 
-          {/* 13. Categories — lazy */}
+          {/* 2f. Categories — lazy */}
           <Suspense fallback={<SectionSkeleton height={180} />}>
             <MobileCategories />
           </Suspense>
 
-          {/* 14. Brands — lazy */}
+          {/* 2g. Brands — lazy */}
           <Suspense fallback={<SectionSkeleton height={120} />}>
             <MobileBrands />
           </Suspense>
 
-          {/* 15. Newsletter — lazy */}
+          {/* 2h. Newsletter — lazy */}
           <Suspense fallback={<SectionSkeleton height={280} />}>
             <MobileNewsletter />
           </Suspense>
 
-          {/* 16. Footer — lazy */}
+          {/* 2i. Footer — lazy */}
           <Suspense fallback={<SectionSkeleton height={320} />}>
             <MobileFooter />
           </Suspense>
         </main>
 
-        {/* 17. Floating bottom nav — lazy (not needed for LCP) */}
+        {/* 3. Floating bottom nav with center FAB — lazy */}
         <Suspense fallback={null}>
           <MobileBottomNav />
         </Suspense>
 
-        {/* 18. Menu drawer — rendered at page level so its z-index (1100)
+        {/* 4. Menu drawer — rendered at page level so its z-index (1100)
               is not trapped inside the MobileHeader's stacking context. */}
         <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
 
-      {/* 19. Service worker registration (production-only, lazy) — provides
+      {/* 5. Service worker registration (production-only, lazy) — provides
             offline app shell + cache-first static assets for PWA installs. */}
       <Suspense fallback={null}>
         <MobileServiceWorkerRegister />

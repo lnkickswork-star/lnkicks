@@ -1,27 +1,32 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { useState, memo } from 'react';
 import Link from 'next/link';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 
 /**
- * MobileBrandShortcuts — horizontal scrolling circular brand chips.
+ * MobileBrandShortcuts — horizontal scrolling capsule pills.
  *
- * 10 premium brands: Nike, Jordan, Adidas, Puma, New Balance, ASICS,
- * Converse, Vans, Reebok, HOKA. Pure monochrome text-based logos on
- * soft-grey circular chips. Active chip = solid black bg + white text.
+ * Pure-minimal layout matching the reference:
+ *   - 10 brands: Nike, Jordan, Adidas, Puma, New Balance, ASICS,
+ *     Converse, Vans, Reebok, HOKA
+ *   - Active pill: matte black bg + white text
+ *   - Inactive pill: soft grey bg + black text
+ *   - Fully rounded capsule shape (radius.pill)
+ *   - Horizontal scroll, hidden scrollbar, momentum scroll on iOS
  *
- * LN KICKS theme: white bg, soft grey circles, black text, no colorful
- * logos. Premium minimal.
+ * Selection state is purely visual (first item defaults to active).
+ * Tapping a chip navigates to /products?brand=<slug> — the actual
+ * filter happens on the products page (no duplicate logic).
  *
  * Phase 3 polish:
- *  - Design tokens
+ *  - Design tokens (no hardcoded values)
  *  - Haptic selection tick on tap
  *  - Pressed state (scale 0.96)
- *  - Focus-visible ring
- *  - Memoized
- *  - ARIA: section label, role="list" semantics
+ *  - Focus-visible ring for keyboard navigation
+ *  - ARIA: role="list" + aria-label per item
+ *  - Memoized — never re-renders unless active index changes
  */
 
 const BRANDS = [
@@ -38,85 +43,55 @@ const BRANDS = [
 ] as const;
 
 function MobileBrandShortcutsImpl() {
+  const [activeId, setActiveId] = useState<string>('nike');
+
   return (
-    <section
-      aria-label="Brand shortcuts"
-      style={{
-        paddingTop: theme.spacing.gutter,
-        paddingBottom: theme.spacing.hairline,
-      }}
-    >
+    <section aria-label="Brand shortcuts" style={{ paddingTop: theme.spacing.lg }}>
       <div
         className="mbs-scroller"
         role="list"
         style={{
           display: 'flex',
-          gap: theme.spacing.sm + 2,
+          gap: theme.spacing.sm,
           overflowX: 'auto',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: `0 ${theme.spacing.gutter}px`,
+          padding: `0 ${theme.spacing.pad}px`,
         }}
       >
-        {BRANDS.map((b, i) => {
-          const isActive = i === 0; // Nike as default-active for visual interest
+        {BRANDS.map((b) => {
+          const isActive = b.id === activeId;
           return (
             <Link
               key={b.id}
               href={b.href}
               role="listitem"
               aria-label={`Shop ${b.label}`}
-              onPointerDown={() => haptic.selection()}
+              aria-current={isActive ? 'true' : undefined}
+              onPointerDown={() => {
+                haptic.selection();
+                setActiveId(b.id);
+              }}
               className="mbs-chip"
               style={{
                 flex: '0 0 auto',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: theme.spacing.sm,
-                padding: `${theme.spacing.sm}px ${theme.spacing.lg}px ${theme.spacing.sm}px ${theme.spacing.sm}px`,
+                justifyContent: 'center',
+                padding: `${theme.spacing.sm + 2}px ${theme.spacing.lg + 2}px`,
                 borderRadius: theme.radius.pill,
-                background: isActive ? theme.colors.black : theme.colors.grey50,
+                background: isActive ? theme.colors.black : theme.colors.grey100,
                 color: isActive ? theme.colors.white : theme.colors.textPrimary,
                 textDecoration: 'none',
-                transition: `background-color ${theme.motion.duration.slow} ${theme.motion.easing.out}, color ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
-                border: isActive
-                  ? `1px solid ${theme.colors.black}`
-                  : '1px solid transparent',
+                fontSize: theme.fontSize.md,
+                fontWeight: theme.fontWeight.semibold,
+                letterSpacing: theme.letterSpacing.tight,
+                whiteSpace: 'nowrap',
+                transition: `background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}, color ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
+                border: '1px solid transparent',
               }}
             >
-              {/* Brand monogram circle */}
-              <span
-                aria-hidden
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: isActive ? 'rgba(255,255,255,0.15)' : theme.colors.white,
-                  color: isActive ? theme.colors.white : theme.colors.textPrimary,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: theme.fontSize.sm,
-                  fontWeight: theme.fontWeight.extrabold,
-                  fontFamily: theme.fontFamily.display,
-                  letterSpacing: theme.letterSpacing.wide,
-                  border: isActive
-                    ? '1px solid rgba(255,255,255,0.18)'
-                    : `1px solid ${theme.colors.border}`,
-                }}
-              >
-                {b.label.charAt(0)}
-              </span>
-              <span
-                style={{
-                  fontSize: theme.fontSize.base,
-                  fontWeight: theme.fontWeight.bold,
-                  letterSpacing: theme.letterSpacing.wide,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {b.label}
-              </span>
+              {b.label}
             </Link>
           );
         })}
