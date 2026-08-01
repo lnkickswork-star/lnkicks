@@ -779,3 +779,44 @@ Stage Summary:
 - Files modified: 18 (app/layout.tsx, app/mobile/page.tsx, 16 components/mobile/*.tsx)
 - Files created: 16 (8 lib/mobile/theme/*.ts + 3 lib/mobile/utils/*.ts + manifest + 7 icons + icon generator script)
 - Desktop homepage: ZERO files modified in app/desktop/ or components/desktop/
+
+---
+Task ID: phase-3-pwa-offline-shell
+Agent: main
+Task: Add PWA offline shell (service worker + /offline.html fallback) to complete Phase 3 §8.
+
+Work Log:
+- Audited existing state: Phase 3 design system + safe-area + haptics + micro-interactions
+  + accessibility + PWA manifest/icons/theme-color all already in place (commit d9deb6b)
+- Identified the only remaining gap: offline shell (service worker)
+- Created /public/sw.js — minimal production-ready service worker:
+  * install: pre-caches app shell (manifest, icons, /offline.html)
+  * activate: purges old caches when VERSION bumps, clients.claim()
+  * fetch routing:
+    - navigations: network-first, fallback to cache, then /offline.html
+    - same-origin static: cache-first
+    - cross-origin (CDN images, fonts): stale-while-revalidate
+    - POST/PUT/DELETE: bypass SW entirely
+  * image fallback: transparent 1x1 PNG via atob() (no broken-image icons)
+  * message handler: SKIP_WAITING for instant activation
+- Created /app/offline.html/route.ts — route handler returning raw HTML:
+  * Bypasses root layout (no AppProvider, no client JS, no fonts)
+  * Pure inline CSS — loads instantly on dead connection
+  * LN KICKS mobile aesthetic (white bg, black wordmark, soft grey caption)
+  * Retry button
+- Created /components/mobile/MobileServiceWorkerRegister.tsx:
+  * Production-only (skipped in dev)
+  * Deferred until window 'load' event
+  * Silent failure (progressive enhancement)
+  * Lazy-loaded via React.lazy + Suspense
+- Wired into /app/mobile/page.tsx as section 19
+- QA: lint PASS, tsc PASS, build PASS (44 routes, /mobile 1.02 kB + 114 kB)
+- Committed as 54d0fda
+- Push blocked: no GitHub credentials (previous PAT was correctly purged for security)
+
+Stage Summary:
+- Phase 3 PWA section now fully complete: manifest + theme color + icons + splash + offline shell
+- /mobile page size unchanged (1.02 kB); First Load JS 113 kB → 114 kB (+1 kB for SW register)
+- /offline.html route adds 0 B to JS bundle (route handler returns raw HTML)
+- Desktop homepage remains untouched (verified: git diff components/desktop/ clean)
+- 1 commit ahead of origin/main (54d0fda) — needs user-provided PAT to push
