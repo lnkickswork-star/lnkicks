@@ -43,9 +43,9 @@ type Banner = {
 const BANNERS: Banner[] = [
   {
     src: '/heroes/banner-1-vintage-nike-jordan.png',
-    alt: 'Vintage Nike and Jordan legends — iconic Air Jordan 1 collection with up to 50% off. Shop timeless sneakers at LN KICKS.',
+    alt: 'Vintage Nike and Jordan legends — iconic Air Jordan 1 collection. Timeless legends, iconic vintage luxury. Shop the retro classics at LN KICKS.',
     href: '/category-products',
-    ariaLabel: 'Shop the Vintage Nike and Jordan collection — Air Jordan 1, retro classics, and timeless legends. Up to 50% off at LN KICKS.',
+    ariaLabel: 'Shop the Vintage Nike and Jordan collection — Air Jordan 1, retro classics, and timeless legends at LN KICKS.',
     preload: true,
   },
   {
