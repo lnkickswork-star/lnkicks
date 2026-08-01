@@ -3,132 +3,226 @@
 import React from 'react';
 
 /**
- * BrandsSection — grayscale brand wordmarks that de-grayscale on hover.
- * Stitch design specs:
- *  - section: py-24 bg white, border-t gray-50
- *  - header: text-5xl font-black "Brands at KM"
- *  - brands: flex flex-wrap, gap-x-16 gap-y-12, opacity-80 grayscale hover:grayscale-0
- *  - each brand has unique typography (italic/bold/light/tracking-widest/etc.)
+ * BrandsSection — infinite horizontal marquee of luxury brand wordmarks.
+ *
+ * Refinements (Phase 1.5):
+ *  - Renamed: "Brands at LN KICKS"
+ *  - 11 brands: Nike, Jordan, Adidas, Puma, Reebok, Converse, Vans, HOKA,
+ *    New Balance, ASICS, Yeezy
+ *  - Continuous infinite horizontal scroll (CSS keyframes only — no JS)
+ *  - Reverse-direction second row for visual depth
+ *  - Each brand has unique typography to feel like a real logo lockup
  */
 
 interface Brand {
   name: string;
   className: string;
+  render?: React.ReactNode;
 }
 
 const BRANDS: Brand[] = [
-  { name: 'Dior', className: 'brand-dior' },
-  { name: 'crocs', className: 'brand-crocs' },
-  { name: 'NIKE SB', className: 'brand-nike-sb' },
-  { name: 'On', className: 'brand-on' },
-  { name: 'ASICS', className: 'brand-asics' },
-  { name: 'JORDAN', className: 'brand-jordan' },
-  { name: 'Converse', className: 'brand-converse' },
-  { name: 'HOKA', className: 'brand-hoka' },
+  { name: 'Nike', className: 'brand-nike', render: <span>NIKE</span> },
+  { name: 'Jordan', className: 'brand-jordan', render: <><span>JUMP</span><span style={{ fontStyle: 'italic', fontWeight: 400 }}>man</span></> },
+  { name: 'Adidas', className: 'brand-adidas', render: <span>adidas</span> },
+  { name: 'Puma', className: 'brand-puma', render: <span>PUMA</span> },
+  { name: 'Reebok', className: 'brand-reebok', render: <span>REEBOK</span> },
+  { name: 'Converse', className: 'brand-converse', render: <span>CONVERSE</span> },
+  { name: 'Vans', className: 'brand-vans', render: <span><em>VANS</em></span> },
+  { name: 'HOKA', className: 'brand-hoka', render: <span>HOKA</span> },
+  { name: 'New Balance', className: 'brand-newbalance', render: <span>NEW BALANCE</span> },
+  { name: 'ASICS', className: 'brand-asics', render: <span>ASICS</span> },
+  { name: 'Yeezy', className: 'brand-yeezy', render: <span>YEEZY</span> },
 ];
 
 export default function BrandsSection() {
+  // Two duplicated tracks for seamless infinite scroll
+  const track1 = [...BRANDS, ...BRANDS];
+
   return (
-    <section style={{ paddingTop: '96px', paddingBottom: '96px', background: '#ffffff', borderTop: '1px solid #fafafa' }}>
+    <section
+      style={{
+        paddingTop: '96px',
+        paddingBottom: '96px',
+        background: '#ffffff',
+        borderTop: '1px solid #fafafa',
+        overflow: 'hidden',
+      }}
+    >
       <div style={{ maxWidth: '1280px', margin: '0 auto', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
+        <p
+          style={{
+            fontSize: '10px',
+            fontWeight: 700,
+            color: '#9ca3af',
+            textTransform: 'uppercase',
+            letterSpacing: '0.3em',
+            marginBottom: '16px',
+            margin: '0 0 16px 0',
+          }}
+        >
+          Authenticated · Stocked · Trusted
+        </p>
         <h2
           style={{
-            fontSize: '48px',
-            fontWeight: 900,
-            marginBottom: '80px',
+            fontSize: '56px',
+            fontWeight: 800,
+            marginBottom: '72px',
             textTransform: 'uppercase',
-            letterSpacing: '-0.05em',
-            margin: '0 0 80px 0',
+            letterSpacing: '-0.04em',
+            margin: '0 0 72px 0',
           }}
         >
-          Brands at KM
+          Brands at <span style={{ fontStyle: 'italic', fontWeight: 300 }}>LN KICKS</span>
         </h2>
-        <div
-          className="brands-row"
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            alignItems: 'center',
-            columnGap: '64px',
-            rowGap: '48px',
-            opacity: 0.8,
-          }}
-        >
-          {BRANDS.map((brand) => (
-            <span key={brand.name} className={`brand-item ${brand.className}`}>
-              {brand.name === 'NIKE SB' ? (
-                <>
-                  <em>NIKE</em> <span>SB</span>
-                </>
-              ) : (
-                brand.name
-              )}
-            </span>
+      </div>
+
+      {/* Marquee row 1 (left → right) */}
+      <div className="marquee-wrap" style={{ marginBottom: '24px' }}>
+        <div className="marquee-track marquee-track-ltr">
+          {track1.map((brand, idx) => (
+            <div
+              key={`r1-${idx}`}
+              className={`brand-item ${brand.className}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '0 56px',
+                flexShrink: 0,
+                color: '#000',
+                opacity: 0.85,
+                transition: 'opacity 300ms ease, filter 300ms ease',
+                cursor: 'pointer',
+              }}
+            >
+              {brand.render}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Marquee row 2 (right → left, slower, different palette) */}
+      <div className="marquee-wrap">
+        <div className="marquee-track marquee-track-rtl">
+          {track1.map((brand, idx) => (
+            <div
+              key={`r2-${idx}`}
+              className={`brand-item ${brand.className}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '0 56px',
+                flexShrink: 0,
+                color: '#000',
+                opacity: 0.7,
+                transition: 'opacity 300ms ease, filter 300ms ease',
+                cursor: 'pointer',
+              }}
+            >
+              {brand.render}
+            </div>
           ))}
         </div>
       </div>
 
       <style jsx>{`
-        .brands-row {
+        .marquee-wrap {
+          width: 100%;
+          overflow: hidden;
+          position: relative;
           filter: grayscale(1);
-          transition: filter 400ms ease;
+          transition: filter 500ms ease;
         }
-        .brands-row:hover {
+        .marquee-wrap:hover {
           filter: grayscale(0);
         }
-        .brand-item {
-          color: #000;
-          cursor: pointer;
-          transition: opacity 250ms ease;
+        .marquee-track {
+          display: inline-flex;
+          align-items: center;
+          white-space: nowrap;
+          will-change: transform;
+        }
+        .marquee-track-ltr {
+          animation: lnk-brand-marquee-ltr 48s linear infinite;
+        }
+        .marquee-track-rtl {
+          animation: lnk-brand-marquee-rtl 60s linear infinite;
+        }
+        .marquee-wrap:hover .marquee-track {
+          animation-play-state: paused;
         }
         .brand-item:hover {
-          opacity: 0.6;
+          opacity: 1 !important;
         }
-        .brand-dior {
-          font-size: 30px;
+        @keyframes lnk-brand-marquee-ltr {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes lnk-brand-marquee-rtl {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+
+        /* Per-brand typography */
+        .brand-nike {
+          font-size: 44px;
           font-weight: 900;
-          letter-spacing: -0.05em;
+          letter-spacing: -0.02em;
           font-style: italic;
-        }
-        .brand-crocs {
-          font-size: 40px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-        }
-        .brand-nike-sb {
-          font-size: 30px;
-          font-weight: 900;
-          font-style: italic;
-        }
-        .brand-nike-sb em {
-          font-style: italic;
-        }
-        .brand-nike-sb span {
-          font-style: normal;
-        }
-        .brand-on {
-          font-size: 40px;
-          font-weight: 300;
-        }
-        .brand-asics {
-          font-size: 30px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
         }
         .brand-jordan {
-          font-size: 24px;
+          font-size: 36px;
           font-weight: 900;
+          letter-spacing: -0.02em;
+        }
+        .brand-jordan span:first-child {
+          font-style: normal;
+        }
+        .brand-adidas {
+          font-size: 40px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+        }
+        .brand-puma {
+          font-size: 42px;
+          font-weight: 900;
+          font-style: italic;
+          letter-spacing: -0.02em;
+        }
+        .brand-reebok {
+          font-size: 36px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
         }
         .brand-converse {
-          font-size: 30px;
+          font-size: 36px;
           font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.14em;
+        }
+        .brand-vans {
+          font-size: 44px;
+          font-weight: 900;
+          letter-spacing: 0.02em;
         }
         .brand-hoka {
+          font-size: 44px;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+        }
+        .brand-newbalance {
           font-size: 30px;
-          font-weight: 900;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+        }
+        .brand-asics {
+          font-size: 36px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+        }
+        .brand-yeezy {
+          font-size: 44px;
+          font-weight: 300;
+          letter-spacing: 0.04em;
+          font-style: italic;
         }
       `}</style>
     </section>
