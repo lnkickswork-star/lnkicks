@@ -298,3 +298,67 @@ Stage Summary:
 - CI:   ✅ all 4 checks pass
 - Vercel: ✅ Production deployment completed successfully
 - PAT scrubbed from git config — no secrets left in repo state
+
+---
+Task ID: home-refinement-v3
+Agent: Main
+Task: Refinement task — restore 3D slider, move Trending This Week,
+  remove category sections, fix duplicate brands marquee, remove badges,
+  add single Add to Cart CTA. NO redesign; only the requested changes.
+
+Work Log:
+- Recovered original 3D Card Slider (coverflow) from commit f449347
+  (the version before it was refactored into a floating-product slider).
+- Created components/desktop/CardSlider3D.tsx — restored coverflow with
+  LNKICKS watermark, 3D rotateY perspective, side-card dimming, premium
+  shadows, Buy Now CTA on each card. Renamed title to "Featured Drops"
+  to avoid clashing with the still-present "Trending This Week" section
+  that lives lower on the page.
+- Deleted 5 recently-added category section components:
+    * NikeRunningSection.tsx
+    * JordanCollectionSection.tsx
+    * AdidasOriginalsSection.tsx
+    * YeezyCollectionSection.tsx
+    * NewBalanceSection.tsx
+- Trimmed sliderProducts.ts to keep only TRENDING_PRODUCTS (removed
+  the 5 unused category arrays: NIKE_RUNNING, JORDAN, ADIDAS, YEEZY,
+  NEW_BALANCE).
+- Updated app/desktop/page.tsx — new homepage order:
+    Header → Hero → CardSlider3D → TrustBadges → InstantShipGrid →
+    TrendingSection → LuxuryShoes → BrandsSection → Newsletter → Footer
+- Fixed BrandsSection.tsx — removed the second (RTL) marquee row so
+  only ONE infinite LTR marquee remains. Smooth 48s linear infinite
+  scroll preserved. Duplicate removed.
+- Updated PremiumProductSlider.tsx:
+    * Removed all pill badges (Instant Ship, New Drop, Best Seller,
+      Limited, Restocked, Monsoon Sale, Premium).
+    * SliderProduct.badge / badgeVariant kept on the type for backwards
+      compat but never rendered.
+    * Added single 'Add to Cart' CTA button per product (pill, black,
+      uppercase 11px, with cart icon).
+    * CTA integrates with AppContext.addToCart() and shows a toast.
+    * Only ONE CTA per product — no Buy Now / Add to Cart duplication.
+    * Image and product name now wrap in <Link> to product page; CTA
+      is a separate <button> so clicking it adds to cart without
+      navigating away.
+- Added priceValue: <number> field to each SliderProduct entry in
+  sliderProducts.ts (37 entries) so the CTA can build a CartItem with
+  the numeric price the cart context expects.
+- Validation:
+    * npm run lint        ✅ No ESLint warnings or errors
+    * npm run type-check  ✅ tsc --noEmit passes clean
+    * npm run build       ✅ 43 routes, zero errors, zero warnings
+- Pushed commit 6ea7742 to origin/main (PAT used, then scrubbed).
+- CI: ALL 4 CHECKS PASS (CI summary, Build Node 22, Build Node 20, Secret scan).
+- Vercel: Production deployment 6ea77421 completed successfully.
+- Live URL: https://lnkicks-ix4iceepc-lnkickswork-9481s-projects.vercel.app
+
+Stage Summary:
+- Files created: 1 (CardSlider3D.tsx)
+- Files deleted: 5 (5 category section components)
+- Files modified: 4 (desktop/page.tsx, BrandsSection.tsx,
+  PremiumProductSlider.tsx, sliderProducts.ts)
+- Build / lint / type-check: ALL PASS
+- CI: ALL 4 CHECKS PASS
+- Vercel: Production deployment successful
+- PAT scrubbed from git config — no secrets left in repo state
