@@ -572,3 +572,107 @@ Stage Summary:
 - Desktop homepage: UNTOUCHED (locked per user spec)
 - Shared pages: UNTOUCHED (Product/Category/Cart/Checkout all shared)
 - PAT scrubbed from git config — no secrets left in repo state
+
+---
+Task ID: mobile-phase-2-premium
+Agent: Main (Principal Mobile Product Designer)
+Task: LN KICKS Mobile Homepage (Phase 2) — enhance existing mobile homepage per
+  detailed premium spec. Desktop homepage LOCKED — only mobile homepage modified.
+
+Work Log:
+- Analyzed uploaded reference Screenshot (650).png — standard shoe e-commerce app
+  with blue active states. Used as visual inspiration only; replaced blue with
+  LN KICKS brand language (pure white + matte black + soft grey).
+- Audited existing mobile homepage (`app/mobile/page.tsx` + 13 mobile components
+  in `components/mobile/`). Phase 1 already built: Splash, Header, Search, Hero,
+  FeaturedCollection, Trending, Luxury, Designer, LatestDrops, Brands, Categories,
+  Newsletter, Footer, BottomNav.
+- Identified gaps vs new spec:
+    * Missing: Luxury Status Bar (top announcement)
+    * Header needed: Menu icon (left) + Profile icon (right) in addition to
+      existing Wishlist + Cart
+    * Missing: Quick Brand Icons horizontal chip row (10 brands)
+    * Missing: "Recommended For You" section with star ratings
+    * Search placeholder needed update to "Search sneakers, brands, collections..."
+    * Section order needed reflow per new spec
+- Created `MobileLuxuryBar.tsx` — slim matte black bar with rotating luxury
+  status messages (Authenticated / Free shipping / Returns / Drops / Stocked in
+  India). Auto-rotates every 3.2s with smooth fade. Sits above MobileHeader.
+- Rewrote `MobileHeader.tsx` — 5-column grid: [Menu icon] [LNKICKS centered]
+  [Wishlist] [Cart] [Profile]. Added scroll-aware border (transparent →
+  #ececec on scroll). Live cart + wishlist badges. Menu button opens drawer
+  via onMenuClick callback (state lifted to page level).
+- Created `MobileMenuDrawer.tsx` — luxury slide-in drawer from left.
+  Premium dark overlay + white panel. Contains: LNKICKS header + close,
+  8 primary nav links (Home, Shop All, Trending, New Arrivals, Luxury,
+  Categories, Brands, Track Order), "Sign In / Register" black pill CTA,
+  8 utility links (About, Contact, Size Guide, Shipping, Returns, FAQs,
+  Terms, Privacy), and "100% Authentic" trust footer. Body scroll lock +
+  Escape key close. Rendered at page level (sibling of MobileBottomNav) so
+  its z-index:1100 isn't trapped inside MobileHeader's sticky stacking context.
+- Updated `MobileSearch.tsx` — placeholder text changed to
+  "Search sneakers, brands, collections..." per spec.
+- Created `MobileBrandShortcuts.tsx` — horizontal scrolling brand chips.
+  10 brands: Nike (active=black bg + white text + monogram circle),
+  Jordan, Adidas, Puma, New Balance, ASICS, Converse, Vans, Reebok, HOKA
+  (inactive = soft grey bg + black text + white monogram circle).
+  Pure monochrome — no colorful logos.
+- Created `MobileRecommended.tsx` — "Recommended" 2-col grid (4 products)
+  with floating product presentation (no cards, no borders, drop-shadow
+  only). Each tile shows: brand / name / star rating (5 black stars +
+  numeric) / price + strikethrough / "Add to Cart" pill CTA.
+- Extended `MobileProduct` interface with optional `rating?: number`.
+- Added `MOBILE_RECOMMENDED` array (4 products with ratings 4.6-4.9) to
+  `mobileProducts.ts`.
+- Rewrote `app/mobile/page.tsx` — new section order:
+    1. MobileSplash (auto-dismiss 4s)
+    2. MobileLuxuryBar (rotating announcements)
+    3. MobileHeader (Menu/LNKICKS/Wishlist/Cart/Profile) — accepts onMenuClick
+    4. MobileSearch (premium pill + filter button)
+    5. MobileBrandShortcuts (10 brand chips, Nike active)
+    6. MobileHero (black editorial hero with floating sneaker)
+    7. MobileProductSlider (Trending — This Week)
+    8. MobileLatestDrops (2-col new arrivals grid)
+    9. MobileFeaturedCollection (3-card horizontal curated edit)
+    10. MobileProductSlider (Luxury — Maison Edit)
+    11. MobileProductSlider (Designer — Curated)
+    12. MobileRecommended (Picked For You — 2-col with star ratings)
+    13. MobileCategories (circular category rail)
+    14. MobileBrands (infinite marquee)
+    15. MobileNewsletter (black email-capture card)
+    16. MobileFooter (link columns + social)
+    17. MobileBottomNav (floating 5-item pill)
+    18. MobileMenuDrawer (rendered at page level so z-index isn't trapped)
+- Lifted `menuOpen` state to MobileHome; MobileHeader receives onMenuClick,
+  MobileMenuDrawer receives open + onClose.
+- Debugging drawer z-index: Initially the drawer (z-index:1100) was being
+  rendered INSIDE MobileHeader (which has position:sticky + z-index:100,
+  creating a stacking context). MobileBottomNav (z-index:1000) sat above
+  the entire MobileHeader stacking context, so the bottom nav showed
+  through the drawer's dark overlay. Fixed by lifting MobileMenuDrawer to
+  page level (sibling of MobileBottomNav). Verified via DOM eval that
+  drawer parent is now the page wrapper div, computed z-index is 1100,
+  and the dark overlay properly covers the bottom nav.
+
+Stage Summary:
+- Build: ✅ PASSES — `npm run build` produces 43 routes, "Compiled successfully".
+- Lint: ✅ PASSES — "No ESLint warnings or errors".
+- Types: ✅ PASSES — `npx tsc --noEmit` reports zero errors.
+- Files modified: 2 (MobileHeader.tsx, MobileSearch.tsx, mobileProducts.ts,
+  app/mobile/page.tsx)
+- Files created: 4 (MobileLuxuryBar.tsx, MobileMenuDrawer.tsx,
+  MobileBrandShortcuts.tsx, MobileRecommended.tsx)
+- Desktop homepage: UNTOUCHED (`app/desktop/page.tsx` not modified).
+- All shared pages (Product, Category, Cart, Checkout, etc.) remain shared
+  between desktop and mobile — only the mobile homepage route was modified.
+- Visual verification: agent-browser (iPhone 14 emulation) confirmed all
+  17 sections render correctly. VLM analysis confirmed:
+    * Premium black-and-white aesthetic (Apple/Nike/GOAT/END feel)
+    * Luxury status bar rotating messages at top
+    * Header 5-icon layout properly aligned
+    * Search placeholder updated
+    * Brand shortcuts chip row with Nike active (black) + 9 inactive (grey)
+    * Hero banner clean
+    * Recommended section displays star ratings (4.8 / 4.7 etc.)
+    * Menu drawer slides in from left, dark overlay properly hides bottom nav
+    * Footer + bottom nav correctly rendered

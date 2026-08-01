@@ -41,7 +41,7 @@ export default function MobileSearch() {
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" strokeLinecap="round" />
         </svg>
-        <span style={{ fontSize: 13.5, fontWeight: 500 }}>Search sneakers, brands...</span>
+        <span style={{ fontSize: 13.5, fontWeight: 500 }}>Search sneakers, brands, collections...</span>
       </Link>
       <Link
         href="/filters"

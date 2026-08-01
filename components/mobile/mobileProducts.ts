@@ -10,7 +10,10 @@
 
 import type { SliderProduct } from '@/components/desktop/PremiumProductSlider';
 
-export interface MobileProduct extends SliderProduct {}
+export interface MobileProduct extends SliderProduct {
+  /** Optional rating (0-5, supports 0.5 steps). Used by Recommended grid. */
+  rating?: number;
+}
 
 /* ──────────────────────────────────────────────────────────────────────
  *  FEATURED COLLECTION — editorial hero collection (3 cards)
@@ -374,5 +377,63 @@ export const MOBILE_CATEGORIES: {
     href: '/category/slides',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
+  },
+];
+
+/* ──────────────────────────────────────────────────────────────────────
+ *  RECOMMENDED FOR YOU — personal-style 2-col grid (4 products)
+ *
+ *  Mix of premium lifestyle + retro + runner silhouettes. Each product
+ *  includes a rating (0-5) so the Stars component can render. Uses only
+ *  verified-working Google CDN URLs.
+ * ────────────────────────────────────────────────────────────────────── */
+export const MOBILE_RECOMMENDED: MobileProduct[] = [
+  {
+    id: 'mrec-aj1-powder',
+    brand: 'Air Jordan',
+    name: 'Air Jordan 1 Low Powder Blue',
+    price: 'Rs. 8,899',
+    priceValue: 8899,
+    comparePrice: 'Rs. 18,999',
+    rating: 4.8,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw',
+    href: '/product/air-jordan-1-low-black-powder-blue',
+  },
+  {
+    id: 'mrec-dunk-rose',
+    brand: 'Nike',
+    name: "Nike Dunk Low 'Rose Whisper'",
+    price: 'Rs. 7,399',
+    priceValue: 7399,
+    comparePrice: 'Rs. 12,999',
+    rating: 4.7,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg',
+    href: '/product/nike-dunk-low-rose-whisper',
+  },
+  {
+    id: 'mrec-samba',
+    brand: 'Adidas',
+    name: "Adidas Samba OG 'Wonder Silver'",
+    price: 'Rs. 6,199',
+    priceValue: 6199,
+    comparePrice: 'Rs. 22,999',
+    rating: 4.9,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
+    href: '/product/adidas-samba-og-wonder-silver',
+  },
+  {
+    id: 'mrec-nb530',
+    brand: 'New Balance',
+    name: "New Balance 530 'Steel Grey'",
+    price: 'Rs. 9,499',
+    priceValue: 9499,
+    comparePrice: 'Rs. 20,499',
+    rating: 4.6,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw',
+    href: '/product/new-balance-530-steel-grey',
   },
 ];

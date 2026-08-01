@@ -2,12 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import MobileSplash from '@/components/mobile/MobileSplash';
+import MobileLuxuryBar from '@/components/mobile/MobileLuxuryBar';
 import MobileHeader from '@/components/mobile/MobileHeader';
+import MobileMenuDrawer from '@/components/mobile/MobileMenuDrawer';
 import MobileSearch from '@/components/mobile/MobileSearch';
+import MobileBrandShortcuts from '@/components/mobile/MobileBrandShortcuts';
 import MobileHero from '@/components/mobile/MobileHero';
-import MobileFeaturedCollection from '@/components/mobile/MobileFeaturedCollection';
 import MobileProductSlider from '@/components/mobile/MobileProductSlider';
 import MobileLatestDrops from '@/components/mobile/MobileLatestDrops';
+import MobileFeaturedCollection from '@/components/mobile/MobileFeaturedCollection';
+import MobileRecommended from '@/components/mobile/MobileRecommended';
 import MobileBrands from '@/components/mobile/MobileBrands';
 import MobileCategories from '@/components/mobile/MobileCategories';
 import MobileNewsletter from '@/components/mobile/MobileNewsletter';
@@ -25,21 +29,24 @@ import {
  * Premium white + black + soft grey theme. NO blue, NO colorful gradients.
  * Apple / Nike / GOAT / END Clothing inspired minimal luxury aesthetic.
  *
- * Section order:
- *   1. MobileSplash       — fullscreen luxury splash (auto-dismiss 4s)
- *   2. MobileHeader       — sticky minimal header w/ cart + wishlist badges
- *   3. MobileSearch       — premium search pill
- *   4. MobileHero         — black editorial hero with floating sneaker
- *   5. MobileFeaturedCollection — 3-card horizontal curated edit
- *   6. MobileProductSlider (Trending)  — floating-product slider
- *   7. MobileProductSlider (Luxury)    — floating-product slider
- *   8. MobileProductSlider (Designer)  — floating-product slider
- *   9. MobileLatestDrops  — 2-column new arrivals grid
- *  10. MobileBrands       — infinite marquee of 11 brand wordmarks
- *  11. MobileCategories   — circular category rail
- *  12. MobileNewsletter   — black email-capture card
- *  13. MobileFooter       — minimal link footer
- *  14. MobileBottomNav    — floating 5-item bottom nav
+ * Section order (per Phase 1 spec):
+ *   1. MobileSplash          — fullscreen luxury splash (auto-dismiss 4s)
+ *   2. MobileLuxuryBar       — slim rotating announcement bar
+ *   3. MobileHeader          — Menu / LNKICKS / Wishlist / Cart / Profile
+ *   4. MobileSearch          — premium search pill
+ *   5. MobileBrandShortcuts  — horizontal scrolling brand chips
+ *   6. MobileHero            — black editorial hero with floating sneaker
+ *   7. MobileProductSlider (Trending)  — floating-product slider
+ *   8. MobileLatestDrops     — 2-column new arrivals grid
+ *   9. MobileFeaturedCollection — 3-card horizontal curated edit
+ *  10. MobileProductSlider (Luxury)    — floating-product slider
+ *  11. MobileProductSlider (Designer)  — floating-product slider
+ *  12. MobileRecommended     — Recommended For You (2-col grid with ratings)
+ *  13. MobileCategories      — circular category rail
+ *  14. MobileBrands          — infinite marquee of brand wordmarks
+ *  15. MobileNewsletter      — black email-capture card
+ *  16. MobileFooter          — minimal link footer
+ *  17. MobileBottomNav       — floating 5-item bottom nav
  *
  * Architecture:
  *  - Pure white background, black primary buttons, soft grey borders
@@ -54,6 +61,7 @@ import {
  */
 export default function MobileHome() {
   const [splashHidden, setSplashHidden] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Lock body scroll while splash is visible
   useEffect(() => {
@@ -90,10 +98,13 @@ export default function MobileHome() {
         {/* 1. Splash */}
         {!splashHidden && <MobileSplash onDone={() => setSplashHidden(true)} />}
 
-        {/* 2. Sticky header */}
-        <MobileHeader />
+        {/* 2. Luxury status bar */}
+        <MobileLuxuryBar />
 
-        {/* 3. Main scrollable content */}
+        {/* 3. Sticky header (Menu / LNKICKS / Wishlist / Cart / Profile) */}
+        <MobileHeader onMenuClick={() => setMenuOpen(true)} />
+
+        {/* 4. Main scrollable content */}
         <main
           style={{
             paddingTop: 14,
@@ -103,20 +114,20 @@ export default function MobileHome() {
             gap: 4,
           }}
         >
-          {/* 3. Search */}
+          {/* 4. Search */}
           <div style={{ padding: '0 18px' }}>
             <MobileSearch />
           </div>
 
-          {/* 4. Hero */}
+          {/* 5. Quick Brand Shortcuts */}
+          <MobileBrandShortcuts />
+
+          {/* 6. Hero */}
           <div style={{ padding: '20px 18px 0' }}>
             <MobileHero />
           </div>
 
-          {/* 5. Featured Collection */}
-          <MobileFeaturedCollection />
-
-          {/* 6. Trending */}
+          {/* 7. Trending */}
           <MobileProductSlider
             title="Trending"
             eyebrow="This Week"
@@ -125,7 +136,13 @@ export default function MobileHome() {
             cardWidth={180}
           />
 
-          {/* 7. Luxury Shoes */}
+          {/* 8. Latest Drops */}
+          <MobileLatestDrops />
+
+          {/* 9. Featured Collection */}
+          <MobileFeaturedCollection />
+
+          {/* 10. Luxury Shoes */}
           <MobileProductSlider
             title="Luxury"
             eyebrow="Maison Edit"
@@ -134,7 +151,7 @@ export default function MobileHome() {
             cardWidth={200}
           />
 
-          {/* 8. Designer Sneakers */}
+          {/* 11. Designer Sneakers */}
           <MobileProductSlider
             title="Designer"
             eyebrow="Curated"
@@ -143,24 +160,28 @@ export default function MobileHome() {
             cardWidth={190}
           />
 
-          {/* 9. Latest Drops */}
-          <MobileLatestDrops />
+          {/* 12. Recommended For You */}
+          <MobileRecommended />
 
-          {/* 10. Brands */}
-          <MobileBrands />
-
-          {/* 11. Categories */}
+          {/* 13. Categories */}
           <MobileCategories />
 
-          {/* 12. Newsletter */}
+          {/* 14. Brands */}
+          <MobileBrands />
+
+          {/* 15. Newsletter */}
           <MobileNewsletter />
 
-          {/* 13. Footer */}
+          {/* 16. Footer */}
           <MobileFooter />
         </main>
 
-        {/* 14. Floating bottom nav */}
+        {/* 17. Floating bottom nav */}
         <MobileBottomNav />
+
+        {/* 18. Menu drawer — rendered at page level so its z-index (1100)
+              is not trapped inside the MobileHeader's stacking context. */}
+        <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
     </div>
   );
