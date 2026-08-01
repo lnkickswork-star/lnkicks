@@ -1,6 +1,9 @@
 # Workspace internal — do not track
 skills/
 upload/
+tool-results/
+scripts/
+tsconfig.tsbuildinfo
 
 # === From remote main ===
 # Dependencies
