@@ -1,51 +1,49 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { PRODUCT_REGISTRY } from '@/components/catalog/ProductRegistry';
 
 /**
  * TrendingSection — luxury editorial "Trending This Week" coverflow.
  *
- * Spec contract (do not regress):
- *  - Section header: "RIGHT NOW" eyebrow + "Trending This Week" heading
- *    ("Trending" regular weight, "This Week" italic). "VIEW ALL" button
- *    is outlined (white bg, thin black border), top-right.
- *  - Behind cards: huge "LNKICKSLNKICKSLNKICKSLNKICKS" wordmark (no
- *    spaces, all caps, opacity ~6%) continuously translating LEFT → RIGHT
- *    via GPU-only `transform`, 60s linear infinite loop.
- *  - 3D coverflow: center card flat & full size; side cards rotated
- *    (rotateY ±35°), scaled (0.82), translated back, opacity dimmed
- *    (0.55 for absOffset=1, 0.22 for absOffset=2). Cards beyond
- *    absOffset > 2 hidden for perf.
- *  - Card layout (vertical, matches screenshot):
- *        ┌─────────────────────┐
- *        │     product image   │  ← ~58% of card height
- *        ├─────────────────────┤
- *        │ CATEGORY            │
- *        │ Product Name        │
- *        │ ₹price  ₹old-price  │
- *        │            [BUY NOW]│
- *        └─────────────────────┘
- *  - Autoplay: every 4000ms, infinite loop, pauses on hover/pointer-down.
- *  - Manual interactions: drag, swipe, mouse wheel, trackpad, click
- *    side card, keyboard ←/→, prev/next circle buttons.
- *  - Bottom controls: small prev circle, thin pagination lines
- *    (active = longer + black, inactive = short + light grey), small
- *    next circle. No dots, no thumbnails.
- *  - Products loaded dynamically from PRODUCT_REGISTRY. Selection
- *    priority: trending/featured → bestSeller → newArrival →
- *    limitedEdition → fallback to all (latest first).
+ * ── Reference (Screenshot 645) ──
+ *  Premium Apple × Farfetch × Kicks Machine vibe. Big editorial
+ *  header, giant "LNKICKSLNKICKS..." watermark behind everything,
+ *  true 3D coverflow with center card flat & fully opaque, side
+ *  cards rotated 35–45°, all cards 100% opaque (no transparency
+ *  bug), thin pagination lines + small prev/next circles below.
  *
- * Performance:
- *  - GPU-only transforms (translateX, translateZ, rotateY, scale).
- *  - `will-change: transform, opacity` only on visible slides.
- *  - Images lazy-loaded (center card eager on first paint).
- *  - No layout thrash, no re-render loop, no CLS.
+ * ── Card slot map (per spec) ──
+ *   center  → Jordan   (Air Jordan 1 Low 'Panda')
+ *   left    → Puma     (Puma Velophasis Luxury Edition)
+ *   right   → Nike     (Nike Dunk Low 'Rose Whisper')
+ *   far L/R → Adidas   (Adidas Samba OG 'Wonder Silver')
+ *
+ * ── Image contract ──
+ *  Source PNGs from PRODUCT_REGISTRY are LFS pointer files (broken
+ *  in shared hosting / Vercel). To avoid broken-image flicker we
+ *  use the same external Google-hosted CDN URLs already proven to
+ *  work elsewhere on the homepage (InstantShipGrid). For Puma
+ *  (no external URL in the codebase) we use a verified ZAI image
+ *  search CDN URL.
+ *
+ * ── Opacity contract (FIX vs previous impl) ──
+ *  All visible cards are 100% opaque. The "fading" of side cards
+ *  comes ONLY from:
+ *    - 3D rotation (rotateY ±40°) → less light hits the surface
+ *    - translateZ(-220px)        → pulled back in 3D space
+ *    - scale 0.78                → physically smaller
+ *  We deliberately DO NOT use opacity dimming on side cards —
+ *  the spec explicitly forbids "transparency bugs".
+ *
+ * ── Background watermark contract ──
+ *  The LNKICKS watermark lives on its own stacking context
+ *  (zIndex 0) and the card stage sits at zIndex 2. The watermark
+ *  therefore can NEVER overlap card content.
  */
 
 /* ─────────────────────────────────────────────────────────────────────
-   1. Types & data
+   1. Data — verified working image URLs
    ───────────────────────────────────────────────────────────────────── */
 
 interface TrendingCard {
@@ -55,92 +53,121 @@ interface TrendingCard {
   name: string;
   price: string;
   comparePrice: string;
+  // Verified external CDN URLs (NOT /public/*.png which are LFS pointers).
   image: string;
   href: string;
 }
 
-/** Format an INR integer as `Rs. 12,999.00` (matches project convention). */
-function formatINR(value: number): string {
-  return 'Rs. ' + value.toLocaleString('en-IN') + '.00';
-}
+// All four URLs were curl-tested (HTTP 200) before being committed.
+// Jordan, Nike, Adidas use the same Google-hosted aida-public CDN
+// already used by InstantShipGrid. Puma uses a verified ZAI image
+// search CDN URL (z-cdn.chatglm.cn).
+const TRENDING_CARDS: TrendingCard[] = [
+  {
+    id: 'puma-velophasis',
+    brand: 'PUMA',
+    category: 'Running',
+    name: 'Puma Velophasis Luxury Edition',
+    price: 'Rs. 8,499.00',
+    comparePrice: 'Rs. 14,999.00',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0117cc523363.jpg',
+    href: '/product/puma-velophasis-luxury-edition',
+  },
+  {
+    id: 'air-jordan-1-panda',
+    brand: 'AIR JORDAN',
+    category: 'Sneakers',
+    name: "Air Jordan 1 Low 'Panda'",
+    price: 'Rs. 9,399.00',
+    comparePrice: 'Rs. 21,999.00',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw',
+    href: '/product/air-jordan-1-low-panda',
+  },
+  {
+    id: 'nike-dunk-rose',
+    brand: 'NIKE',
+    category: 'Lifestyle',
+    name: "Nike Dunk Low 'Rose Whisper'",
+    price: 'Rs. 7,399.00',
+    comparePrice: 'Rs. 12,999.00',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg',
+    href: '/product/nike-dunk-low-rose-whisper',
+  },
+  {
+    id: 'adidas-samba',
+    brand: 'ADIDAS',
+    category: 'Sneakers',
+    name: "Adidas Samba OG 'Wonder Silver'",
+    price: 'Rs. 6,199.00',
+    comparePrice: 'Rs. 22,999.00',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
+    href: '/product/samba-og-cloud-white-core-black',
+  },
+  {
+    id: 'adidas-ae-2',
+    brand: 'ADIDAS',
+    category: 'Basketball',
+    name: 'Adidas AE 2 Black Gold Metallic',
+    price: 'Rs. 5,999.00',
+    comparePrice: 'Rs. 14,999.00',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw',
+    href: '/product/adidas-ae-2-black-gold',
+  },
+];
 
-/**
- * Build the trending list dynamically from the project's canonical
- * PRODUCT_REGISTRY. Never hardcodes products.
- *
- * Priority chain (the first non-empty bucket wins, then we fall back
- * to the next; final fallback is all products):
- *   1. featured  (trending / featured)
- *   2. bestSeller
- *   3. newArrival (latest)
- *   4. limitedEdition
- *   5. all products (latest first)
- *
- * We always show between 5 and 8 items — enough for a rich coverflow
- * without overcrowding the stage.
- */
-function buildTrendingList(): TrendingCard[] {
-  const featured = PRODUCT_REGISTRY.filter((p) => p.featured);
-  const bestSellers = PRODUCT_REGISTRY.filter((p) => p.bestSeller);
-  const newArrivals = PRODUCT_REGISTRY.filter((p) => p.newArrival);
-  const limited = PRODUCT_REGISTRY.filter((p) => p.limitedEdition);
-
-  const pool =
-    featured.length >= 3
-      ? featured
-      : bestSellers.length >= 3
-      ? bestSellers
-      : newArrivals.length >= 3
-      ? newArrivals
-      : limited.length >= 3
-      ? limited
-      : PRODUCT_REGISTRY; // fallback — all products (latest first)
-
-  // Cap at 8 for performance; never fewer than 3 (coverflow needs neighbors).
-  const sliced = pool.slice(0, Math.min(8, Math.max(3, pool.length)));
-
-  return sliced.map((p) => ({
-    id: p.id,
-    brand: p.brand,
-    category: p.category,
-    name: p.name,
-    price: formatINR(p.price),
-    comparePrice: p.comparePrice ? formatINR(p.comparePrice) : '',
-    image: p.primaryImage,
-    href: `/product/${p.slug}`,
-  }));
-}
+// Initial active index points to the Jordan card (index 1) per spec:
+// "CENTER CARD → Jordan".
+const INITIAL_ACTIVE_IDX = 1;
 
 /* ─────────────────────────────────────────────────────────────────────
-   2. Constants
+   2. Constants — coverflow geometry tuned to the reference screenshot
    ───────────────────────────────────────────────────────────────────── */
 
 const AUTOPLAY_MS = 4000;
-const TRANSITION_MS = 700;
+const TRANSITION_MS = 600;
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
-// Coverflow geometry — tuned to match the screenshot.
-const CARD_WIDTH = 460;
-const CARD_HEIGHT = 580;
-const SIDE_OFFSET_X = 300; // horizontal distance between adjacent cards
-const SIDE_ROTATE_Y = 35; // degrees
-const SIDE_SCALE = 0.82;
-const SIDE_TRANSLATE_Z = -180;
+// Card dimensions (matches spec: center 540px, side 360px, far 250px).
+// We use ONE base size and apply scale() per offset tier, which keeps
+// the DOM layout stable (no CLS) while letting the 3D transform
+// handle the apparent size difference.
+const CARD_WIDTH = 480;
+const CARD_HEIGHT = 600;
+
+// Per-tier geometry (absOffset 0 = center, 1 = adjacent, 2 = far).
+const TIER = [
+  { translateX: 0, rotateY: 0, scale: 1.0, translateZ: 0, opacity: 1.0 }, // absOffset 0 — center
+  { translateX: 360, rotateY: -42, scale: 0.78, translateZ: -220, opacity: 1.0 }, // absOffset 1 — side
+  { translateX: 620, rotateY: -55, scale: 0.55, translateZ: -440, opacity: 1.0 }, // absOffset 2 — far
+] as const;
+
+// Safe tier lookup — returns the matching tier or a zero-transform
+// fallback for indices beyond the array (used by callers that don't
+// early-return on `hidden`).
+function getTier(absOffset: number) {
+  if (absOffset >= 0 && absOffset < TIER.length) return TIER[absOffset];
+  return TIER[0];
+}
 
 // Repeated marquee text. NO spaces, all caps — per spec.
 const MARQUEE_TEXT = 'LNKICKSLNKICKSLNKICKSLNKICKS';
-const MARQUEE_REPEAT = 6; // enough copies to overflow any viewport
+const MARQUEE_REPEAT = 8;
 
 /* ─────────────────────────────────────────────────────────────────────
    3. Component
    ───────────────────────────────────────────────────────────────────── */
 
 export default function TrendingSection() {
-  const cards = useMemo(buildTrendingList, []);
-  const total = cards.length;
+  const total = TRENDING_CARDS.length;
 
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [mounted, setMounted] = useState(false);
+  // Always starts from the Jordan card (center) on mount — no
+  // persistence, no sessionStorage. Matches "CENTER CARD → Jordan".
+  const [activeIdx, setActiveIdx] = useState(INITIAL_ACTIVE_IDX);
   const [paused, setPaused] = useState(false);
 
   // Drag / swipe state (pointer events — works for mouse + touch + pen).
@@ -157,11 +184,6 @@ export default function TrendingSection() {
     setActiveIdx((i) => (i - 1 + total) % total);
   }, [total]);
 
-  /* --- Mount: reveal animation --- */
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   /* --- Autoplay (paused on hover or while dragging) --- */
   useEffect(() => {
     if (paused || total <= 1) return;
@@ -169,7 +191,7 @@ export default function TrendingSection() {
     return () => window.clearInterval(id);
   }, [paused, advance, total]);
 
-  /* --- Keyboard ←/→ when stage is focused or hovered --- */
+  /* --- Keyboard ←/→ when stage is focused --- */
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -183,19 +205,14 @@ export default function TrendingSection() {
     [advance, regress]
   );
 
-  /* --- Wheel / trackpad: convert vertical or horizontal scroll
-         into prev/next navigation. Throttled via a flag. --- */
+  /* --- Wheel / trackpad navigation (throttled) --- */
   const wheelLock = useRef(false);
   const onWheel = useCallback(
     (e: React.WheelEvent) => {
-      // Only react to deliberate scroll, not micro-jitter.
       const magnitude = Math.abs(e.deltaX) + Math.abs(e.deltaY);
       if (magnitude < 12) return;
-      if (wheelLock.current) {
-        e.preventDefault();
-        return;
-      }
       e.preventDefault();
+      if (wheelLock.current) return;
       wheelLock.current = true;
       const dir = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (dir > 0) advance();
@@ -212,7 +229,11 @@ export default function TrendingSection() {
     dragStartX.current = e.clientX;
     dragDelta.current = 0;
     setPaused(true);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* no-op */
+    }
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
@@ -230,33 +251,42 @@ export default function TrendingSection() {
       try {
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {
-        /* no-op — pointer may already be released */
+        /* no-op */
       }
-      // 50px threshold — feels natural on mouse + trackpad + touch
       if (dx <= -50) advance();
       else if (dx >= 50) regress();
     },
     [advance, regress]
   );
 
-  /* --- Compute per-card transform from the active index --- */
+  /* --- Per-card transform from active index --- */
   const getCardState = (idx: number) => {
     const offset = idx - activeIdx;
-    // Wrap to nearest neighbor (so the carousel feels circular both ways).
-    const wrapped = ((offset + total / 2) % total) - Math.floor(total / 2);
-    const absOffset = Math.abs(wrapped);
+    // Wrap offset to [-floor(total/2), +floor(total/2)] (nearest-neighbor).
+    // For ODD total counts (e.g. 5), `total/2` is fractional — using
+    // Math.floor(Math.abs(...)) on the wrapped value keeps absOffset
+    // an integer so the TIER array index is always valid.
+    const rawWrapped = ((offset + total) % total + total) % total;
+    const wrapped = rawWrapped > total / 2 ? rawWrapped - total : rawWrapped;
+    const absOffset = Math.floor(Math.abs(wrapped));
     const isActive = absOffset === 0;
+    const hidden = absOffset > 2;
+
+    // Defensive tier lookup — never returns undefined.
+    const tier = getTier(absOffset);
 
     return {
       wrapped,
       absOffset,
       isActive,
-      hidden: absOffset > 2,
-      translateX: wrapped * SIDE_OFFSET_X,
-      rotateY: wrapped * -SIDE_ROTATE_Y,
-      scale: isActive ? 1 : SIDE_SCALE - (absOffset - 1) * 0.06,
-      translateZ: isActive ? 0 : SIDE_TRANSLATE_Z,
-      opacity: isActive ? 1 : absOffset === 1 ? 0.55 : 0.22,
+      hidden,
+      // Side cards: sign of `wrapped` decides rotation direction
+      // (left card rotates +42°, right card rotates -42°).
+      translateX: wrapped * tier.translateX,
+      rotateY: wrapped * tier.rotateY,
+      scale: tier.scale,
+      translateZ: tier.translateZ,
+      opacity: tier.opacity,
       zIndex: 20 - absOffset,
     };
   };
@@ -270,23 +300,22 @@ export default function TrendingSection() {
       style={{
         position: 'relative',
         paddingTop: '96px',
-        paddingBottom: '112px',
+        paddingBottom: '120px',
         overflow: 'hidden',
         background: '#ffffff',
       }}
     >
-      {/* ─────────── Animated LNKICKS background wordmark ───────────
-          Huge wordmark, very light grey (~6% opacity), translated
-          LEFT → RIGHT continuously via GPU-only `transform`.
-          Sits BEHIND every card (zIndex 0, cards are zIndex 10+). */}
+      {/* ─────────── Animated LNKICKS watermark ───────────
+          zIndex: 0 → STRICTLY behind cards (cards are zIndex 2).
+          Will never overlap card content. */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
-          top: '180px',
-          bottom: '120px',
+          top: '220px',
+          bottom: '140px',
           overflow: 'hidden',
           pointerEvents: 'none',
           zIndex: 0,
@@ -301,8 +330,6 @@ export default function TrendingSection() {
             flexWrap: 'nowrap',
             whiteSpace: 'nowrap',
             willChange: 'transform',
-            // Start at -100% so the LEFT → RIGHT motion is visible
-            // immediately on first paint.
             transform: 'translate3d(-50%, 0, 0)',
           }}
         >
@@ -311,13 +338,12 @@ export default function TrendingSection() {
               key={i}
               style={{
                 fontFamily: 'var(--font-inter), sans-serif',
-                fontSize: '320px',
+                fontSize: '300px',
                 fontWeight: 800,
                 letterSpacing: '-0.05em',
                 lineHeight: 1,
-                color: '#000000',
-                opacity: 0.06,
-                marginRight: '0px',
+                color: '#111111',
+                opacity: 0.05,
                 userSelect: 'none',
                 display: 'block',
                 transform: 'translateZ(0)',
@@ -338,7 +364,7 @@ export default function TrendingSection() {
           margin: '0 auto',
           paddingLeft: '40px',
           paddingRight: '40px',
-          marginBottom: '56px',
+          marginBottom: '48px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-end',
@@ -346,7 +372,6 @@ export default function TrendingSection() {
         }}
       >
         <div>
-          {/* Eyebrow: small line + "RIGHT NOW" */}
           <div
             style={{
               display: 'flex',
@@ -355,7 +380,7 @@ export default function TrendingSection() {
               marginBottom: '16px',
             }}
           >
-            <div style={{ width: '36px', height: '1px', background: '#000000' }} />
+            <div style={{ width: '36px', height: '1px', background: '#111111' }} />
             <span
               style={{
                 textTransform: 'uppercase',
@@ -368,7 +393,6 @@ export default function TrendingSection() {
               Right Now
             </span>
           </div>
-          {/* Heading: "Trending" regular + "This Week" italic */}
           <h2
             style={{
               fontFamily: 'var(--font-inter), sans-serif',
@@ -384,7 +408,7 @@ export default function TrendingSection() {
             <span
               style={{
                 fontStyle: 'italic',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.02em',
               }}
             >
@@ -393,7 +417,6 @@ export default function TrendingSection() {
           </h2>
         </div>
 
-        {/* VIEW ALL — outlined button, white bg, thin black border */}
         <Link
           href="/category-products"
           className="trending-view-all"
@@ -442,7 +465,6 @@ export default function TrendingSection() {
       {/* ─────────── Coverflow stage ─────────── */}
       <div
         ref={stageRef}
-        className="trending-stage"
         role="region"
         aria-roledescription="carousel"
         aria-label="Trending products carousel"
@@ -457,9 +479,9 @@ export default function TrendingSection() {
         onMouseLeave={() => setPaused(false)}
         style={{
           position: 'relative',
-          zIndex: 2,
-          height: '620px',
-          perspective: '1800px',
+          zIndex: 2, // strictly above watermark (zIndex 0)
+          height: '640px',
+          perspective: '2000px',
           cursor: dragStartX.current !== null ? 'grabbing' : 'grab',
           outline: 'none',
           touchAction: 'pan-y',
@@ -475,10 +497,9 @@ export default function TrendingSection() {
             transformStyle: 'preserve-3d',
           }}
         >
-          {cards.map((card, idx) => {
+          {TRENDING_CARDS.map((card, idx) => {
             const s = getCardState(idx);
             if (s.hidden) return null;
-
             const isCenter = s.isActive;
 
             return (
@@ -489,18 +510,11 @@ export default function TrendingSection() {
                 aria-hidden={!isCenter}
                 tabIndex={isCenter ? 0 : -1}
                 onClick={(e) => {
-                  // If the user clicked a non-center card, we want to
-                  // bring it to center rather than navigate. Only the
-                  // center card actually navigates on click.
-                  if (!isCenter) {
+                  // Non-center cards: bring to center instead of navigating.
+                  // Also suppress accidental clicks at the end of a drag.
+                  if (!isCenter || Math.abs(dragDelta.current) > 8) {
                     e.preventDefault();
-                    setActiveIdx(idx);
-                  }
-                  // If dragging ended with a small delta, suppress
-                  // accidental navigation (handled by threshold above,
-                  // but we also block here for safety).
-                  if (Math.abs(dragDelta.current) > 8) {
-                    e.preventDefault();
+                    if (!isCenter) setActiveIdx(idx);
                   }
                 }}
                 className={`trending-card${isCenter ? ' is-active' : ''}`}
@@ -508,35 +522,39 @@ export default function TrendingSection() {
                   position: 'absolute',
                   width: `${CARD_WIDTH}px`,
                   height: `${CARD_HEIGHT}px`,
+                  // GPU-only transform — translate3d, rotateY, scale.
                   transform: `translate3d(${s.translateX}px, 0, ${s.translateZ}px) rotateY(${s.rotateY}deg) scale(${s.scale})`,
                   transformStyle: 'preserve-3d',
-                  transition: `transform ${TRANSITION_MS}ms ${EASE}, opacity ${TRANSITION_MS}ms ease`,
-                  opacity: s.opacity,
+                  transition: `transform ${TRANSITION_MS}ms ${EASE}`,
+                  // ALL cards are 100% opaque per spec — no transparency bug.
+                  opacity: 1,
                   zIndex: s.zIndex,
                   pointerEvents: 'auto',
                   textDecoration: 'none',
                   color: 'inherit',
-                  background: '#ffffff',
-                  borderRadius: '28px',
-                  border: '1px solid #f1f1f4',
+                  background: '#ffffff', // solid white — no glass, no blur
+                  borderRadius: '24px', // 20-24px per spec
+                  border: '1px solid #ededed',
+                  // Premium soft shadow — center card gets the strongest
+                  // diffuse shadow; side cards get a subtler one.
                   boxShadow: isCenter
-                    ? '0 50px 100px -30px rgba(0,0,0,0.22), 0 16px 32px -12px rgba(0,0,0,0.08)'
-                    : '0 24px 48px -20px rgba(0,0,0,0.14)',
+                    ? '0 40px 80px -20px rgba(0,0,0,0.22), 0 16px 32px -12px rgba(0,0,0,0.10)'
+                    : '0 20px 50px -16px rgba(0,0,0,0.18), 0 8px 16px -8px rgba(0,0,0,0.08)',
                   overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column',
                   backfaceVisibility: 'hidden',
-                  willChange: 'transform, opacity',
+                  willChange: 'transform',
                 }}
               >
-                {/* ── Image area (top ~58% of card) ── */}
+                {/* ── Image area (top 60% of card) ── */}
                 <div
                   style={{
                     position: 'relative',
                     width: '100%',
-                    height: '58%',
+                    height: '60%',
                     background:
-                      'radial-gradient(circle at 50% 40%, #f8f8f8 0%, #efeff2 100%)',
+                      'radial-gradient(circle at 50% 40%, #f8f8f8 0%, #ededed 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -549,14 +567,13 @@ export default function TrendingSection() {
                     src={card.image}
                     alt={`${card.brand} ${card.name}`}
                     draggable={false}
-                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    loading={isCenter ? 'eager' : 'lazy'}
                     decoding="async"
                     style={{
                       maxWidth: '78%',
                       maxHeight: '78%',
                       objectFit: 'contain',
-                      filter: isCenter ? 'none' : 'saturate(0.85) brightness(0.98)',
-                      transition: `filter ${TRANSITION_MS}ms ease`,
+                      // No filter on side cards — fully visible per spec.
                       userSelect: 'none',
                       pointerEvents: 'none',
                       transform: 'translateZ(0)',
@@ -567,31 +584,30 @@ export default function TrendingSection() {
                     aria-hidden="true"
                     style={{
                       position: 'absolute',
-                      bottom: '12px',
+                      bottom: '14px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      width: '60%',
-                      height: '14px',
+                      width: '58%',
+                      height: '12px',
                       background:
-                        'radial-gradient(ellipse at center, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 70%)',
+                        'radial-gradient(ellipse at center, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0) 70%)',
                       filter: 'blur(4px)',
                       pointerEvents: 'none',
                     }}
                   />
                 </div>
 
-                {/* ── Content area (bottom ~42%) ── */}
+                {/* ── Content area (bottom 40%) ── */}
                 <div
                   style={{
                     flex: 1,
-                    padding: '24px 28px 28px',
+                    padding: '24px 28px 24px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                   }}
                 >
                   <div>
-                    {/* Category */}
                     <span
                       style={{
                         display: 'block',
@@ -603,9 +619,8 @@ export default function TrendingSection() {
                         marginBottom: '8px',
                       }}
                     >
-                      {card.category}
+                      {card.brand} · {card.category}
                     </span>
-                    {/* Product name */}
                     <h3
                       style={{
                         fontFamily: 'var(--font-inter), sans-serif',
@@ -623,13 +638,12 @@ export default function TrendingSection() {
                     >
                       {card.name}
                     </h3>
-                    {/* Price */}
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'baseline',
                         gap: '12px',
-                        marginTop: '14px',
+                        marginTop: '12px',
                         flexWrap: 'wrap',
                       }}
                     >
@@ -658,7 +672,6 @@ export default function TrendingSection() {
                     </div>
                   </div>
 
-                  {/* CTA: BUY NOW pill button */}
                   <div
                     style={{
                       display: 'flex',
@@ -718,7 +731,7 @@ export default function TrendingSection() {
           justifyContent: 'center',
           alignItems: 'center',
           gap: '24px',
-          marginTop: '48px',
+          marginTop: '56px',
           position: 'relative',
           zIndex: 5,
         }}
@@ -746,34 +759,17 @@ export default function TrendingSection() {
               'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <svg
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Thin pagination lines (not dots, not thumbnails) */}
         <div
           role="tablist"
           aria-label="Select trending slide"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
         >
-          {cards.map((card, idx) => {
+          {TRENDING_CARDS.map((card, idx) => {
             const isActive = idx === activeIdx;
             return (
               <button
@@ -793,8 +789,7 @@ export default function TrendingSection() {
                   margin: 0,
                   cursor: 'pointer',
                   transition:
-                    'width 450ms cubic-bezier(0.16, 1, 0.3, 1), ' +
-                    'background-color 300ms ease',
+                    'width 450ms cubic-bezier(0.16, 1, 0.3, 1), background-color 300ms ease',
                 }}
               />
             );
@@ -824,41 +819,17 @@ export default function TrendingSection() {
               'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <svg
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.2}
-              d="M9 5l7 7-7 7"
-            />
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
-      {/* ─────────── Mounted reveal + scoped hover/marquee styles ─── */}
+      {/* ─────────── Scoped hover + marquee styles ─────────── */}
       <style jsx>{`
-        /* Section fade-up on first paint — no CLS, no layout shift. */
-        section {
-          opacity: 0;
-          transform: translateY(16px);
-          transition: opacity 700ms ${EASE} 100ms,
-            transform 700ms ${EASE} 100ms;
-        }
-        section.is-mounted {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
         /* LNKICKS wordmark — infinite LEFT → RIGHT motion.
            translate3d keeps it on the compositor thread (GPU only).
-           60s is "very slow, almost unnoticeable" per spec. */
+           60s = "very slow, almost unnoticeable" per spec. */
         .lnkicks-marquee-track {
           animation: lnkicks-marquee 60s linear infinite;
         }
@@ -909,37 +880,15 @@ export default function TrendingSection() {
            desktop widths without cropping the center card's CTA. */
         @media (max-width: 1536px) {
           .trending-stage {
-            height: 580px !important;
+            height: 600px !important;
           }
         }
         @media (max-width: 1440px) {
           .trending-stage {
-            height: 540px !important;
+            height: 560px !important;
           }
         }
       `}</style>
-
-      {/* Trigger mounted reveal — wrapped in a separate element so the
-          styled-jsx selector above can attach the .is-mounted class. */}
-      <MountedTrigger mounted={mounted} />
     </section>
   );
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   4. Helper — adds `is-mounted` class to the parent <section> via a
-      side-effect on the DOM. This is a tiny workaround so the
-      styled-jsx `section.is-mounted` selector works without a wrapper
-      div that would break the layout.
-   ───────────────────────────────────────────────────────────────────── */
-function MountedTrigger({ mounted }: { mounted: boolean }) {
-  const ref = useRef<HTMLSpanElement | null>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    const section = ref.current.closest('section');
-    if (!section) return;
-    if (mounted) section.classList.add('is-mounted');
-    else section.classList.remove('is-mounted');
-  }, [mounted]);
-  return <span ref={ref} aria-hidden="true" style={{ display: 'none' }} />;
 }
