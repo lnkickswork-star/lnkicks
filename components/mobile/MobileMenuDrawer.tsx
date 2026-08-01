@@ -29,7 +29,7 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  */
 
 const PRIMARY_LINKS = [
-  { label: 'Home', href: '/mobile' },
+  { label: 'Home', href: '/' },
   { label: 'Shop All', href: '/products' },
   { label: 'Trending', href: '/products?filter=trending' },
   { label: 'New Arrivals', href: '/products?filter=new' },

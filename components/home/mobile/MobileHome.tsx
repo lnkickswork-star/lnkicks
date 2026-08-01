@@ -74,6 +74,10 @@ const MobileServiceWorkerRegister = lazy(
  *  - Below-fold sections lazy-loaded via React.lazy + Suspense
  *
  * Mobile-only: optimized for 360px–440px viewports (iPhone / Galaxy / Pixel).
+ *
+ * Mounted by `app/page.tsx` (server component) when the User-Agent
+ * indicates a mobile browser. The URL is always `/` — there is no
+ * public `/mobile` route.
  */
 
 /** Lightweight skeleton placeholder shown while lazy chunks load. */

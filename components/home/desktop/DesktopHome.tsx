@@ -41,6 +41,10 @@ import MainFooter from '@/components/desktop/MainFooter';
  *  - styled-jsx for hover/animations (scoped CSS, no global stylesheet)
  *
  * Desktop-only: optimized for 1280px–1920px viewports.
+ *
+ * Mounted by `app/page.tsx` (server component) when the User-Agent
+ * indicates a desktop browser. The URL is always `/` — there is no
+ * public `/desktop` route.
  */
 export default function DesktopHome() {
   return (

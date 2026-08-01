@@ -2,7 +2,7 @@
   "name": "LNKICKS — Stocked & Loaded",
   "short_name": "LNKICKS",
   "description": "India's premier destination for authentic luxury sneakers and hyped drops.",
-  "start_url": "/mobile",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -35,7 +35,7 @@
     {
       "name": "Trending",
       "short_name": "Trending",
-      "url": "/mobile?section=trending",
+      "url": "/?section=trending",
       "description": "This week's hottest sneaker drops"
     },
     {

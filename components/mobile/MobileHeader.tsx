@@ -104,7 +104,7 @@ function MobileHeaderImpl({
 
         {/* Center: wordmark */}
         <Link
-          href="/mobile"
+          href="/"
           aria-label="LNKICKS home"
           className="pressable mh-wordmark"
           style={{

@@ -31,9 +31,11 @@ const ASSET_CACHE = `${VERSION}-assets`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
 // App shell — minimal set of files required for the PWA to boot offline.
+// Note: only `/` is cached as the entry route; the server decides whether
+// to render the mobile or desktop shell based on User-Agent. Both shells
+// are cached implicitly via the runtime navigation cache after first visit.
 const APP_SHELL = [
   '/',
-  '/mobile',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -119,7 +121,9 @@ self.addEventListener('fetch', (event) => {
           // Network failed — try cache, then offline page.
           const cached = await caches.match(request);
           if (cached) return cached;
-          const shell = await caches.match('/mobile');
+          // Fall back to the cached root shell (mobile or desktop variant
+          // depending on which was previously cached for this UA).
+          const shell = await caches.match('/');
           if (shell) return shell;
           const offline = await caches.match('/offline.html');
           return (

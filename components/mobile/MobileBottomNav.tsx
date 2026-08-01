@@ -39,7 +39,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   {
     label: 'Home',
-    href: '/mobile',
+    href: '/',
     icon: (color: string) => (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -90,10 +90,10 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function MobileBottomNavImpl() {
-  const pathname = usePathname() || '/mobile';
+  const pathname = usePathname() || '/';
 
   const isActive = (href: string) => {
-    if (href === '/mobile') return pathname === '/mobile' || pathname === '/';
+    if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(href + '/');
   };
 

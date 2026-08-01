@@ -9,10 +9,8 @@ import type { RouteMeta } from '@/types';
 export type { RouteMeta } from '@/types';
 
 export const ROUTE_REGISTRY: Record<string, RouteMeta> = {
-  HOME: { path: '/', title: 'LNKICKS — Stocked & Loaded', layout: 'desktop-locked', category: 'core' },
-  DESKTOP_HOME: { path: '/desktop', title: 'LNKICKS — Stocked & Loaded', layout: 'desktop-locked', category: 'core' },
-  MOBILE_HOME: { path: '/mobile', title: 'LNKICKS — Mobile App', layout: 'mobile-locked', category: 'core' },
-  
+  HOME: { path: '/', title: 'LNKICKS — Stocked & Loaded', layout: 'responsive-app', category: 'core' },
+
   CATEGORIES: { path: '/categories', title: 'Categories — LNKICKS', layout: 'responsive-app', category: 'catalog' },
   CATEGORY_PRODUCTS: { path: '/category-products', title: 'Sneakers & Apparel — LNKICKS', layout: 'responsive-app', category: 'catalog' },
   PRODUCT_DETAIL: { path: '/product-detail', title: 'Product Detail — LNKICKS', layout: 'responsive-app', category: 'catalog' },
