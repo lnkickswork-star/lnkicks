@@ -286,7 +286,7 @@ export default function MainFooter() {
               Shop
             </h4>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {SHOP_LINKS.map((link, idx) => (
+              {SHOP_LINKS.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
