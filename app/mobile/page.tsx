@@ -32,6 +32,9 @@ const MobileBrands = lazy(() => import('@/components/mobile/MobileBrands'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
 const MobileFooter = lazy(() => import('@/components/mobile/MobileFooter'));
 const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav'));
+const MobileServiceWorkerRegister = lazy(
+  () => import('@/components/mobile/MobileServiceWorkerRegister'),
+);
 
 /**
  * MobileHome — production mobile homepage for LN KICKS.
@@ -285,6 +288,12 @@ export default function MobileHome() {
               is not trapped inside the MobileHeader's stacking context. */}
         <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
+
+      {/* 19. Service worker registration (production-only, lazy) — provides
+            offline app shell + cache-first static assets for PWA installs. */}
+      <Suspense fallback={null}>
+        <MobileServiceWorkerRegister />
+      </Suspense>
     </div>
   );
 }
