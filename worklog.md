@@ -208,3 +208,66 @@ Stage Summary:
 - HIGH-risk issue outstanding: 15 broken Git LFS pointers in /public/
   (see /docs/git-lfs-audit.md). Production images will not render
   until this is resolved. Requires user decision on remediation path.
+
+---
+Task ID: trending-rebuild-v2
+Agent: Main (Senior Luxury E-commerce UI/UX Engineer)
+Task: Rebuild Trending This Week section as premium floating-product slider
+  matching KicksMachine reference (Screenshot 646). Add multiple category
+  sections using the same premium layout.
+
+Work Log:
+- Analyzed reference screenshot (Screenshot 646) with VLM — extracted exact
+  layout spec: floating products (NO cards), pill badges, circular nav
+  arrows centered above products, brand/name/price typography, ~280px image
+  height, pure white background, lots of whitespace.
+- Verified all 44 product images load (HTTP 200 + image content-type):
+  4 existing Google CDN URLs + 40 new ZAI image-search OSS URLs across
+  10 brand categories (jordan, nike_running, nike_dunk, adidas, yeezy, nb,
+  puma, asics, hoka, converse).
+- Created components/desktop/PremiumProductSlider.tsx — reusable luxury
+  editorial slider component:
+    * Pure white background, NO product cards, NO card borders/shadows
+    * Shoes float on white with only soft drop-shadow on image (filter)
+    * Centered title (clamp 36-60px, weight 800) + subtitle + eyebrow
+    * Centered circular prev/next arrows (48px, outline style, hover fills black)
+    * Horizontal slider: 5 desktop / 3 tablet / 2 mobile
+    * Pill badges (black/red/gold/cream variants)
+    * Brand (grey uppercase) / Name (black) / Price (red bold) + strikethrough
+    * Infinite loop via 3x duplication + seamless jump-back after 620ms
+    * Drag (pointer events: mouse+touch+pen), swipe, wheel, keyboard, autoplay
+    * Autoplay pauses on hover and during drag
+    * Pagination dots (active = wide pill, inactive = small dot)
+    * Hover: image lifts 10px + drop-shadow deepens, 500ms ease
+    * Responsive image heights (280 desktop / 240 tablet / 200 mobile)
+- Created components/desktop/sliderProducts.ts — centralized product data
+  for 6 category sections (Trending, Nike Running, Jordan, Adidas, Yeezy,
+  New Balance) with verified-working image URLs and existing-route hrefs.
+- Rewrote components/desktop/TrendingSection.tsx — now a thin wrapper around
+  PremiumProductSlider with "Trending This Week" title/subtitle/products.
+- Created 5 new category section components:
+    * NikeRunningSection.tsx
+    * JordanCollectionSection.tsx
+    * AdidasOriginalsSection.tsx
+    * YeezyCollectionSection.tsx
+    * NewBalanceSection.tsx
+- Updated app/desktop/page.tsx — added all 5 new sections to the homepage
+  between InstantShipGrid and LuxuryShoes.
+- Updated .gitignore — added scripts/, tool-results/, tsconfig.tsbuildinfo.
+- Removed tsconfig.tsbuildinfo from git tracking (was committed by mistake).
+- Validation:
+    * npm run lint      ✅ No ESLint warnings or errors
+    * npm run type-check ✅ tsc --noEmit passes clean
+    * npm run build     ✅ 43 routes generated, no errors, no warnings
+- Committed locally as 2d0498b.
+
+Stage Summary:
+- Files created: 7 (PremiumProductSlider, sliderProducts, 5 category sections)
+- Files modified: 3 (TrendingSection rewrite, desktop/page.tsx, .gitignore)
+- Files untracked from git: 1 (tsconfig.tsbuildinfo removed from tracking)
+- Build/lint/type-check: ALL PASS
+- Local commit: 2d0498b ready to push
+- BLOCKER: No GitHub PAT available in this session. Previous session had
+  the token in conversation context, but it was not persisted to env,
+  .git-credentials, .netrc, or git config. Cannot push without user
+  providing a new PAT.
