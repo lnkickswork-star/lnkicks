@@ -1,0 +1,52 @@
+{
+  "name": "LNKICKS — Stocked & Loaded",
+  "short_name": "LNKICKS",
+  "description": "India's premier destination for authentic luxury sneakers and hyped drops.",
+  "start_url": "/mobile",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "categories": ["shopping", "lifestyle", "fashion"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Trending",
+      "short_name": "Trending",
+      "url": "/mobile?section=trending",
+      "description": "This week's hottest sneaker drops"
+    },
+    {
+      "name": "Wishlist",
+      "short_name": "Wishlist",
+      "url": "/wishlist"
+    },
+    {
+      "name": "Cart",
+      "short_name": "Cart",
+      "url": "/cart"
+    }
+  ]
+}

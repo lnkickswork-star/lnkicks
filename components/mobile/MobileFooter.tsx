@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
+import { theme } from '@/lib/mobile/theme/theme';
+import { safeArea } from '@/lib/mobile/utils/safeArea';
+import { haptic } from '@/lib/mobile/utils/haptics';
 
 /**
  * MobileFooter — premium minimal footer.
@@ -10,6 +13,9 @@ import Link from 'next/link';
  * link columns (Shop / Help / Company), and social icons.
  *
  * LN KICKS theme: white bg, black text, soft grey dividers.
+ *
+ * Phase 3 polish: design tokens, haptics, focus-visible, memoized,
+ * safe-area-aware bottom padding (clears floating bottom nav + Home Indicator).
  */
 
 const SHOP_LINKS = [
@@ -17,51 +23,52 @@ const SHOP_LINKS = [
   { label: 'Trending', href: '/products?filter=trending' },
   { label: 'Luxury', href: '/category/luxury' },
   { label: 'New Arrivals', href: '/products?filter=new' },
-];
+] as const;
 
 const HELP_LINKS = [
   { label: 'Track Order', href: '/track-order' },
   { label: 'Shipping', href: '/shipping-policy' },
   { label: 'Returns', href: '/return-refund-policy' },
   { label: 'Size Guide', href: '/size-guide' },
-];
+] as const;
 
 const COMPANY_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact-us' },
   { label: 'Terms', href: '/terms-conditions' },
   { label: 'Privacy', href: '/privacy-policy' },
-];
+] as const;
 
-export default function MobileFooter() {
+function MobileFooterImpl() {
   return (
     <footer
       style={{
-        background: '#ffffff',
-        borderTop: '1px solid #f0f0f0',
-        padding: '40px 18px 120px',
+        background: theme.colors.white,
+        borderTop: `1px solid ${theme.colors.grey150}`,
+        // Safe-area-aware: clears floating bottom nav + iOS Home Indicator
+        padding: `${theme.spacing.huge + 4}px ${theme.spacing.pad}px calc(120px + ${safeArea.paddingBottom})`,
       }}
     >
       {/* Wordmark + tagline */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: theme.spacing.huge }}>
         <div
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 24,
-            fontWeight: 800,
-            letterSpacing: '0.18em',
-            color: '#0A0A0A',
-            marginBottom: 8,
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.title + 2,
+            fontWeight: theme.fontWeight.extrabold,
+            letterSpacing: theme.letterSpacing.widest,
+            color: theme.colors.textPrimary,
+            marginBottom: theme.spacing.sm,
           }}
         >
           LNKICKS
         </div>
         <p
           style={{
-            fontSize: 12,
-            color: '#6b7280',
+            fontSize: theme.fontSize.base,
+            color: theme.colors.textSecondary,
             margin: 0,
-            lineHeight: 1.5,
+            lineHeight: theme.lineHeight.relaxed,
             maxWidth: 280,
           }}
         >
@@ -75,8 +82,8 @@ export default function MobileFooter() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 20,
-          marginBottom: 32,
+          gap: theme.spacing.xl,
+          marginBottom: theme.spacing.huge,
         }}
       >
         <FooterColumn title="Shop" links={SHOP_LINKS} />
@@ -88,8 +95,8 @@ export default function MobileFooter() {
       <div
         style={{
           display: 'flex',
-          gap: 10,
-          marginBottom: 24,
+          gap: theme.spacing.sm + 2,
+          marginBottom: theme.spacing.xxl,
         }}
       >
         {[
@@ -101,17 +108,18 @@ export default function MobileFooter() {
             key={s.label}
             href={s.href}
             aria-label={s.label}
+            onPointerDown={() => haptic.light()}
             style={{
               width: 40,
               height: 40,
               borderRadius: '50%',
-              border: '1px solid #e5e5e5',
+              border: `1px solid ${theme.colors.grey300}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0A0A0A',
+              color: theme.colors.textPrimary,
               textDecoration: 'none',
-              transition: 'background-color 280ms ease, color 280ms ease',
+              transition: `background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}, color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
             }}
             className="mfooter-social"
           >
@@ -123,64 +131,82 @@ export default function MobileFooter() {
       {/* Bottom legal */}
       <div
         style={{
-          paddingTop: 20,
-          borderTop: '1px solid #f0f0f0',
+          paddingTop: theme.spacing.xl,
+          borderTop: `1px solid ${theme.colors.grey150}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 12,
+          gap: theme.spacing.md,
           flexWrap: 'wrap',
         }}
       >
-        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
+        <p style={{ fontSize: theme.fontSize.sm, color: theme.colors.textTertiary, margin: 0 }}>
           &copy; {new Date().getFullYear()} LN KICKS
         </p>
-        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Made in India</p>
+        <p style={{ fontSize: theme.fontSize.sm, color: theme.colors.textTertiary, margin: 0 }}>
+          Made in India
+        </p>
       </div>
 
       <style jsx>{`
         .mfooter-social:hover {
-          background-color: #0a0a0a !important;
-          color: #ffffff !important;
-          border-color: #0a0a0a !important;
+          background-color: ${theme.colors.black} !important;
+          color: ${theme.colors.white} !important;
+          border-color: ${theme.colors.black} !important;
+        }
+        .mfooter-social:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 2px;
         }
       `}</style>
     </footer>
   );
 }
 
-function FooterColumn({
+export const MobileFooter = memo(MobileFooterImpl);
+export default MobileFooter;
+
+const FooterColumn = memo(function FooterColumn({
   title,
   links,
 }: {
   title: string;
-  links: { label: string; href: string }[];
+  links: readonly { label: string; href: string }[];
 }) {
   return (
     <div>
       <h4
         style={{
-          fontSize: 10,
-          fontWeight: 800,
-          color: '#0A0A0A',
+          fontSize: theme.fontSize.xs,
+          fontWeight: theme.fontWeight.extrabold,
+          color: theme.colors.textPrimary,
           textTransform: 'uppercase',
           letterSpacing: '0.22em',
-          margin: '0 0 14px 0',
+          margin: `0 0 ${theme.spacing.md + 2}px 0`,
         }}
       >
         {title}
       </h4>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <ul
+        style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: theme.spacing.sm + 2,
+        }}
+      >
         {links.map((l) => (
           <li key={l.label}>
             <Link
               href={l.href}
               style={{
                 fontSize: 12.5,
-                color: '#6b7280',
+                color: theme.colors.textSecondary,
                 textDecoration: 'none',
-                fontWeight: 500,
-                transition: 'color 220ms ease',
+                fontWeight: theme.fontWeight.medium,
+                transition: `color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
               }}
               className="mfooter-link"
             >
@@ -191,12 +217,16 @@ function FooterColumn({
       </ul>
       <style jsx>{`
         .mfooter-link:hover {
-          color: #0a0a0a !important;
+          color: ${theme.colors.textPrimary} !important;
+        }
+        .mfooter-link:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 2px;
         }
       `}</style>
     </div>
   );
-}
+});
 
 function InstagramIcon() {
   return (

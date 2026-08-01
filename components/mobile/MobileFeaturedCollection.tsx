@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
+import { theme as designTokens } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { haptic } from '@/lib/mobile/utils/haptics';
 import { MOBILE_FEATURED } from './mobileProducts';
 
 /**
@@ -11,41 +14,71 @@ import { MOBILE_FEATURED } from './mobileProducts';
  * black or off-white background. Big editorial typography.
  *
  * LN KICKS theme: alternating black / white cards, gold accent dot.
+ *
+ * Phase 3 polish: design tokens, haptics, focus-visible ring, memoized.
+ * Renamed local `theme` to `cardTheme` to avoid clashing with imported
+ * design token `theme`.
  */
-const CARD_THEMES: { bg: string; fg: string; sub: string; accent: string }[] = [
-  { bg: '#0A0A0A', fg: '#ffffff', sub: 'rgba(255,255,255,0.65)', accent: '#ffffff' },
-  { bg: '#ffffff', fg: '#0A0A0A', sub: '#6b7280', accent: '#0A0A0A' },
-  { bg: '#f6f6f6', fg: '#0A0A0A', sub: '#6b7280', accent: '#0A0A0A' },
+type CardTheme = {
+  bg: string;
+  fg: string;
+  sub: string;
+  accent: string;
+  isDark: boolean;
+};
+
+const CARD_THEMES: CardTheme[] = [
+  {
+    bg: designTokens.colors.black,
+    fg: designTokens.colors.white,
+    sub: 'rgba(255,255,255,0.65)',
+    accent: designTokens.colors.white,
+    isDark: true,
+  },
+  {
+    bg: designTokens.colors.white,
+    fg: designTokens.colors.textPrimary,
+    sub: designTokens.colors.textSecondary,
+    accent: designTokens.colors.black,
+    isDark: false,
+  },
+  {
+    bg: designTokens.colors.grey50,
+    fg: designTokens.colors.textPrimary,
+    sub: designTokens.colors.textSecondary,
+    accent: designTokens.colors.black,
+    isDark: false,
+  },
 ];
 
-export default function MobileFeaturedCollection() {
+function MobileFeaturedCollectionImpl() {
   return (
-    <section style={{ paddingTop: 36 }}>
+    <section style={{ paddingTop: designTokens.spacing.section }}>
       <div
         style={{
-          padding: '0 18px',
-          marginBottom: 18,
+          padding: `0 ${designTokens.spacing.pad}px`,
+          marginBottom: designTokens.spacing.xxl,
         }}
       >
         <p
           style={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: '#9ca3af',
+            fontSize: designTokens.fontSize.xs,
+            fontWeight: designTokens.fontWeight.bold,
+            color: designTokens.colors.textTertiary,
             textTransform: 'uppercase',
-            letterSpacing: '0.28em',
-            margin: '0 0 8px 0',
+            letterSpacing: designTokens.letterSpacing.extreme,
+            margin: `0 0 ${designTokens.spacing.sm}px 0`,
           }}
         >
           Curated Edit
         </p>
         <h2
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 26,
-            fontWeight: 800,
-            color: '#0A0A0A',
-            letterSpacing: '-0.02em',
+            fontFamily: designTokens.fontFamily.display,
+            fontSize: designTokens.fontSize.h2,
+            fontWeight: designTokens.fontWeight.extrabold,
+            color: designTokens.colors.textPrimary,
+            letterSpacing: designTokens.letterSpacing.tight,
             lineHeight: 1,
             margin: 0,
             textTransform: 'uppercase',
@@ -58,29 +91,32 @@ export default function MobileFeaturedCollection() {
       <div
         style={{
           display: 'flex',
-          gap: 14,
+          gap: designTokens.spacing.md - 2,
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: '4px 18px 12px',
+          padding: `${designTokens.spacing.xs}px ${designTokens.spacing.pad}px ${designTokens.spacing.md}px`,
         }}
         className="mfc-scroller"
       >
         {MOBILE_FEATURED.map((p, i) => {
-          const theme = CARD_THEMES[i % CARD_THEMES.length];
+          const cardTheme = CARD_THEMES[i % CARD_THEMES.length];
           return (
             <Link
               key={p.id}
               href={p.href}
+              aria-label={`${p.brand} ${p.name} — ${p.price}`}
+              onPointerDown={() => haptic.selection()}
+              className="mfc-card"
               style={{
                 flex: '0 0 240px',
                 maxWidth: 240,
                 scrollSnapAlign: 'start',
-                background: theme.bg,
-                color: theme.fg,
+                background: cardTheme.bg,
+                color: cardTheme.fg,
                 borderRadius: 24,
-                padding: '20px 18px',
+                padding: `${designTokens.spacing.xl}px ${designTokens.spacing.pad}px`,
                 position: 'relative',
                 overflow: 'hidden',
                 minHeight: 260,
@@ -88,7 +124,10 @@ export default function MobileFeaturedCollection() {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 textDecoration: 'none',
-                border: theme.bg === '#ffffff' ? '1px solid #f0f0f0' : 'none',
+                border: !cardTheme.isDark && cardTheme.bg === designTokens.colors.white
+                  ? `1px solid ${designTokens.colors.grey150}`
+                  : 'none',
+                transition: `transform ${designTokens.motion.duration.instant} ${designTokens.motion.easing.out}`,
               }}
             >
               {/* Index number watermark */}
@@ -96,12 +135,14 @@ export default function MobileFeaturedCollection() {
                 aria-hidden
                 style={{
                   position: 'absolute',
-                  top: 12,
-                  right: 16,
-                  fontFamily: 'var(--font-oswald), sans-serif',
+                  top: designTokens.spacing.md,
+                  right: designTokens.spacing.lg,
+                  fontFamily: designTokens.fontFamily.display,
                   fontSize: 56,
-                  fontWeight: 900,
-                  color: theme.bg === '#0A0A0A' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                  fontWeight: designTokens.fontWeight.black,
+                  color: cardTheme.isDark
+                    ? 'rgba(255,255,255,0.08)'
+                    : 'rgba(0,0,0,0.05)',
                   lineHeight: 1,
                   letterSpacing: '-0.04em',
                 }}
@@ -112,14 +153,14 @@ export default function MobileFeaturedCollection() {
               {/* Brand label */}
               <p
                 style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: theme.sub,
+                  fontSize: designTokens.fontSize.xs,
+                  fontWeight: designTokens.fontWeight.bold,
+                  color: cardTheme.sub,
                   textTransform: 'uppercase',
                   letterSpacing: '0.22em',
                   margin: 0,
                   position: 'relative',
-                  zIndex: 2,
+                  zIndex: designTokens.zIndex.base + 2,
                 }}
               >
                 {p.brand}
@@ -129,12 +170,12 @@ export default function MobileFeaturedCollection() {
               <div
                 style={{
                   position: 'relative',
-                  zIndex: 2,
+                  zIndex: designTokens.zIndex.base + 2,
                   flex: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '8px 0',
+                  margin: `${designTokens.spacing.sm}px 0`,
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -147,10 +188,9 @@ export default function MobileFeaturedCollection() {
                     maxWidth: '100%',
                     maxHeight: 130,
                     objectFit: 'contain',
-                    filter:
-                      theme.bg === '#0A0A0A'
-                        ? 'drop-shadow(0 18px 24px rgba(0,0,0,0.5))'
-                        : 'drop-shadow(0 16px 22px rgba(0,0,0,0.13))',
+                    filter: cardTheme.isDark
+                      ? 'drop-shadow(0 18px 24px rgba(0,0,0,0.5))'
+                      : dropShadows.md,
                     transform: 'rotate(-12deg)',
                   }}
                 />
@@ -160,22 +200,29 @@ export default function MobileFeaturedCollection() {
               <div
                 style={{
                   position: 'relative',
-                  zIndex: 2,
+                  zIndex: designTokens.zIndex.base + 2,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: 8,
+                  gap: designTokens.spacing.sm,
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 10, color: theme.sub, fontWeight: 500, marginBottom: 2 }}>
+                  <div
+                    style={{
+                      fontSize: designTokens.fontSize.xs,
+                      color: cardTheme.sub,
+                      fontWeight: designTokens.fontWeight.medium,
+                      marginBottom: 2,
+                    }}
+                  >
                     From
                   </div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-oswald), sans-serif',
-                      fontSize: 18,
-                      fontWeight: 800,
+                      fontFamily: designTokens.fontFamily.display,
+                      fontSize: designTokens.fontSize.lg,
+                      fontWeight: designTokens.fontWeight.extrabold,
                       letterSpacing: '-0.01em',
                     }}
                   >
@@ -183,12 +230,13 @@ export default function MobileFeaturedCollection() {
                   </div>
                 </div>
                 <div
+                  aria-hidden
                   style={{
                     width: 36,
                     height: 36,
                     borderRadius: '50%',
-                    background: theme.accent,
-                    color: theme.bg,
+                    background: cardTheme.accent,
+                    color: cardTheme.bg,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -202,14 +250,27 @@ export default function MobileFeaturedCollection() {
             </Link>
           );
         })}
-        <div aria-hidden style={{ flex: '0 0 18px', height: 1 }} />
+        <div aria-hidden style={{ flex: `0 0 ${designTokens.spacing.pad}px`, height: 1 }} />
       </div>
 
       <style jsx>{`
         .mfc-scroller::-webkit-scrollbar {
           display: none;
         }
+        .mfc-card {
+          -webkit-tap-highlight-color: transparent;
+        }
+        .mfc-card:active {
+          transform: scale(0.97);
+        }
+        .mfc-card:focus-visible {
+          outline: 2px solid ${designTokens.colors.black};
+          outline-offset: 3px;
+        }
       `}</style>
     </section>
   );
 }
+
+export const MobileFeaturedCollection = memo(MobileFeaturedCollectionImpl);
+export default MobileFeaturedCollection;

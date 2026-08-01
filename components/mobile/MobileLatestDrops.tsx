@@ -1,8 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/components/context/AppContext';
+import { theme } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { transitions } from '@/lib/mobile/theme/motion';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import { MOBILE_LATEST } from './mobileProducts';
 
 /**
@@ -12,42 +17,60 @@ import { MOBILE_LATEST } from './mobileProducts';
  * Each tile: floating sneaker on white + brand / name / price + Add to Cart.
  *
  * LN KICKS theme: white bg, black text, red price, black CTA pill.
+ *
+ * Phase 3 polish: design tokens, haptics, pressed states, focus rings,
+ * memoization, useCallback for addToCart.
  */
-export default function MobileLatestDrops() {
+function MobileLatestDropsImpl() {
   const { addToCart, showToast } = useApp();
 
+  const handleAddToCart = useCallback(
+    (p: typeof MOBILE_LATEST[number]) => {
+      haptic.light();
+      addToCart({
+        id: p.id,
+        name: p.name,
+        price: p.priceValue,
+        image: p.image,
+        qty: 1,
+      });
+      showToast(`${p.name} added to cart`);
+    },
+    [addToCart, showToast],
+  );
+
   return (
-    <section style={{ paddingTop: 36 }}>
+    <section style={{ paddingTop: theme.spacing.section }}>
       <div
         style={{
-          padding: '0 18px',
+          padding: `0 ${theme.spacing.pad}px`,
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          marginBottom: 18,
-          gap: 12,
+          marginBottom: theme.spacing.xxl,
+          gap: theme.spacing.md,
         }}
       >
         <div>
           <p
             style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: '#9ca3af',
+              fontSize: theme.fontSize.xs,
+              fontWeight: theme.fontWeight.bold,
+              color: theme.colors.textTertiary,
               textTransform: 'uppercase',
-              letterSpacing: '0.28em',
-              margin: '0 0 8px 0',
+              letterSpacing: theme.letterSpacing.extreme,
+              margin: `0 0 ${theme.spacing.sm}px 0`,
             }}
           >
             Fresh Arrivals
           </p>
           <h2
             style={{
-              fontFamily: 'var(--font-oswald), sans-serif',
-              fontSize: 26,
-              fontWeight: 800,
-              color: '#0A0A0A',
-              letterSpacing: '-0.02em',
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.h2,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.textPrimary,
+              letterSpacing: theme.letterSpacing.tight,
               lineHeight: 1,
               margin: 0,
               textTransform: 'uppercase',
@@ -58,16 +81,18 @@ export default function MobileLatestDrops() {
         </div>
         <Link
           href="/products?filter=new"
+          aria-label="See all latest drops"
+          onPointerDown={() => haptic.light()}
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: '#0A0A0A',
+            fontSize: theme.fontSize.sm,
+            fontWeight: theme.fontWeight.bold,
+            color: theme.colors.textPrimary,
             textTransform: 'uppercase',
-            letterSpacing: '0.14em',
+            letterSpacing: theme.letterSpacing.wider,
             textDecoration: 'none',
             whiteSpace: 'nowrap',
             paddingBottom: 2,
-            borderBottom: '1.5px solid #0A0A0A',
+            borderBottom: `1.5px solid ${theme.colors.black}`,
           }}
         >
           See All
@@ -76,10 +101,10 @@ export default function MobileLatestDrops() {
 
       <div
         style={{
-          padding: '0 18px',
+          padding: `0 ${theme.spacing.pad}px`,
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: 16,
+          gap: theme.spacing.lg,
         }}
       >
         {MOBILE_LATEST.map((p) => (
@@ -95,6 +120,7 @@ export default function MobileLatestDrops() {
             <Link
               href={p.href}
               aria-label={`${p.brand} ${p.name} — ${p.price}`}
+              onPointerDown={() => haptic.selection()}
               style={{
                 textDecoration: 'none',
                 color: 'inherit',
@@ -116,34 +142,43 @@ export default function MobileLatestDrops() {
                   maxWidth: '100%',
                   maxHeight: '100%',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 16px 22px rgba(0,0,0,0.13))',
-                  transition:
-                    'transform 400ms cubic-bezier(0.16, 1, 0.3, 1), filter 400ms ease',
+                  filter: dropShadows.md,
+                  transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}, filter ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
                 }}
               />
             </Link>
 
-            <div style={{ textAlign: 'center', marginTop: 14, width: '100%' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: theme.spacing.md + 2,
+                width: '100%',
+              }}
+            >
               <p
                 style={{
-                  fontSize: 10,
-                  color: '#9ca3af',
-                  fontWeight: 700,
+                  fontSize: theme.fontSize.xs,
+                  color: theme.colors.textTertiary,
+                  fontWeight: theme.fontWeight.bold,
                   textTransform: 'uppercase',
                   letterSpacing: '0.16em',
-                  margin: '0 0 4px 0',
+                  margin: `0 0 ${theme.spacing.xs}px 0`,
                 }}
               >
                 {p.brand}
               </p>
-              <Link href={p.href} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link
+                href={p.href}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                onPointerDown={() => haptic.selection()}
+              >
                 <h3
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#0A0A0A',
-                    lineHeight: 1.35,
-                    margin: '0 0 8px 0',
+                    fontSize: theme.fontSize.body,
+                    fontWeight: theme.fontWeight.semibold,
+                    color: theme.colors.textPrimary,
+                    lineHeight: theme.lineHeight.normal,
+                    margin: `0 0 ${theme.spacing.sm}px 0`,
                     minHeight: 36,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -159,19 +194,27 @@ export default function MobileLatestDrops() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 6,
+                  gap: theme.spacing.xs + 2,
                   flexWrap: 'wrap',
-                  marginBottom: 12,
+                  marginBottom: theme.spacing.md,
                 }}
               >
-                <span style={{ color: '#DC2626', fontWeight: 700, fontSize: 13 }}>{p.price}</span>
+                <span
+                  style={{
+                    color: theme.colors.price,
+                    fontWeight: theme.fontWeight.bold,
+                    fontSize: theme.fontSize.body,
+                  }}
+                >
+                  {p.price}
+                </span>
                 {p.comparePrice && (
                   <span
                     style={{
-                      color: '#9ca3af',
-                      fontSize: 11,
+                      color: theme.colors.textTertiary,
+                      fontSize: theme.fontSize.sm,
                       textDecoration: 'line-through',
-                      fontWeight: 400,
+                      fontWeight: theme.fontWeight.regular,
                     }}
                   >
                     {p.comparePrice}
@@ -180,35 +223,25 @@ export default function MobileLatestDrops() {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  addToCart({
-                    id: p.id,
-                    name: p.name,
-                    price: p.priceValue,
-                    image: p.image,
-                    qty: 1,
-                  });
-                  showToast(`${p.name} added to cart`);
-                }}
-                className="mld-cta"
+                onClick={() => handleAddToCart(p)}
+                className="pressable mld-cta"
                 style={{
                   width: '100%',
-                  background: '#0A0A0A',
-                  color: '#ffffff',
+                  background: theme.colors.black,
+                  color: theme.colors.white,
                   border: 'none',
-                  borderRadius: 999,
-                  padding: '10px 12px',
+                  borderRadius: theme.radius.pill,
+                  padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
                   fontSize: 10.5,
-                  fontWeight: 700,
+                  fontWeight: theme.fontWeight.bold,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.14em',
+                  letterSpacing: theme.letterSpacing.wider,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 6,
-                  transition:
-                    'background-color 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  gap: theme.spacing.xs + 2,
+                  transition: transitions.surface,
                 }}
                 aria-label={`Add ${p.name} to cart`}
               >
@@ -230,17 +263,17 @@ export default function MobileLatestDrops() {
       <style jsx>{`
         .mld-img:hover {
           transform: translateY(-6px);
-          filter: drop-shadow(0 22px 30px rgba(0, 0, 0, 0.18));
+          filter: ${dropShadows.lg};
         }
         .mld-cta:hover {
-          background-color: #1f1f1f !important;
+          background-color: ${theme.colors.grey800} !important;
           transform: translateY(-1px);
         }
-        .mld-cta:focus-visible {
-          outline: 2px solid #0a0a0a;
-          outline-offset: 3px;
-        }
       `}</style>
+      <style jsx>{pressableStyle}</style>
     </section>
   );
 }
+
+export const MobileLatestDrops = memo(MobileLatestDropsImpl);
+export default MobileLatestDrops;

@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
+import { theme } from '@/lib/mobile/theme/theme';
+import { safeArea } from '@/lib/mobile/utils/safeArea';
 
 /**
  * MobileLuxuryBar — slim premium announcement bar at the very top.
@@ -10,6 +12,11 @@ import React, { useState, useEffect } from 'react';
  * drops). Tiny height (28px) so it doesn't eat into the header.
  *
  * LN KICKS theme: pure black bar, white text, soft fade between messages.
+ * Safe-area-aware: padding-top extends into the iOS status bar / Dynamic
+ * Island area so the bar tucks under the notch cleanly.
+ *
+ * Memoized — message rotation causes re-render every 3.2s; memoizing
+ * prevents unnecessary parent re-renders from re-mounting this bar.
  */
 const MESSAGES = [
   'AUTHENTICATED BY CHECKCHECK & LEGITAPP',
@@ -17,9 +24,9 @@ const MESSAGES = [
   '7-DAY EASY RETURNS · 100% MONEY-BACK',
   'NEW DROPS EVERY FRIDAY · MEMBERS ONLY',
   'STOCKED IN INDIA · DISPATCHED IN 24H',
-];
+] as const;
 
-export default function MobileLuxuryBar() {
+function MobileLuxuryBarImpl() {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
@@ -34,30 +41,32 @@ export default function MobileLuxuryBar() {
       role="status"
       aria-live="polite"
       style={{
-        background: '#0A0A0A',
-        color: '#ffffff',
-        height: 28,
+        background: theme.colors.black,
+        color: theme.colors.white,
+        // Safe-area-aware: status bar (Dynamic Island) on iOS extends to ~59px
+        paddingTop: safeArea.paddingTop,
+        height: `calc(28px + ${safeArea.paddingTop})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
-        zIndex: 101,
+        zIndex: theme.zIndex.bar,
       }}
     >
       <div
         key={idx}
         className="mlb-text"
         style={{
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: '0.18em',
+          fontSize: theme.fontSize.xs,
+          fontWeight: theme.fontWeight.bold,
+          letterSpacing: theme.letterSpacing.widest,
           textTransform: 'uppercase',
           color: 'rgba(255,255,255,0.92)',
           whiteSpace: 'nowrap',
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: theme.spacing.sm,
         }}
       >
         <span
@@ -66,7 +75,7 @@ export default function MobileLuxuryBar() {
             width: 5,
             height: 5,
             borderRadius: '50%',
-            background: '#ffffff',
+            background: theme.colors.white,
             display: 'inline-block',
           }}
         />
@@ -75,7 +84,7 @@ export default function MobileLuxuryBar() {
 
       <style jsx>{`
         .mlb-text {
-          animation: mlb-fade 600ms cubic-bezier(0.16, 1, 0.3, 1);
+          animation: mlb-fade ${theme.motion.duration.long} ${theme.motion.easing.out};
         }
         @keyframes mlb-fade {
           0% {
@@ -91,3 +100,6 @@ export default function MobileLuxuryBar() {
     </div>
   );
 }
+
+export const MobileLuxuryBar = memo(MobileLuxuryBarImpl);
+export default MobileLuxuryBar;

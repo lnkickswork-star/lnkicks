@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
+import { theme } from '@/lib/mobile/theme/theme';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
  * MobileSearch — premium search bar.
@@ -10,51 +13,65 @@ import Link from 'next/link';
  * Filter icon button on the right. Tappable, links to /search.
  *
  * LN KICKS theme: white pill, black icons, soft grey placeholder.
+ *
+ * Phase 3 polish:
+ *  - Design tokens
+ *  - Haptic light tick on tap (both search + filter)
+ *  - Pressed state (scale 0.97 on filter button)
+ *  - Focus-visible ring
+ *  - Memoized — stateless component, no re-render needed
  */
-export default function MobileSearch() {
+function MobileSearchImpl() {
   return (
     <div
       style={{
-        background: '#ffffff',
-        borderRadius: 999,
+        background: theme.colors.white,
+        borderRadius: theme.radius.pill,
         height: 52,
-        padding: '0 6px 0 18px',
+        padding: `0 ${theme.spacing.xs + 2}px 0 ${theme.spacing.pad}px`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
-        border: '1px solid #f3f3f3',
+        boxShadow: theme.shadows.xs,
+        border: `1px solid ${theme.colors.divider}`,
       }}
     >
       <Link
         href="/search"
+        aria-label="Search sneakers, brands, and collections"
+        className="pressable ms-search-link"
+        onPointerDown={() => haptic.light()}
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: theme.spacing.sm + 2,
           flex: 1,
           textDecoration: 'none',
-          color: '#9ca3af',
+          color: theme.colors.textTertiary,
         }}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" strokeLinecap="round" />
         </svg>
-        <span style={{ fontSize: 13.5, fontWeight: 500 }}>Search sneakers, brands, collections...</span>
+        <span style={{ fontSize: 13.5, fontWeight: theme.fontWeight.medium }}>
+          Search sneakers, brands, collections...
+        </span>
       </Link>
       <Link
         href="/filters"
-        aria-label="Filters"
+        aria-label="Open filters"
+        className="pressable ms-filter-btn"
+        onPointerDown={() => haptic.light()}
         style={{
           width: 40,
           height: 40,
           borderRadius: '50%',
-          background: '#0A0A0A',
+          background: theme.colors.black,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#ffffff',
+          color: theme.colors.white,
           textDecoration: 'none',
           border: 'none',
         }}
@@ -71,6 +88,10 @@ export default function MobileSearch() {
           <line x1="17" y1="16" x2="23" y2="16" strokeLinecap="round" />
         </svg>
       </Link>
+      <style jsx>{pressableStyle}</style>
     </div>
   );
 }
+
+export const MobileSearch = memo(MobileSearchImpl);
+export default MobileSearch;

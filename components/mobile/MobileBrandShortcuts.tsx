@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
+import { theme } from '@/lib/mobile/theme/theme';
+import { haptic } from '@/lib/mobile/utils/haptics';
 
 /**
  * MobileBrandShortcuts — horizontal scrolling circular brand chips.
@@ -13,7 +15,13 @@ import Link from 'next/link';
  * LN KICKS theme: white bg, soft grey circles, black text, no colorful
  * logos. Premium minimal.
  *
- * Reference: Screenshot 650 — brand chips row, but in B&W instead of blue.
+ * Phase 3 polish:
+ *  - Design tokens
+ *  - Haptic selection tick on tap
+ *  - Pressed state (scale 0.96)
+ *  - Focus-visible ring
+ *  - Memoized
+ *  - ARIA: section label, role="list" semantics
  */
 
 const BRANDS = [
@@ -27,26 +35,27 @@ const BRANDS = [
   { id: 'vans', label: 'Vans', href: '/products?brand=vans' },
   { id: 'reebok', label: 'Reebok', href: '/products?brand=reebok' },
   { id: 'hoka', label: 'HOKA', href: '/products?brand=hoka' },
-];
+] as const;
 
-export default function MobileBrandShortcuts() {
+function MobileBrandShortcutsImpl() {
   return (
     <section
       aria-label="Brand shortcuts"
       style={{
-        paddingTop: 14,
-        paddingBottom: 4,
+        paddingTop: theme.spacing.gutter,
+        paddingBottom: theme.spacing.hairline,
       }}
     >
       <div
         className="mbs-scroller"
+        role="list"
         style={{
           display: 'flex',
-          gap: 10,
+          gap: theme.spacing.sm + 2,
           overflowX: 'auto',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: '0 14px',
+          padding: `0 ${theme.spacing.gutter}px`,
         }}
       >
         {BRANDS.map((b, i) => {
@@ -55,21 +64,25 @@ export default function MobileBrandShortcuts() {
             <Link
               key={b.id}
               href={b.href}
+              role="listitem"
+              aria-label={`Shop ${b.label}`}
+              onPointerDown={() => haptic.selection()}
+              className="mbs-chip"
               style={{
                 flex: '0 0 auto',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '8px 16px 8px 8px',
-                borderRadius: 999,
-                background: isActive ? '#0A0A0A' : '#f6f6f6',
-                color: isActive ? '#ffffff' : '#0A0A0A',
+                gap: theme.spacing.sm,
+                padding: `${theme.spacing.sm}px ${theme.spacing.lg}px ${theme.spacing.sm}px ${theme.spacing.sm}px`,
+                borderRadius: theme.radius.pill,
+                background: isActive ? theme.colors.black : theme.colors.grey50,
+                color: isActive ? theme.colors.white : theme.colors.textPrimary,
                 textDecoration: 'none',
-                transition:
-                  'background-color 280ms cubic-bezier(0.16, 1, 0.3, 1), color 280ms ease, transform 280ms ease',
-                border: isActive ? '1px solid #0A0A0A' : '1px solid transparent',
+                transition: `background-color ${theme.motion.duration.slow} ${theme.motion.easing.out}, color ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
+                border: isActive
+                  ? `1px solid ${theme.colors.black}`
+                  : '1px solid transparent',
               }}
-              className="mbs-chip"
             >
               {/* Brand monogram circle */}
               <span
@@ -78,25 +91,27 @@ export default function MobileBrandShortcuts() {
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  background: isActive ? 'rgba(255,255,255,0.15)' : '#ffffff',
-                  color: isActive ? '#ffffff' : '#0A0A0A',
+                  background: isActive ? 'rgba(255,255,255,0.15)' : theme.colors.white,
+                  color: isActive ? theme.colors.white : theme.colors.textPrimary,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 11,
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-oswald), sans-serif',
-                  letterSpacing: '0.04em',
-                  border: isActive ? '1px solid rgba(255,255,255,0.18)' : '1px solid #ececec',
+                  fontSize: theme.fontSize.sm,
+                  fontWeight: theme.fontWeight.extrabold,
+                  fontFamily: theme.fontFamily.display,
+                  letterSpacing: theme.letterSpacing.wide,
+                  border: isActive
+                    ? '1px solid rgba(255,255,255,0.18)'
+                    : `1px solid ${theme.colors.border}`,
                 }}
               >
                 {b.label.charAt(0)}
               </span>
               <span
                 style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
+                  fontSize: theme.fontSize.base,
+                  fontWeight: theme.fontWeight.bold,
+                  letterSpacing: theme.letterSpacing.wide,
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -112,10 +127,20 @@ export default function MobileBrandShortcuts() {
         .mbs-scroller::-webkit-scrollbar {
           display: none;
         }
+        .mbs-chip {
+          -webkit-tap-highlight-color: transparent;
+        }
         .mbs-chip:active {
           transform: scale(0.96);
+        }
+        .mbs-chip:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 2px;
         }
       `}</style>
     </section>
   );
 }
+
+export const MobileBrandShortcuts = memo(MobileBrandShortcutsImpl);
+export default MobileBrandShortcuts;

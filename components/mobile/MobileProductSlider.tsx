@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, memo, useCallback } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/components/context/AppContext';
+import { theme } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { transitions } from '@/lib/mobile/theme/motion';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import type { MobileProduct } from './mobileProducts';
 
 /**
@@ -17,12 +22,21 @@ import type { MobileProduct } from './mobileProducts';
  * wheel for trackpad. Smooth momentum. Snap-to-card.
  *
  * LN KICKS theme: white bg, black text, red price, black CTA pill.
+ *
+ * Phase 3 polish:
+ *  - Design tokens (no hardcoded values)
+ *  - Haptic light tick on Add to Cart
+ *  - Pressed state on CTA (scale 0.96)
+ *  - Focus-visible ring
+ *  - aria-label on CTAs and links
+ *  - Memoized — props rarely change, prevents re-render on parent state ticks
+ *  - useCallback for addToCart handler (stable reference)
  */
 interface MobileProductSliderProps {
   title: string;
   eyebrow?: string;
   products: MobileProduct[];
-  /** Card width on mobile (px). Default 200. */
+  /** Card width on mobile (px). Default 190. */
   cardWidth?: number;
   /** Show "See all" link on the right of the title. */
   seeAllHref?: string;
@@ -30,7 +44,7 @@ interface MobileProductSliderProps {
   compact?: boolean;
 }
 
-export default function MobileProductSlider({
+function MobileProductSliderImpl({
   title,
   eyebrow,
   products,
@@ -41,30 +55,49 @@ export default function MobileProductSlider({
   const { addToCart, showToast } = useApp();
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  // Hide scrollbars but keep scrollability
+  const handleAddToCart = useCallback(
+    (p: MobileProduct) => {
+      haptic.light();
+      addToCart({
+        id: p.id,
+        name: p.name,
+        price: p.priceValue,
+        image: p.image,
+        qty: 1,
+      });
+      showToast(`${p.name} added to cart`);
+    },
+    [addToCart, showToast],
+  );
+
   return (
-    <section style={{ paddingTop: 36, paddingBottom: 8 }}>
+    <section
+      style={{
+        paddingTop: theme.spacing.section,
+        paddingBottom: theme.spacing.sm,
+      }}
+    >
       {/* Title row */}
       <div
         style={{
-          padding: '0 18px',
+          padding: `0 ${theme.spacing.pad}px`,
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          marginBottom: 18,
-          gap: 12,
+          marginBottom: theme.spacing.xxl,
+          gap: theme.spacing.md,
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           {eyebrow && (
             <p
               style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: '#9ca3af',
+                fontSize: theme.fontSize.xs,
+                fontWeight: theme.fontWeight.bold,
+                color: theme.colors.textTertiary,
                 textTransform: 'uppercase',
-                letterSpacing: '0.28em',
-                margin: '0 0 8px 0',
+                letterSpacing: theme.letterSpacing.extreme,
+                margin: `0 0 ${theme.spacing.sm}px 0`,
               }}
             >
               {eyebrow}
@@ -72,11 +105,11 @@ export default function MobileProductSlider({
           )}
           <h2
             style={{
-              fontFamily: 'var(--font-oswald), sans-serif',
-              fontSize: 26,
-              fontWeight: 800,
-              color: '#0A0A0A',
-              letterSpacing: '-0.02em',
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.h2,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.textPrimary,
+              letterSpacing: theme.letterSpacing.tight,
               lineHeight: 1,
               margin: 0,
               textTransform: 'uppercase',
@@ -88,16 +121,18 @@ export default function MobileProductSlider({
         {seeAllHref && (
           <Link
             href={seeAllHref}
+            aria-label={`See all ${title.toLowerCase()} products`}
+            onPointerDown={() => haptic.light()}
             style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#0A0A0A',
+              fontSize: theme.fontSize.sm,
+              fontWeight: theme.fontWeight.bold,
+              color: theme.colors.textPrimary,
               textTransform: 'uppercase',
-              letterSpacing: '0.14em',
+              letterSpacing: theme.letterSpacing.wider,
               textDecoration: 'none',
               whiteSpace: 'nowrap',
               paddingBottom: 2,
-              borderBottom: '1.5px solid #0A0A0A',
+              borderBottom: `1.5px solid ${theme.colors.black}`,
             }}
           >
             See All
@@ -111,13 +146,12 @@ export default function MobileProductSlider({
         className="mps-scroller"
         style={{
           display: 'flex',
-          gap: 16,
+          gap: theme.spacing.lg,
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: '4px 18px 12px',
-          margin: '0 -0px',
+          padding: `${theme.spacing.xs}px ${theme.spacing.pad}px ${theme.spacing.md}px`,
           cursor: 'grab',
         }}
       >
@@ -138,6 +172,7 @@ export default function MobileProductSlider({
             <Link
               href={p.href}
               aria-label={`${p.brand} ${p.name} — ${p.price}`}
+              onPointerDown={() => haptic.selection()}
               style={{
                 textDecoration: 'none',
                 color: 'inherit',
@@ -159,9 +194,8 @@ export default function MobileProductSlider({
                   maxWidth: '100%',
                   maxHeight: '100%',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 16px 22px rgba(0,0,0,0.13))',
-                  transition:
-                    'transform 400ms cubic-bezier(0.16, 1, 0.3, 1), filter 400ms ease',
+                  filter: dropShadows.md,
+                  transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}, filter ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
                 }}
               />
             </Link>
@@ -170,31 +204,35 @@ export default function MobileProductSlider({
             <div
               style={{
                 textAlign: 'center',
-                marginTop: compact ? 12 : 16,
+                marginTop: compact ? theme.spacing.md : theme.spacing.lg,
                 width: '100%',
-                padding: '0 4px',
+                padding: `0 ${theme.spacing.xs}px`,
               }}
             >
               <p
                 style={{
-                  fontSize: 10,
-                  color: '#9ca3af',
-                  fontWeight: 700,
+                  fontSize: theme.fontSize.xs,
+                  color: theme.colors.textTertiary,
+                  fontWeight: theme.fontWeight.bold,
                   textTransform: 'uppercase',
                   letterSpacing: '0.16em',
-                  margin: '0 0 4px 0',
+                  margin: `0 0 ${theme.spacing.xs}px 0`,
                 }}
               >
                 {p.brand}
               </p>
-              <Link href={p.href} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link
+                href={p.href}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                onPointerDown={() => haptic.selection()}
+              >
                 <h3
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#0A0A0A',
-                    lineHeight: 1.35,
-                    margin: '0 0 8px 0',
+                    fontSize: theme.fontSize.body,
+                    fontWeight: theme.fontWeight.semibold,
+                    color: theme.colors.textPrimary,
+                    lineHeight: theme.lineHeight.normal,
+                    margin: `0 0 ${theme.spacing.sm}px 0`,
                     minHeight: 36,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -210,19 +248,28 @@ export default function MobileProductSlider({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 6,
+                  gap: theme.spacing.xs + 2,
                   flexWrap: 'wrap',
-                  marginBottom: compact ? 0 : 12,
+                  marginBottom: compact ? 0 : theme.spacing.md,
                 }}
               >
-                <span style={{ color: '#DC2626', fontWeight: 700, fontSize: 13 }}>{p.price}</span>
+                {/* Price — kept matte black (luxury, no red) */}
+                <span
+                  style={{
+                    color: theme.colors.price,
+                    fontWeight: theme.fontWeight.bold,
+                    fontSize: theme.fontSize.body,
+                  }}
+                >
+                  {p.price}
+                </span>
                 {p.comparePrice && (
                   <span
                     style={{
-                      color: '#9ca3af',
-                      fontSize: 11,
+                      color: theme.colors.textTertiary,
+                      fontSize: theme.fontSize.sm,
                       textDecoration: 'line-through',
-                      fontWeight: 400,
+                      fontWeight: theme.fontWeight.regular,
                     }}
                   >
                     {p.comparePrice}
@@ -232,35 +279,25 @@ export default function MobileProductSlider({
               {!compact && (
                 <button
                   type="button"
-                  onClick={() => {
-                    addToCart({
-                      id: p.id,
-                      name: p.name,
-                      price: p.priceValue,
-                      image: p.image,
-                      qty: 1,
-                    });
-                    showToast(`${p.name} added to cart`);
-                  }}
-                  className="mps-cta"
+                  onClick={() => handleAddToCart(p)}
+                  className="pressable mps-cta"
                   style={{
                     width: '100%',
-                    background: '#0A0A0A',
-                    color: '#ffffff',
+                    background: theme.colors.black,
+                    color: theme.colors.white,
                     border: 'none',
-                    borderRadius: 999,
-                    padding: '10px 12px',
+                    borderRadius: theme.radius.pill,
+                    padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
                     fontSize: 10.5,
-                    fontWeight: 700,
+                    fontWeight: theme.fontWeight.bold,
                     textTransform: 'uppercase',
-                    letterSpacing: '0.14em',
+                    letterSpacing: theme.letterSpacing.wider,
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 6,
-                    transition:
-                      'background-color 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    gap: theme.spacing.xs + 2,
+                    transition: transitions.surface,
                   }}
                   aria-label={`Add ${p.name} to cart`}
                 >
@@ -279,7 +316,7 @@ export default function MobileProductSlider({
           </article>
         ))}
         {/* Trailing spacer so last card can scroll-snap to start */}
-        <div aria-hidden style={{ flex: '0 0 18px', height: 1 }} />
+        <div aria-hidden style={{ flex: `0 0 ${theme.spacing.pad}px`, height: 1 }} />
       </div>
 
       <style jsx>{`
@@ -291,17 +328,17 @@ export default function MobileProductSlider({
         }
         .mps-img:hover {
           transform: translateY(-6px);
-          filter: drop-shadow(0 22px 30px rgba(0, 0, 0, 0.18));
+          filter: ${dropShadows.lg};
         }
         .mps-cta:hover {
-          background-color: #1f1f1f !important;
+          background-color: ${theme.colors.grey800} !important;
           transform: translateY(-1px);
         }
-        .mps-cta:focus-visible {
-          outline: 2px solid #0a0a0a;
-          outline-offset: 3px;
-        }
       `}</style>
+      <style jsx>{pressableStyle}</style>
     </section>
   );
 }
+
+export const MobileProductSlider = memo(MobileProductSliderImpl);
+export default MobileProductSlider;

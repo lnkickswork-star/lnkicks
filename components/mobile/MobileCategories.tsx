@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
+import { theme } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { haptic } from '@/lib/mobile/utils/haptics';
 import { MOBILE_CATEGORIES } from './mobileProducts';
 
 /**
@@ -11,30 +14,37 @@ import { MOBILE_CATEGORIES } from './mobileProducts';
  * sneaker image inside a soft-grey circle, label below. Premium minimal.
  *
  * LN KICKS theme: white bg, soft grey circles, black labels.
+ *
+ * Phase 3 polish: design tokens, haptics, focus-visible, memoized.
  */
-export default function MobileCategories() {
+function MobileCategoriesImpl() {
   return (
-    <section style={{ paddingTop: 36 }}>
-      <div style={{ padding: '0 18px', marginBottom: 18 }}>
+    <section style={{ paddingTop: theme.spacing.section }}>
+      <div
+        style={{
+          padding: `0 ${theme.spacing.pad}px`,
+          marginBottom: theme.spacing.xxl,
+        }}
+      >
         <p
           style={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: '#9ca3af',
+            fontSize: theme.fontSize.xs,
+            fontWeight: theme.fontWeight.bold,
+            color: theme.colors.textTertiary,
             textTransform: 'uppercase',
-            letterSpacing: '0.28em',
-            margin: '0 0 8px 0',
+            letterSpacing: theme.letterSpacing.extreme,
+            margin: `0 0 ${theme.spacing.sm}px 0`,
           }}
         >
           Browse by
         </p>
         <h2
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 26,
-            fontWeight: 800,
-            color: '#0A0A0A',
-            letterSpacing: '-0.02em',
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.h2,
+            fontWeight: theme.fontWeight.extrabold,
+            color: theme.colors.textPrimary,
+            letterSpacing: theme.letterSpacing.tight,
             lineHeight: 1,
             margin: 0,
             textTransform: 'uppercase',
@@ -48,18 +58,21 @@ export default function MobileCategories() {
         className="mcat-scroller"
         style={{
           display: 'flex',
-          gap: 16,
+          gap: theme.spacing.lg,
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: '4px 18px 12px',
+          padding: `${theme.spacing.xs}px ${theme.spacing.pad}px ${theme.spacing.md}px`,
         }}
       >
         {MOBILE_CATEGORIES.map((c) => (
           <Link
             key={c.id}
             href={c.href}
+            aria-label={`Browse ${c.label} category`}
+            onPointerDown={() => haptic.selection()}
+            className="mcat-link"
             style={{
               flex: '0 0 88px',
               maxWidth: 88,
@@ -67,7 +80,7 @@ export default function MobileCategories() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 8,
+              gap: theme.spacing.sm,
               textDecoration: 'none',
               color: 'inherit',
             }}
@@ -77,13 +90,13 @@ export default function MobileCategories() {
                 width: 88,
                 height: 88,
                 borderRadius: '50%',
-                background: '#f6f6f6',
+                background: theme.colors.grey50,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                border: '1px solid #f0f0f0',
-                transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+                border: `1px solid ${theme.colors.grey150}`,
+                transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
               }}
               className="mcat-circle"
             >
@@ -97,15 +110,15 @@ export default function MobileCategories() {
                   maxWidth: '78%',
                   maxHeight: '78%',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.10))',
+                  filter: dropShadows.xs,
                 }}
               />
             </div>
             <span
               style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: '#0A0A0A',
+                fontSize: theme.fontSize.sm,
+                fontWeight: theme.fontWeight.semibold,
+                color: theme.colors.textPrimary,
                 letterSpacing: '0.02em',
                 textAlign: 'center',
               }}
@@ -114,7 +127,7 @@ export default function MobileCategories() {
             </span>
           </Link>
         ))}
-        <div aria-hidden style={{ flex: '0 0 18px', height: 1 }} />
+        <div aria-hidden style={{ flex: `0 0 ${theme.spacing.pad}px`, height: 1 }} />
       </div>
 
       <style jsx>{`
@@ -124,7 +137,15 @@ export default function MobileCategories() {
         .mcat-circle:hover {
           transform: translateY(-3px) scale(1.03);
         }
+        .mcat-link:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 3px;
+          border-radius: ${theme.radius.md};
+        }
       `}</style>
     </section>
   );
 }
+
+export const MobileCategories = memo(MobileCategoriesImpl);
+export default MobileCategories;

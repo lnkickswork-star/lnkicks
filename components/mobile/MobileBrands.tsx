@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
+import { theme } from '@/lib/mobile/theme/theme';
 import { MOBILE_BRANDS } from './mobileProducts';
 
 /**
@@ -10,46 +11,58 @@ import { MOBILE_BRANDS } from './mobileProducts';
  * Grayscale filter, hover reveals color. Smooth 38s linear infinite.
  *
  * LN KICKS theme: black wordmarks on white, soft grey dividers.
+ *
+ * Phase 3 polish: design tokens, memoized, prefers-reduced-motion support.
  */
-export default function MobileBrands() {
+function MobileBrandsImpl() {
   const track = [...MOBILE_BRANDS, ...MOBILE_BRANDS];
 
   return (
     <section
+      aria-label="Featured brands"
       style={{
-        paddingTop: 40,
-        paddingBottom: 36,
-        background: '#ffffff',
-        borderTop: '1px solid #fafafa',
+        paddingTop: theme.spacing.huge + 4,
+        paddingBottom: theme.spacing.section,
+        background: theme.colors.white,
+        borderTop: `1px solid ${theme.colors.grey50}`,
         overflow: 'hidden',
       }}
     >
-      <div style={{ padding: '0 18px', textAlign: 'center', marginBottom: 24 }}>
+      <div
+        style={{
+          padding: `0 ${theme.spacing.pad}px`,
+          textAlign: 'center',
+          marginBottom: theme.spacing.xxl,
+        }}
+      >
         <p
           style={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: '#9ca3af',
+            fontSize: theme.fontSize.xs,
+            fontWeight: theme.fontWeight.bold,
+            color: theme.colors.textTertiary,
             textTransform: 'uppercase',
             letterSpacing: '0.3em',
-            margin: '0 0 8px 0',
+            margin: `0 0 ${theme.spacing.sm}px 0`,
           }}
         >
           Authenticated · Stocked · Trusted
         </p>
         <h2
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 30,
-            fontWeight: 800,
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.h1,
+            fontWeight: theme.fontWeight.extrabold,
             margin: 0,
             textTransform: 'uppercase',
-            letterSpacing: '-0.03em',
-            color: '#0A0A0A',
+            letterSpacing: theme.letterSpacing.tightest,
+            color: theme.colors.textPrimary,
             lineHeight: 1,
           }}
         >
-          Brands at <span style={{ fontStyle: 'italic', fontWeight: 300 }}>LN KICKS</span>
+          Brands at{' '}
+          <span style={{ fontStyle: 'italic', fontWeight: theme.fontWeight.regular }}>
+            LN KICKS
+          </span>
         </h2>
       </div>
 
@@ -62,11 +75,11 @@ export default function MobileBrands() {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                padding: '0 28px',
+                padding: `0 ${theme.spacing.xxxl}px`,
                 flexShrink: 0,
-                color: '#0A0A0A',
+                color: theme.colors.textPrimary,
                 opacity: 0.85,
-                transition: 'opacity 300ms ease',
+                transition: `opacity ${theme.motion.duration.slow} ${theme.motion.easing.inOut}`,
               }}
             >
               {b.name}
@@ -81,7 +94,7 @@ export default function MobileBrands() {
           overflow: hidden;
           position: relative;
           filter: grayscale(1);
-          transition: filter 500ms ease;
+          transition: filter ${theme.motion.duration.long} ${theme.motion.easing.inOut};
         }
         .mb-marquee-wrap:hover {
           filter: grayscale(0);
@@ -104,6 +117,13 @@ export default function MobileBrands() {
           100% { transform: translateX(-50%); }
         }
 
+        /* Respect user's reduced-motion preference */
+        @media (prefers-reduced-motion: reduce) {
+          .mb-marquee-track {
+            animation: none;
+          }
+        }
+
         .mb-nike { font-size: 30px; font-weight: 900; letter-spacing: -0.02em; font-style: italic; }
         .mb-jordan { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
         .mb-adidas { font-size: 28px; font-weight: 700; letter-spacing: 0.08em; }
@@ -119,3 +139,6 @@ export default function MobileBrands() {
     </section>
   );
 }
+
+export const MobileBrands = memo(MobileBrandsImpl);
+export default MobileBrands;

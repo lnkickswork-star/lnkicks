@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Oswald, Playfair_Display, Inter } from 'next/font/google';
 import { AppProvider } from '@/components/context/AppContext';
 
@@ -51,8 +51,14 @@ export const metadata: Metadata = {
   description:
     "India's premier destination for authentic luxury sneakers and hyped drops.",
   metadataBase: new URL('https://www.lnkicks.com'),
+  manifest: '/manifest.webmanifest',
   alternates: {
     canonical: '/',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'LNKICKS',
   },
   openGraph: {
     title: 'LNKICKS — Stocked & Loaded',
@@ -84,6 +90,24 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Viewport — Next.js 14 separates viewport from metadata.
+ *
+ * `viewport-fit=cover` is REQUIRED for safe-area-inset-* env() values to
+ * be non-zero on iOS notched devices. Without this, env(safe-area-inset-*)
+ * always returns 0 and content sits under the Dynamic Island / Home Indicator.
+ *
+ * `themeColor` controls Safari mobile browser chrome color and the iOS
+ * PWA status bar style. Pure white keeps the luxury aesthetic.
+ */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5, // Allow zoom for accessibility (don't disable)
+  viewportFit: 'cover',
+  themeColor: '#ffffff',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -101,6 +125,15 @@ export default function RootLayout({
           fontFamily: 'var(--font-inter), sans-serif',
           background: '#0A0A0A',
           color: '#0A0A0A',
+          // Prevent iOS rubber-band scroll bleed-through on mobile
+          overscrollBehaviorY: 'none',
+          // Improve text rendering on iOS / macOS
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          // Prevent text auto-size on orientation change (iOS)
+          textSizeAdjust: '100%',
+          // Disable tap highlight (we manage our own pressed states)
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         <AppProvider>{children}</AppProvider>

@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
+import { theme } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { transitions } from '@/lib/mobile/theme/motion';
+import { safeArea } from '@/lib/mobile/utils/safeArea';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle, pressableStrongStyle } from '@/lib/mobile/utils/interactions';
 
 /**
  * MobileSplash — luxury fullscreen splash screen.
@@ -11,11 +17,20 @@ import React, { useState, useEffect, useCallback } from 'react';
  *
  * LN KICKS theme: pure white + black + soft grey. No blue, no gradients.
  *
+ * Phase 3 polish:
+ *  - Design tokens (no hardcoded values)
+ *  - Safe-area-aware: padding-top clears Dynamic Island / status bar
+ *  - Haptic feedback (medium) on Get Started / Skip tap
+ *  - Pressed state on CTAs
+ *  - Focus-visible ring for keyboard users
+ *  - aria-label on CTAs
+ *  - Memoized — splash state is internal, parent re-renders don't affect it
+ *
  * NOTE: Uses external CDN image URLs because the local /public/*.png
  * files are Git LFS pointers (broken in this repo). See worklog
  * phase-2-enterprise-modernization for details.
  */
-export default function MobileSplash({ onDone }: { onDone: () => void }) {
+function MobileSplashImpl({ onDone }: { onDone: () => void }) {
   const [exiting, setExiting] = useState(false);
 
   const dismiss = useCallback(() => {
@@ -34,18 +49,22 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
   return (
     <div
       className={`m-splash ${exiting ? 'm-splash--out' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome to LNKICKS"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        background: '#ffffff',
-        zIndex: 9999,
+        background: theme.colors.white,
+        zIndex: theme.zIndex.splash,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '56px 24px 32px',
+        // Safe-area-aware padding — clears Dynamic Island / notch
+        padding: `calc(56px + ${safeArea.paddingTop}) ${theme.spacing.xxl}px calc(32px + ${safeArea.paddingBottom})`,
         boxSizing: 'border-box',
       }}
     >
@@ -53,28 +72,32 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 16,
-            fontWeight: 800,
-            letterSpacing: '0.18em',
-            color: '#0A0A0A',
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.lg,
+            fontWeight: theme.fontWeight.extrabold,
+            letterSpacing: theme.letterSpacing.widest,
+            color: theme.colors.textPrimary,
           }}
         >
           LNKICKS
         </div>
         <button
           type="button"
-          onClick={dismiss}
-          aria-label="Skip splash"
+          onClick={() => {
+            haptic.medium();
+            dismiss();
+          }}
+          aria-label="Skip splash screen"
+          className="pressable"
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.18em',
+            fontSize: theme.fontSize.sm,
+            fontWeight: theme.fontWeight.bold,
+            letterSpacing: theme.letterSpacing.widest,
             textTransform: 'uppercase',
-            color: '#6b7280',
-            padding: '8px 16px',
+            color: theme.colors.textSecondary,
+            padding: `${theme.spacing.sm}px ${theme.spacing.md}px`,
             background: 'rgba(0,0,0,0.04)',
-            borderRadius: 999,
+            borderRadius: theme.radius.pill,
             border: 'none',
             cursor: 'pointer',
           }}
@@ -91,7 +114,7 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '24px 0',
+          margin: `${theme.spacing.xxl}px 0`,
           overflow: 'hidden',
         }}
       >
@@ -99,11 +122,11 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
         <div
           aria-hidden
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 96,
-            fontWeight: 900,
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.watermark,
+            fontWeight: theme.fontWeight.black,
             letterSpacing: '0.04em',
-            color: '#0A0A0A',
+            color: theme.colors.textPrimary,
             writingMode: 'vertical-rl',
             transform: 'rotate(180deg)',
             userSelect: 'none',
@@ -123,13 +146,14 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
           alt="Air Jordan 1"
           width={180}
           height={180}
+          loading="eager"
           style={{
             position: 'absolute',
             top: '4%',
             left: '0%',
             width: 180,
             height: 'auto',
-            filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.18))',
+            filter: dropShadows.lg,
             transform: 'rotate(-28deg)',
             zIndex: 3,
           }}
@@ -142,13 +166,14 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
           alt="Adidas Samba OG"
           width={190}
           height={190}
+          loading="eager"
           style={{
             position: 'absolute',
             bottom: '6%',
             right: '0%',
             width: 190,
             height: 'auto',
-            filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.18))',
+            filter: dropShadows.lg,
             transform: 'rotate(24deg)',
             zIndex: 3,
           }}
@@ -159,25 +184,25 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
       <div style={{ position: 'relative', zIndex: 10 }}>
         <p
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: '#9ca3af',
+            fontSize: theme.fontSize.xs,
+            fontWeight: theme.fontWeight.bold,
+            color: theme.colors.textTertiary,
             textTransform: 'uppercase',
-            letterSpacing: '0.28em',
-            margin: '0 0 14px 0',
+            letterSpacing: theme.letterSpacing.extreme,
+            margin: `0 0 ${theme.spacing.md + 2}px 0`,
           }}
         >
           Authenticated Luxury
         </p>
         <h1
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 38,
-            fontWeight: 800,
-            lineHeight: 1.05,
-            color: '#0A0A0A',
-            letterSpacing: '-0.02em',
-            margin: '0 0 28px 0',
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.hero,
+            fontWeight: theme.fontWeight.extrabold,
+            lineHeight: theme.lineHeight.tight,
+            color: theme.colors.textPrimary,
+            letterSpacing: theme.letterSpacing.tight,
+            margin: `0 0 ${theme.spacing.xxl + 4}px 0`,
             textTransform: 'uppercase',
           }}
         >
@@ -185,27 +210,32 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
         </h1>
         <button
           type="button"
-          onClick={dismiss}
+          onClick={() => {
+            haptic.medium();
+            dismiss();
+          }}
+          aria-label="Get started — enter LN KICKS"
+          className="pressable-strong"
           style={{
             width: '100%',
-            background: '#0A0A0A',
-            borderRadius: 999,
-            padding: '18px 28px',
+            background: theme.colors.black,
+            borderRadius: theme.radius.pill,
+            padding: `${theme.spacing.xxxl - 10}px ${theme.spacing.xxl + 4}px`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            color: '#ffffff',
+            color: theme.colors.white,
             cursor: 'pointer',
             border: 'none',
-            boxShadow: '0 12px 28px rgba(0,0,0,0.18)',
+            boxShadow: theme.shadows.xl,
           }}
         >
           <span
             style={{
-              fontFamily: 'var(--font-oswald), sans-serif',
-              fontSize: 15,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.bold,
+              letterSpacing: theme.letterSpacing.wider,
               textTransform: 'uppercase',
             }}
           >
@@ -220,13 +250,18 @@ export default function MobileSplash({ onDone }: { onDone: () => void }) {
       <style jsx>{`
         .m-splash {
           opacity: 1;
-          transition: opacity 380ms cubic-bezier(0.16, 1, 0.3, 1);
+          transition: ${transitions.splash};
         }
         .m-splash--out {
           opacity: 0;
           pointer-events: none;
         }
       `}</style>
+      <style jsx>{pressableStyle}</style>
+      <style jsx>{pressableStrongStyle}</style>
     </div>
   );
 }
+
+export const MobileSplash = memo(MobileSplashImpl);
+export default MobileSplash;

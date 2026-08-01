@@ -1,8 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/components/context/AppContext';
+import { theme } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { transitions } from '@/lib/mobile/theme/motion';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import { MOBILE_RECOMMENDED } from './mobileProducts';
 
 /**
@@ -14,42 +19,60 @@ import { MOBILE_RECOMMENDED } from './mobileProducts';
  *
  * LN KICKS theme: white bg, black text, red price, black CTA pill,
  * black star rating. Minimal luxury.
+ *
+ * Phase 3 polish: design tokens, haptics, pressed states, focus rings,
+ * memoization, useCallback for addToCart, Stars memoized.
  */
-export default function MobileRecommended() {
+function MobileRecommendedImpl() {
   const { addToCart, showToast } = useApp();
 
+  const handleAddToCart = useCallback(
+    (p: typeof MOBILE_RECOMMENDED[number]) => {
+      haptic.light();
+      addToCart({
+        id: p.id,
+        name: p.name,
+        price: p.priceValue,
+        image: p.image,
+        qty: 1,
+      });
+      showToast(`${p.name} added to cart`);
+    },
+    [addToCart, showToast],
+  );
+
   return (
-    <section style={{ paddingTop: 36 }}>
+    <section style={{ paddingTop: theme.spacing.section }}>
       <div
         style={{
-          padding: '0 18px',
+          padding: `0 ${theme.spacing.pad}px`,
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          marginBottom: 18,
-          gap: 12,
+          marginBottom: theme.spacing.xxl,
+          gap: theme.spacing.md,
         }}
       >
         <div>
           <p
             style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: '#9ca3af',
+              fontSize: theme.fontSize.xs,
+              fontWeight: theme.fontWeight.bold,
+              color: theme.colors.textTertiary,
               textTransform: 'uppercase',
-              letterSpacing: '0.28em',
-              margin: '0 0 8px 0',
+              letterSpacing: theme.letterSpacing.extreme,
+              margin: `0 0 ${theme.spacing.sm}px 0`,
             }}
           >
             Picked For You
           </p>
           <h2
             style={{
-              fontFamily: 'var(--font-oswald), sans-serif',
-              fontSize: 26,
-              fontWeight: 800,
-              color: '#0A0A0A',
-              letterSpacing: '-0.02em',
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.h2,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.textPrimary,
+              letterSpacing: theme.letterSpacing.tight,
               lineHeight: 1,
               margin: 0,
               textTransform: 'uppercase',
@@ -60,16 +83,18 @@ export default function MobileRecommended() {
         </div>
         <Link
           href="/products?filter=recommended"
+          aria-label="See all recommended products"
+          onPointerDown={() => haptic.light()}
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: '#0A0A0A',
+            fontSize: theme.fontSize.sm,
+            fontWeight: theme.fontWeight.bold,
+            color: theme.colors.textPrimary,
             textTransform: 'uppercase',
-            letterSpacing: '0.14em',
+            letterSpacing: theme.letterSpacing.wider,
             textDecoration: 'none',
             whiteSpace: 'nowrap',
             paddingBottom: 2,
-            borderBottom: '1.5px solid #0A0A0A',
+            borderBottom: `1.5px solid ${theme.colors.black}`,
           }}
         >
           See All
@@ -78,10 +103,10 @@ export default function MobileRecommended() {
 
       <div
         style={{
-          padding: '0 18px',
+          padding: `0 ${theme.spacing.pad}px`,
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: 16,
+          gap: theme.spacing.lg,
         }}
       >
         {MOBILE_RECOMMENDED.map((p) => (
@@ -97,6 +122,7 @@ export default function MobileRecommended() {
             <Link
               href={p.href}
               aria-label={`${p.brand} ${p.name} — ${p.price}`}
+              onPointerDown={() => haptic.selection()}
               style={{
                 textDecoration: 'none',
                 color: 'inherit',
@@ -118,34 +144,43 @@ export default function MobileRecommended() {
                   maxWidth: '100%',
                   maxHeight: '100%',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 16px 22px rgba(0,0,0,0.13))',
-                  transition:
-                    'transform 400ms cubic-bezier(0.16, 1, 0.3, 1), filter 400ms ease',
+                  filter: dropShadows.md,
+                  transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}, filter ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
                 }}
               />
             </Link>
 
-            <div style={{ textAlign: 'center', marginTop: 14, width: '100%' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: theme.spacing.md + 2,
+                width: '100%',
+              }}
+            >
               <p
                 style={{
-                  fontSize: 10,
-                  color: '#9ca3af',
-                  fontWeight: 700,
+                  fontSize: theme.fontSize.xs,
+                  color: theme.colors.textTertiary,
+                  fontWeight: theme.fontWeight.bold,
                   textTransform: 'uppercase',
                   letterSpacing: '0.16em',
-                  margin: '0 0 4px 0',
+                  margin: `0 0 ${theme.spacing.xs}px 0`,
                 }}
               >
                 {p.brand}
               </p>
-              <Link href={p.href} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link
+                href={p.href}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                onPointerDown={() => haptic.selection()}
+              >
                 <h3
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#0A0A0A',
-                    lineHeight: 1.35,
-                    margin: '0 0 6px 0',
+                    fontSize: theme.fontSize.body,
+                    fontWeight: theme.fontWeight.semibold,
+                    color: theme.colors.textPrimary,
+                    lineHeight: theme.lineHeight.normal,
+                    margin: `0 0 ${theme.spacing.xs + 2}px 0`,
                     minHeight: 36,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -163,16 +198,16 @@ export default function MobileRecommended() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 4,
-                  marginBottom: 8,
+                  gap: theme.spacing.hairline + 2,
+                  marginBottom: theme.spacing.sm,
                 }}
               >
                 <Stars rating={p.rating || 5} />
                 <span
                   style={{
-                    fontSize: 10,
-                    color: '#9ca3af',
-                    fontWeight: 600,
+                    fontSize: theme.fontSize.xs,
+                    color: theme.colors.textTertiary,
+                    fontWeight: theme.fontWeight.semibold,
                     marginLeft: 2,
                   }}
                 >
@@ -185,19 +220,27 @@ export default function MobileRecommended() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 6,
+                  gap: theme.spacing.xs + 2,
                   flexWrap: 'wrap',
-                  marginBottom: 12,
+                  marginBottom: theme.spacing.md,
                 }}
               >
-                <span style={{ color: '#DC2626', fontWeight: 700, fontSize: 13 }}>{p.price}</span>
+                <span
+                  style={{
+                    color: theme.colors.price,
+                    fontWeight: theme.fontWeight.bold,
+                    fontSize: theme.fontSize.body,
+                  }}
+                >
+                  {p.price}
+                </span>
                 {p.comparePrice && (
                   <span
                     style={{
-                      color: '#9ca3af',
-                      fontSize: 11,
+                      color: theme.colors.textTertiary,
+                      fontSize: theme.fontSize.sm,
                       textDecoration: 'line-through',
-                      fontWeight: 400,
+                      fontWeight: theme.fontWeight.regular,
                     }}
                   >
                     {p.comparePrice}
@@ -206,35 +249,25 @@ export default function MobileRecommended() {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  addToCart({
-                    id: p.id,
-                    name: p.name,
-                    price: p.priceValue,
-                    image: p.image,
-                    qty: 1,
-                  });
-                  showToast(`${p.name} added to cart`);
-                }}
-                className="mrec-cta"
+                onClick={() => handleAddToCart(p)}
+                className="pressable mrec-cta"
                 style={{
                   width: '100%',
-                  background: '#0A0A0A',
-                  color: '#ffffff',
+                  background: theme.colors.black,
+                  color: theme.colors.white,
                   border: 'none',
-                  borderRadius: 999,
-                  padding: '10px 12px',
+                  borderRadius: theme.radius.pill,
+                  padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
                   fontSize: 10.5,
-                  fontWeight: 700,
+                  fontWeight: theme.fontWeight.bold,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.14em',
+                  letterSpacing: theme.letterSpacing.wider,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 6,
-                  transition:
-                    'background-color 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  gap: theme.spacing.xs + 2,
+                  transition: transitions.surface,
                 }}
                 aria-label={`Add ${p.name} to cart`}
               >
@@ -256,26 +289,28 @@ export default function MobileRecommended() {
       <style jsx>{`
         .mrec-img:hover {
           transform: translateY(-6px);
-          filter: drop-shadow(0 22px 30px rgba(0, 0, 0, 0.18));
+          filter: ${dropShadows.lg};
         }
         .mrec-cta:hover {
-          background-color: #1f1f1f !important;
+          background-color: ${theme.colors.grey800} !important;
           transform: translateY(-1px);
         }
-        .mrec-cta:focus-visible {
-          outline: 2px solid #0a0a0a;
-          outline-offset: 3px;
-        }
       `}</style>
+      <style jsx>{pressableStyle}</style>
     </section>
   );
 }
 
+export const MobileRecommended = memo(MobileRecommendedImpl);
+export default MobileRecommended;
+
 /* ──────────────────────────────────────────────────────────────────
  *  Stars — 5-star rating display (0.5 step).
  *  Black filled stars, soft grey empty stars. Compact 12px size.
+ *
+ *  Memoized — only re-renders when rating prop changes.
  * ────────────────────────────────────────────────────────────────── */
-function Stars({ rating }: { rating: number }) {
+const Stars = memo(function Stars({ rating }: { rating: number }) {
   const full = Math.floor(rating);
   const half = rating - full >= 0.5;
   return (
@@ -296,8 +331,8 @@ function Stars({ rating }: { rating: number }) {
             width="11"
             height="11"
             viewBox="0 0 24 24"
-            fill={filled || isHalf ? '#0A0A0A' : 'none'}
-            stroke={filled || isHalf ? '#0A0A0A' : '#d1d5db'}
+            fill={filled || isHalf ? theme.colors.black : 'none'}
+            stroke={filled || isHalf ? theme.colors.black : theme.colors.grey300}
             strokeWidth="2"
             aria-hidden
           >
@@ -307,4 +342,4 @@ function Stars({ rating }: { rating: number }) {
       })}
     </div>
   );
-}
+});

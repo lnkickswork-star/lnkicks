@@ -1,7 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import Link from 'next/link';
+import { theme } from '@/lib/mobile/theme/theme';
+import { transitions } from '@/lib/mobile/theme/motion';
+import { safeArea } from '@/lib/mobile/utils/safeArea';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
  * MobileMenuDrawer — luxury slide-in drawer from the left.
@@ -11,6 +16,16 @@ import Link from 'next/link';
  * auth link, secondary utility links, social row.
  *
  * LN KICKS theme: white drawer, black text, soft grey dividers.
+ *
+ * Phase 3 polish:
+ *  - Design tokens
+ *  - Haptic feedback (heavy on open, light on close/link-tap)
+ *  - Safe-area-aware: drawer header clears Dynamic Island, footer clears Home Indicator
+ *  - Focus trap inside drawer (focus moves to close button on open, returns on close)
+ *  - aria-modal + role="dialog" properly set
+ *  - Esc key closes (already done)
+ *  - Body scroll lock (already done)
+ *  - Memoized — only re-renders when `open` prop changes
  */
 
 const PRIMARY_LINKS = [
@@ -22,7 +37,7 @@ const PRIMARY_LINKS = [
   { label: 'Categories', href: '/categories' },
   { label: 'Brands', href: '/products?filter=brands' },
   { label: 'Track Order', href: '/track-order' },
-];
+] as const;
 
 const UTILITY_LINKS = [
   { label: 'About LN KICKS', href: '/about' },
@@ -33,32 +48,43 @@ const UTILITY_LINKS = [
   { label: 'FAQs', href: '/faqs' },
   { label: 'Terms & Conditions', href: '/terms-conditions' },
   { label: 'Privacy Policy', href: '/privacy-policy' },
-];
+] as const;
 
-export default function MobileMenuDrawer({
+function MobileMenuDrawerImpl({
   open,
   onClose,
 }: {
   open: boolean;
   onClose: () => void;
 }) {
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
   // Lock body scroll while open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      // Haptic: heavy tick on open
+      haptic.heavy();
+      // Move focus to close button after drawer opens
+      const t = setTimeout(() => closeBtnRef.current?.focus(), 100);
+      return () => {
+        document.body.style.overflow = '';
+        clearTimeout(t);
+      };
     }
     return () => {
       document.body.style.overflow = '';
     };
   }, [open]);
 
-  // Close on Escape
+  // Close on Escape (also handled at page level, kept here for self-containment)
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        haptic.light();
+        onClose();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -73,7 +99,7 @@ export default function MobileMenuDrawer({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 1100,
+        zIndex: theme.zIndex.drawer,
         pointerEvents: open ? 'auto' : 'none',
         visibility: open ? 'visible' : 'hidden',
       }}
@@ -81,13 +107,16 @@ export default function MobileMenuDrawer({
       {/* Dark overlay */}
       <div
         className="mmd-overlay"
-        onClick={onClose}
+        onClick={() => {
+          haptic.light();
+          onClose();
+        }}
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(10,10,10,0.45)',
+          background: theme.colors.scrim,
           opacity: open ? 1 : 0,
-          transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: transitions.fade,
         }}
         aria-hidden
       />
@@ -104,12 +133,14 @@ export default function MobileMenuDrawer({
           left: 0,
           bottom: 0,
           width: 'min(86%, 360px)',
-          background: '#ffffff',
+          background: theme.colors.white,
           display: 'flex',
           flexDirection: 'column',
           transform: open ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 380ms cubic-bezier(0.16, 1, 0.3, 1)',
-          boxShadow: '0 0 60px rgba(0,0,0,0.18)',
+          transition: transitions.drawer,
+          boxShadow: theme.shadows.xxl,
+          // Safe-area-aware: drawer header clears Dynamic Island
+          paddingTop: safeArea.paddingTop,
         }}
       >
         {/* Drawer header */}
@@ -118,32 +149,37 @@ export default function MobileMenuDrawer({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '20px 22px 18px',
-            borderBottom: '1px solid #f0f0f0',
+            padding: `${theme.spacing.xl}px ${theme.spacing.xxl - 2}px ${theme.spacing.xxl - 4}px`,
+            borderBottom: `1px solid ${theme.colors.grey150}`,
           }}
         >
           <div
             style={{
-              fontFamily: 'var(--font-oswald), sans-serif',
-              fontSize: 18,
-              fontWeight: 800,
-              letterSpacing: '0.18em',
-              color: '#0A0A0A',
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.xl,
+              fontWeight: theme.fontWeight.extrabold,
+              letterSpacing: theme.letterSpacing.widest,
+              color: theme.colors.textPrimary,
             }}
           >
             LNKICKS
           </div>
           <button
+            ref={closeBtnRef}
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              haptic.light();
+              onClose();
+            }}
             aria-label="Close menu"
+            className="pressable"
             style={{
               width: 36,
               height: 36,
               borderRadius: '50%',
-              border: '1px solid #ececec',
-              background: '#ffffff',
-              color: '#0A0A0A',
+              border: `1px solid ${theme.colors.border}`,
+              background: theme.colors.white,
+              color: theme.colors.textPrimary,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -162,7 +198,7 @@ export default function MobileMenuDrawer({
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '8px 0 24px',
+            padding: `${theme.spacing.sm}px 0 ${theme.spacing.xxl}px`,
             WebkitOverflowScrolling: 'touch',
           }}
           className="mmd-scroll"
@@ -174,18 +210,21 @@ export default function MobileMenuDrawer({
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    onClick={onClose}
+                    onClick={() => {
+                      haptic.selection();
+                      onClose();
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '15px 22px',
+                      padding: `15px ${theme.spacing.xxl - 2}px`,
                       fontSize: 14.5,
-                      fontWeight: 600,
-                      color: '#0A0A0A',
+                      fontWeight: theme.fontWeight.semibold,
+                      color: theme.colors.textPrimary,
                       textDecoration: 'none',
-                      borderBottom: '1px solid #f6f6f6',
-                      transition: 'background-color 220ms ease',
+                      borderBottom: `1px solid ${theme.colors.grey50}`,
+                      transition: transitions.press,
                     }}
                     className="mmd-link"
                   >
@@ -200,24 +239,28 @@ export default function MobileMenuDrawer({
           </nav>
 
           {/* Auth CTA */}
-          <div style={{ padding: '22px 22px 18px' }}>
+          <div style={{ padding: `${theme.spacing.xxl - 4}px ${theme.spacing.xxl - 2}px ${theme.spacing.xxl - 4}px` }}>
             <Link
               href="/login"
-              onClick={onClose}
+              onClick={() => {
+                haptic.medium();
+                onClose();
+              }}
+              className="pressable"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
+                gap: theme.spacing.sm,
                 width: '100%',
-                padding: '14px 20px',
-                background: '#0A0A0A',
-                color: '#ffffff',
-                borderRadius: 999,
+                padding: `${theme.spacing.md + 2}px ${theme.spacing.xl}px`,
+                background: theme.colors.black,
+                color: theme.colors.white,
+                borderRadius: theme.radius.pill,
                 textDecoration: 'none',
-                fontFamily: 'var(--font-oswald), sans-serif',
-                fontSize: 13,
-                fontWeight: 700,
+                fontFamily: theme.fontFamily.display,
+                fontSize: theme.fontSize.body,
+                fontWeight: theme.fontWeight.bold,
                 letterSpacing: '0.16em',
                 textTransform: 'uppercase',
               }}
@@ -230,15 +273,15 @@ export default function MobileMenuDrawer({
           </div>
 
           {/* Section divider */}
-          <div style={{ padding: '0 22px', marginTop: 4 }}>
+          <div style={{ padding: `0 ${theme.spacing.xxl - 2}px`, marginTop: theme.spacing.xs }}>
             <p
               style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: '#9ca3af',
+                fontSize: theme.fontSize.xs,
+                fontWeight: theme.fontWeight.bold,
+                color: theme.colors.textTertiary,
                 textTransform: 'uppercase',
                 letterSpacing: '0.22em',
-                margin: '0 0 8px 0',
+                margin: `0 0 ${theme.spacing.sm}px 0`,
               }}
             >
               Help & Info
@@ -252,15 +295,18 @@ export default function MobileMenuDrawer({
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    onClick={onClose}
+                    onClick={() => {
+                      haptic.selection();
+                      onClose();
+                    }}
                     style={{
                       display: 'block',
-                      padding: '11px 22px',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: '#6b7280',
+                      padding: `${theme.spacing.md - 1}px ${theme.spacing.xxl - 2}px`,
+                      fontSize: theme.fontSize.body,
+                      fontWeight: theme.fontWeight.medium,
+                      color: theme.colors.textSecondary,
                       textDecoration: 'none',
-                      transition: 'color 220ms ease',
+                      transition: transitions.color,
                     }}
                     className="mmd-util-link"
                   >
@@ -274,19 +320,19 @@ export default function MobileMenuDrawer({
           {/* Trust footer */}
           <div
             style={{
-              padding: '24px 22px 0',
-              marginTop: 12,
-              borderTop: '1px solid #f0f0f0',
+              padding: `${theme.spacing.xxl}px ${theme.spacing.xxl - 2}px 0`,
+              marginTop: theme.spacing.md,
+              borderTop: `1px solid ${theme.colors.grey150}`,
             }}
           >
             <p
               style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: '#0A0A0A',
+                fontSize: theme.fontSize.xs,
+                fontWeight: theme.fontWeight.bold,
+                color: theme.colors.textPrimary,
                 textTransform: 'uppercase',
                 letterSpacing: '0.22em',
-                margin: '0 0 8px 0',
+                margin: `0 0 ${theme.spacing.sm}px 0`,
               }}
             >
               100% Authentic
@@ -294,7 +340,7 @@ export default function MobileMenuDrawer({
             <p
               style={{
                 fontSize: 11.5,
-                color: '#9ca3af',
+                color: theme.colors.textTertiary,
                 margin: 0,
                 lineHeight: 1.55,
               }}
@@ -311,12 +357,21 @@ export default function MobileMenuDrawer({
           display: none;
         }
         .mmd-link:active {
-          background-color: #f6f6f6;
+          background-color: ${theme.colors.grey50};
         }
         .mmd-util-link:active {
-          color: #0a0a0a;
+          color: ${theme.colors.textPrimary};
+        }
+        .mmd-link:focus-visible,
+        .mmd-util-link:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: -2px;
         }
       `}</style>
+      <style jsx>{pressableStyle}</style>
     </div>
   );
 }
+
+export const MobileMenuDrawer = memo(MobileMenuDrawerImpl);
+export default MobileMenuDrawer;

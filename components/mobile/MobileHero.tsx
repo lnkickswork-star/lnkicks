@@ -1,7 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
+import { theme } from '@/lib/mobile/theme/theme';
+import { dropShadows } from '@/lib/mobile/theme/shadows';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
  * MobileHero — premium editorial hero banner.
@@ -11,23 +15,31 @@ import Link from 'next/link';
  *
  * LN KICKS theme: black hero card on white page, white text, accent gold dot.
  *
+ * Phase 3 polish:
+ *  - Design tokens
+ *  - Haptic light tick on Shop Now tap
+ *  - Pressed state (scale 0.97)
+ *  - Focus-visible ring
+ *  - aria-label on CTA
+ *  - Memoized
+ *
  * NOTE: Uses external CDN image URL because local /public/*.png are LFS pointers.
  */
-export default function MobileHero() {
+function MobileHeroImpl() {
   return (
     <section
       style={{
         position: 'relative',
-        borderRadius: 28,
+        borderRadius: theme.radius.hero,
         overflow: 'hidden',
-        background: '#0A0A0A',
-        padding: '28px 24px 28px',
-        color: '#ffffff',
+        background: theme.colors.black,
+        padding: `${theme.spacing.xxxl}px ${theme.spacing.xxl}px ${theme.spacing.xxxl}px`,
+        color: theme.colors.white,
         minHeight: 320,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.18)',
+        boxShadow: theme.shadows.xl,
       }}
     >
       {/* Background watermark wordmark */}
@@ -37,41 +49,41 @@ export default function MobileHero() {
           position: 'absolute',
           top: -20,
           right: -20,
-          fontFamily: 'var(--font-oswald), sans-serif',
+          fontFamily: theme.fontFamily.display,
           fontSize: 140,
-          fontWeight: 900,
+          fontWeight: theme.fontWeight.black,
           color: 'rgba(255,255,255,0.04)',
-          letterSpacing: '-0.02em',
+          letterSpacing: theme.letterSpacing.tight,
           lineHeight: 1,
           userSelect: 'none',
           pointerEvents: 'none',
-          zIndex: 1,
+          zIndex: theme.zIndex.bg,
         }}
       >
         LK
       </div>
 
       {/* Top: eyebrow + headline */}
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: 220 }}>
+      <div style={{ position: 'relative', zIndex: theme.zIndex.base + 1, maxWidth: 220 }}>
         <p
           style={{
-            fontSize: 10,
-            fontWeight: 700,
+            fontSize: theme.fontSize.xs,
+            fontWeight: theme.fontWeight.bold,
             color: 'rgba(255,255,255,0.55)',
             textTransform: 'uppercase',
-            letterSpacing: '0.28em',
-            margin: '0 0 14px 0',
+            letterSpacing: theme.letterSpacing.extreme,
+            margin: `0 0 ${theme.spacing.md + 2}px 0`,
           }}
         >
-          Stocked & Loaded
+          Stocked &amp; Loaded
         </p>
         <h2
           style={{
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 38,
-            fontWeight: 800,
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.hero,
+            fontWeight: theme.fontWeight.extrabold,
             lineHeight: 1,
-            letterSpacing: '-0.02em',
+            letterSpacing: theme.letterSpacing.tight,
             margin: 0,
             textTransform: 'uppercase',
           }}
@@ -84,12 +96,12 @@ export default function MobileHero() {
       <div
         style={{
           position: 'relative',
-          zIndex: 2,
+          zIndex: theme.zIndex.base + 1,
           flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '8px 0',
+          margin: `${theme.spacing.sm}px 0`,
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -98,11 +110,14 @@ export default function MobileHero() {
           alt="Air Jordan 1 Low Powder Blue"
           width={240}
           height={240}
+          loading="eager"
+          // fetchPriority="high" — boost LCP for hero image
+          // (next/image not used; plain img tag with manual priority)
           style={{
             width: 240,
             height: 'auto',
             maxWidth: '80%',
-            filter: 'drop-shadow(0 24px 32px rgba(0,0,0,0.45))',
+            filter: dropShadows.xl,
             transform: 'rotate(-18deg)',
           }}
         />
@@ -112,29 +127,29 @@ export default function MobileHero() {
       <div
         style={{
           position: 'relative',
-          zIndex: 2,
+          zIndex: theme.zIndex.base + 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 12,
+          gap: theme.spacing.md,
         }}
       >
         <div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: theme.fontSize.sm,
               color: 'rgba(255,255,255,0.7)',
-              fontWeight: 500,
-              margin: '0 0 4px 0',
+              fontWeight: theme.fontWeight.medium,
+              margin: `0 0 ${theme.spacing.xs}px 0`,
             }}
           >
             From
           </div>
           <div
             style={{
-              fontFamily: 'var(--font-oswald), sans-serif',
-              fontSize: 22,
-              fontWeight: 800,
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.title,
+              fontWeight: theme.fontWeight.extrabold,
               letterSpacing: '-0.01em',
             }}
           >
@@ -143,20 +158,23 @@ export default function MobileHero() {
         </div>
         <Link
           href="/products"
+          aria-label="Shop now — browse all sneakers"
+          onPointerDown={() => haptic.light()}
+          className="pressable mh-hero-cta"
           style={{
-            background: '#ffffff',
-            color: '#0A0A0A',
-            fontFamily: 'var(--font-oswald), sans-serif',
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: '0.14em',
+            background: theme.colors.white,
+            color: theme.colors.textPrimary,
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.body,
+            fontWeight: theme.fontWeight.bold,
+            letterSpacing: theme.letterSpacing.wider,
             textTransform: 'uppercase',
-            padding: '14px 24px',
-            borderRadius: 999,
+            padding: `${theme.spacing.md + 2}px ${theme.spacing.xxl}px`,
+            borderRadius: theme.radius.pill,
             textDecoration: 'none',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
+            gap: theme.spacing.sm,
           }}
         >
           Shop Now
@@ -165,6 +183,10 @@ export default function MobileHero() {
           </svg>
         </Link>
       </div>
+      <style jsx>{pressableStyle}</style>
     </section>
   );
 }
+
+export const MobileHero = memo(MobileHeroImpl);
+export default MobileHero;
