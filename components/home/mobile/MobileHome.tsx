@@ -5,6 +5,7 @@ import MobileHeader from '@/components/mobile/MobileHeader';
 import MobileMenuDrawer from '@/components/mobile/MobileMenuDrawer';
 import MobileSearch from '@/components/mobile/MobileSearch';
 import MobileBrandShortcuts from '@/components/mobile/MobileBrandShortcuts';
+import MobileHeroBanner from '@/components/mobile/MobileHeroBanner';
 import MobilePopularShoes from '@/components/mobile/MobilePopularShoes';
 import MobileNewArrivals from '@/components/mobile/MobileNewArrivals';
 import {
@@ -15,13 +16,18 @@ import { theme } from '@/lib/mobile/theme/theme';
 import { safeArea } from '@/lib/mobile/utils/safeArea';
 
 // ── Lazy-loaded below-fold sections ─────────────────────────────────
-// Initial viewport (Header + Search + BrandShortcuts + PopularShoes +
-// NewArrivals) renders eagerly. Below-the-fold sections lazy-load on
-// demand, reducing initial JS bundle and improving LCP on 3G mobile.
-const MobileCategories = lazy(() => import('@/components/mobile/MobileCategories'));
+// Initial viewport (Header + Search + BrandShortcuts + HeroBanner +
+// PopularShoes + NewArrivals) renders eagerly. Below-the-fold sections
+// lazy-load on demand, reducing initial JS bundle and improving LCP.
+//
+// Per UX spec:
+//   - MobileFooter (informational) has been REMOVED from MobileHome.
+//     The floating MobileBottomNav is the sole navigation chrome.
+//   - MobileCategories ("Browse by Category") has been REMOVED.
+//     Categories are still reachable via /categories route + bottom nav.
+const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
 const MobileBrands = lazy(() => import('@/components/mobile/MobileBrands'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
-const MobileFooter = lazy(() => import('@/components/mobile/MobileFooter'));
 const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav'));
 const MobileServiceWorkerRegister = lazy(
   () => import('@/components/mobile/MobileServiceWorkerRegister'),
@@ -34,18 +40,22 @@ const MobileServiceWorkerRegister = lazy(
  * gradients. Apple / Nike / GOAT / END Clothing inspired minimal luxury
  * aesthetic — adapted from a reference mobile shopping app screenshot.
  *
- * Section order (per reference-inspired rebuild):
- *   1. MobileHeader          — Menu / LNKICKS / Wishlist / Cart / Profile
+ * Section order (per UX spec refinement):
+ *   1. MobileHeader          — Menu / LNKICKS / Cart / Profile (wishlist removed)
  *   2. MobileSearch          — premium pill search bar
  *   3. MobileBrandShortcuts  — horizontal capsule brand pills (10 brands)
- *   4. MobilePopularShoes    — 2-col product grid with + add-to-cart
- *   5. MobileNewArrivals     — large featured product card
- *   6. MobileRecommended     — 2-col recommended grid (kept)
- *   7. MobileCategories      — circular category rail (kept, lazy)
+ *   4. MobileHeroBanner      — swipeable 3-banner carousel with auto-advance + dots
+ *   5. MobilePopularShoes    — 2-col product grid with + add-to-cart
+ *   6. MobileNewArrivals     — large featured product card
+ *   7. MobileRecommended     — 2-col recommended grid (kept, lazy)
  *   8. MobileBrands          — brand wordmark marquee (kept, lazy)
  *   9. MobileNewsletter      — black email-capture card (kept, lazy)
- *  10. MobileFooter          — minimal link footer (kept, lazy)
- *  11. MobileBottomNav       — floating nav with center FAB (lazy)
+ *  10. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
+ *
+ * REMOVED sections (per UX spec):
+ *   - MobileFooter (informational footer) — BottomNav is the only navigation
+ *   - MobileCategories ("Browse by Category") — categories reachable via
+ *     /categories route + bottom nav
  *
  * Architecture:
  *  - Pure white background, matte black primary buttons, soft grey surfaces
@@ -98,9 +108,6 @@ function SectionSkeleton({ height = 240 }: { height?: number }) {
     </div>
   );
 }
-
-/** Lazy-loaded Recommended grid (kept from previous architecture). */
-const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
 
 export default function MobileHome() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -181,7 +188,7 @@ export default function MobileHome() {
           boxShadow: theme.shadows.hairline,
         }}
       >
-        {/* 1. Sticky header (Menu / LNKICKS / Wishlist / Cart / Profile) */}
+        {/* 1. Sticky header (Menu / LNKICKS / Cart / Profile) */}
         <MobileHeader onMenuClick={() => setMenuOpen(true)} />
 
         {/* 2. Main scrollable content */}
@@ -204,20 +211,18 @@ export default function MobileHome() {
           {/* 2b. Quick Brand Shortcuts */}
           <MobileBrandShortcuts />
 
-          {/* 2c. Popular Shoes — 2-col grid with + add-to-cart */}
+          {/* 2c. Hero Banner Slider — 3 swipeable promotional banners */}
+          <MobileHeroBanner />
+
+          {/* 2d. Popular Shoes — 2-col grid with + add-to-cart */}
           <MobilePopularShoes products={popularShoes} />
 
-          {/* 2d. New Arrivals — large featured product */}
+          {/* 2e. New Arrivals — large featured product */}
           <MobileNewArrivals product={featuredArrival} />
 
-          {/* 2e. Recommended For You — lazy (kept from previous architecture) */}
+          {/* 2f. Recommended For You — lazy (kept from previous architecture) */}
           <Suspense fallback={<SectionSkeleton height={520} />}>
             <MobileRecommended />
-          </Suspense>
-
-          {/* 2f. Categories — lazy */}
-          <Suspense fallback={<SectionSkeleton height={180} />}>
-            <MobileCategories />
           </Suspense>
 
           {/* 2g. Brands — lazy */}
@@ -230,10 +235,8 @@ export default function MobileHome() {
             <MobileNewsletter />
           </Suspense>
 
-          {/* 2i. Footer — lazy */}
-          <Suspense fallback={<SectionSkeleton height={320} />}>
-            <MobileFooter />
-          </Suspense>
+          {/* NOTE: MobileFooter (informational) has been REMOVED per UX spec.
+              The floating MobileBottomNav below is the sole navigation chrome. */}
         </main>
 
         {/* 3. Floating bottom nav with center FAB — lazy */}

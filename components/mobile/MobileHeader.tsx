@@ -34,9 +34,8 @@ function MobileHeaderImpl({
 }: {
   onMenuClick: () => void;
 }) {
-  const { cart, wishlist } = useApp();
+  const { cart } = useApp();
   const cartCount = cart.reduce((sum, i) => sum + (i.qty || 1), 0);
-  const wishCount = wishlist.length;
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -67,8 +66,10 @@ function MobileHeaderImpl({
           maxWidth: 440,
           margin: '0 auto',
           padding: `${theme.spacing.md}px ${theme.spacing.gutter}px`,
+          // 3-column grid: Menu | centered wordmark | right cluster (Cart + Profile)
+          // Wishlist icon was removed per UX spec — keep spacing balanced.
           display: 'grid',
-          gridTemplateColumns: '36px 1fr 36px 36px 36px',
+          gridTemplateColumns: '36px 1fr 36px 36px',
           alignItems: 'center',
           gap: theme.spacing.hairline,
         }}
@@ -120,13 +121,6 @@ function MobileHeaderImpl({
         >
           LNKICKS
         </Link>
-
-        {/* Right: Wishlist */}
-        <HeaderIconButton href="/wishlist" label="Wishlist" badge={wishCount}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </HeaderIconButton>
 
         {/* Right: Cart */}
         <HeaderIconButton href="/cart" label="Cart" badge={cartCount}>
