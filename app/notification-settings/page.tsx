@@ -1,145 +1,474 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { MobileLayout } from '@/components/layout/MobileLayout';
+import { theme } from '@/lib/mobile/theme/theme';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { useApp } from '@/components/context/AppContext';
+
+/**
+ * NotificationSettingsPage — Pattern C rewrite.
+ *
+ * The previous file used undefined Tailwind utility classes
+ * (`bg-surface`, `text-primary`, `text-headline-lg-mobile`,
+ * `material-symbols-outlined`, `peer-checked:*`, etc.) and Material Symbols
+ * font icons — it rendered unstyled in production (Tailwind `peer-checked`
+ * variants require the actual Tailwind config; `bg-surface` etc. are
+ * undefined). This rewrite rebuilds the toggle list from scratch with
+ * MobileLayout + tokens + inline SVG icons + a custom toggle component.
+ *
+ * Semantic content preserved 1:1:
+ *  - Header: "Preferences" + "Manage how you stay updated with LNKICKS."
+ *  - Transactionals group:
+ *      • Order Updates — Tracking, delivery, and returns (on)
+ *      • Account Alerts — Security and privacy notifications (on)
+ *  - Discovery group:
+ *      • New Drops — Limited edition releases (off)
+ *      • Promotions — Personalized offers and sales (off)
+ *  - Save Preferences + Disable All CTAs.
+ *  - "Need help with your account?" + "Contact Support 24/7" accent card.
+ */
+type SettingKey = 'orderUpdates' | 'accountAlerts' | 'newDrops' | 'promotions';
+
+type SettingDef = {
+  key: SettingKey;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+};
+
+const TRANSACTIONALS: SettingDef[] = [
+  {
+    key: 'orderUpdates',
+    title: 'Order Updates',
+    subtitle: 'Tracking, delivery, and returns',
+    icon: (
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <rect x="1" y="3" width="15" height="13" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 8h4l3 3v5h-7V8z" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    key: 'accountAlerts',
+    title: 'Account Alerts',
+    subtitle: 'Security and privacy notifications',
+    icon: (
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="9 12 11 14 15 10" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+];
+
+const DISCOVERY: SettingDef[] = [
+  {
+    key: 'newDrops',
+    title: 'New Drops',
+    subtitle: 'Limited edition releases',
+    icon: (
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M12 2v6M12 22v-6M2 12h6M22 12h-6" strokeLinecap="round" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+  },
+  {
+    key: 'promotions',
+    title: 'Promotions',
+    subtitle: 'Personalized offers and sales',
+    icon: (
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="7" y1="7" x2="7.01" y2="7" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+];
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className="pressable ns-toggle"
+      style={{
+        width: 44,
+        height: 24,
+        borderRadius: theme.radius.pill,
+        background: checked ? theme.colors.black : theme.colors.grey300,
+        border: 'none',
+        cursor: 'pointer',
+        position: 'relative',
+        flexShrink: 0,
+        transition: 'background 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: checked ? 22 : 2,
+          width: 20,
+          height: 20,
+          borderRadius: '50%',
+          background: theme.colors.white,
+          boxShadow: theme.shadows.xs,
+          transition: 'left 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      />
+    </button>
+  );
+}
 
 export default function NotificationSettingsPage() {
+  const { showToast } = useApp();
+  const [settings, setSettings] = useState<Record<SettingKey, boolean>>({
+    orderUpdates: true,
+    accountAlerts: true,
+    newDrops: false,
+    promotions: false,
+  });
+
+  const toggle = (key: SettingKey) => {
+    haptic.selection();
+    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleSave = () => {
+    haptic.success();
+    showToast('Notification preferences saved');
+  };
+
+  const handleDisableAll = () => {
+    haptic.medium();
+    setSettings({
+      orderUpdates: false,
+      accountAlerts: false,
+      newDrops: false,
+      promotions: false,
+    });
+    showToast('All notifications disabled');
+  };
+
+  const renderRow = (def: SettingDef) => (
+    <div
+      key={def.key}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: theme.spacing.md,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: theme.spacing.lg,
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: theme.colors.grey100,
+            color: theme.colors.textPrimary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {def.icon}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p
+            style={{
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.title,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.textPrimary,
+              margin: 0,
+              letterSpacing: theme.letterSpacing.tight,
+            }}
+          >
+            {def.title}
+          </p>
+          <p
+            style={{
+              fontSize: theme.fontSize.sm,
+              color: theme.colors.textSecondary,
+              margin: 0,
+            }}
+          >
+            {def.subtitle}
+          </p>
+        </div>
+      </div>
+      <Toggle
+        checked={settings[def.key]}
+        onChange={() => toggle(def.key)}
+        label={def.title}
+      />
+    </div>
+  );
+
+  const renderGroup = (title: string, items: SettingDef[]) => (
+    <div
+      style={{
+        background: theme.colors.white,
+        borderRadius: theme.radius.xl,
+        padding: theme.spacing.xl,
+        border: `1px solid ${theme.colors.grey150}`,
+        boxShadow: theme.shadows.xs,
+      }}
+    >
+      <h3
+        style={{
+          fontSize: theme.fontSize.sm,
+          fontWeight: theme.fontWeight.bold,
+          color: theme.colors.textSecondary,
+          letterSpacing: theme.letterSpacing.wider,
+          textTransform: 'uppercase',
+          margin: `0 0 ${theme.spacing.lg}px 0`,
+        }}
+      >
+        {title}
+      </h3>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: theme.spacing.xl,
+        }}
+      >
+        {items.map(renderRow)}
+      </div>
+    </div>
+  );
+
   return (
-    <>
+    <MobileLayout headerVariant="back" title="Notification Settings">
+      <div
+        style={{
+          padding: `0 ${theme.spacing.pad}px`,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxl,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: theme.spacing.xxl,
+        }}
+      >
+        {/* HEADER */}
+        <div>
+          <h2
+            style={{
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.h1,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.textPrimary,
+              letterSpacing: theme.letterSpacing.tight,
+              margin: `0 0 ${theme.spacing.xs}px 0`,
+              lineHeight: theme.lineHeight.tight,
+            }}
+          >
+            Preferences
+          </h2>
+          <p
+            style={{
+              fontSize: theme.fontSize.md,
+              color: theme.colors.textSecondary,
+              margin: 0,
+              lineHeight: theme.lineHeight.relaxed,
+            }}
+          >
+            Manage how you stay updated with LNKICKS.
+          </p>
+        </div>
 
-{/* Mobile Frame (390x844) */}
-<main className="w-[390px] h-[844px] bg-background relative overflow-hidden shadow-2xl flex flex-col">
-{/* TopAppBar (From JSON) */}
-<header className="docked full-width top-0 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4 z-50">
-<button className="text-primary dark:text-on-background hover:opacity-80 transition-opacity active:scale-0.95 transition-transform">
-<span className="material-symbols-outlined">arrow_back</span>
-</button>
-<h1 className="text-label-lg font-label-lg text-primary dark:text-on-background">Notification Settings</h1>
-<button className="text-primary dark:text-on-background hover:opacity-80 transition-opacity active:scale-0.95 transition-transform">
-<span className="material-symbols-outlined">notifications</span>
-</button>
-</header>
-{/* Content Canvas */}
-<div className="flex-1 overflow-y-auto px-container-margin py-stack-lg">
-{/* Header Section */}
-<div className="mb-section-gap">
-<h2 className="text-display-lg-mobile font-display-lg-mobile text-on-background tracking-tighter">Preferences</h2>
-<p className="text-body-md font-body-md text-secondary mt-1">Manage how you stay updated with LNKICKS.</p>
-</div>
-{/* Settings List */}
-<div className="space-y-gutter">
-{/* Group 1: Account Activities */}
-<div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<h3 className="text-label-sm font-label-sm text-secondary uppercase tracking-widest mb-4">Transactionals</h3>
-<div className="space-y-stack-lg">
-{/* Row: Order Updates */}
-<div className="flex items-center justify-between">
-<div className="flex items-center gap-4">
-<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-<span className="material-symbols-outlined text-primary text-[20px]">local_shipping</span>
-</div>
-<div>
-<p className="text-title-lg font-title-lg text-on-background">Order Updates</p>
-<p className="text-label-sm font-label-sm text-secondary">Tracking, delivery, and returns</p>
-</div>
-</div>
-<label className="relative inline-flex items-center cursor-pointer">
-<input checked className="sr-only peer" type="checkbox" />
-<div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-</label>
-</div>
-{/* Row: Account Alerts */}
-<div className="flex items-center justify-between">
-<div className="flex items-center gap-4">
-<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-<span className="material-symbols-outlined text-primary text-[20px]">security</span>
-</div>
-<div>
-<p className="text-title-lg font-title-lg text-on-background">Account Alerts</p>
-<p className="text-label-sm font-label-sm text-secondary">Security and privacy notifications</p>
-</div>
-</div>
-<label className="relative inline-flex items-center cursor-pointer">
-<input checked className="sr-only peer" type="checkbox" />
-<div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-</label>
-</div>
-</div>
-</div>
-{/* Group 2: Marketing & Drops */}
-<div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<h3 className="text-label-sm font-label-sm text-secondary uppercase tracking-widest mb-4">Discovery</h3>
-<div className="space-y-stack-lg">
-{/* Row: New Drops */}
-<div className="flex items-center justify-between">
-<div className="flex items-center gap-4">
-<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-<span className="material-symbols-outlined text-primary text-[20px]">flare</span>
-</div>
-<div>
-<p className="text-title-lg font-title-lg text-on-background">New Drops</p>
-<p className="text-label-sm font-label-sm text-secondary">Limited edition releases</p>
-</div>
-</div>
-<label className="relative inline-flex items-center cursor-pointer">
-<input className="sr-only peer" type="checkbox" />
-<div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-</label>
-</div>
-{/* Row: Promotions */}
-<div className="flex items-center justify-between">
-<div className="flex items-center gap-4">
-<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
-<span className="material-symbols-outlined text-primary text-[20px]">sell</span>
-</div>
-<div>
-<p className="text-title-lg font-title-lg text-on-background">Promotions</p>
-<p className="text-label-sm font-label-sm text-secondary">Personalized offers and sales</p>
-</div>
-</div>
-<label className="relative inline-flex items-center cursor-pointer">
-<input className="sr-only peer" type="checkbox" />
-<div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-</label>
-</div>
-</div>
-</div>
-{/* Footer CTA */}
-<div className="mt-8 space-y-4">
-<button className="w-full bg-primary text-on-primary py-[18px] rounded-full font-bold text-label-lg hover:opacity-90 active:scale-95 transition-all">
-                        Save Preferences
-                    </button>
-<button className="w-full bg-transparent border border-outline text-primary py-[18px] rounded-full font-bold text-label-lg hover:bg-surface-container active:scale-95 transition-all">
-                        Disable All
-                    </button>
-</div>
-</div>
-{/* Asymmetric Accent Card */}
-<div className="mt-section-gap relative rounded-2xl overflow-hidden h-32 flex items-center p-6 bg-primary">
-<div className="relative z-10 w-2/3">
-<p className="text-on-primary font-title-lg text-title-lg leading-tight">Need help with your account?</p>
-<p className="text-on-primary-container text-label-sm mt-1">Contact Support 24/7</p>
-</div>
-<div className="absolute right-[-20px] top-[-20px] w-32 h-32 opacity-20">
-<span className="material-symbols-outlined text-[120px] text-on-primary">support_agent</span>
-</div>
-</div>
-</div>
-{/* BottomNavBar (From JSON) */}
-<nav className="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
-<button className="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
-<span className="material-symbols-outlined">home</span>
-</button>
-<button className="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
-<span className="material-symbols-outlined">search</span>
-</button>
-<button className="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
-<span className="material-symbols-outlined">favorite</span>
-</button>
-<button className="flex items-center justify-center text-primary dark:text-on-background scale-110">
-<span className="material-symbols-outlined" style={{ fontVariationSettings: '\'FILL\' 1' }}>person</span>
-</button>
-</nav>
-</main>
+        {/* GROUP 1 — TRANSACTIONALS */}
+        {renderGroup('Transactionals', TRANSACTIONALS)}
 
+        {/* GROUP 2 — DISCOVERY */}
+        {renderGroup('Discovery', DISCOVERY)}
 
-    </>
+        {/* SAVE / DISABLE ALL */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: theme.spacing.md,
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleSave}
+            className="pressable-strong ns-save"
+            style={{
+              width: '100%',
+              padding: `${theme.spacing.lg + 2}px ${theme.spacing.md}px`,
+              background: theme.colors.black,
+              color: theme.colors.white,
+              borderRadius: theme.radius.pill,
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.bold,
+              border: 'none',
+              cursor: 'pointer',
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+              boxShadow: theme.shadows.md,
+            }}
+          >
+            Save Preferences
+          </button>
+          <button
+            type="button"
+            onClick={handleDisableAll}
+            className="pressable ns-disable"
+            style={{
+              width: '100%',
+              padding: `${theme.spacing.lg + 2}px ${theme.spacing.md}px`,
+              background: 'transparent',
+              color: theme.colors.textPrimary,
+              borderRadius: theme.radius.pill,
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.bold,
+              border: `1.5px solid ${theme.colors.grey300}`,
+              cursor: 'pointer',
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+            }}
+          >
+            Disable All
+          </button>
+        </div>
+
+        {/* SUPPORT ACCENT CARD */}
+        <Link
+          href="/contact-us"
+          onClick={() => haptic.light()}
+          className="pressable ns-support"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: theme.spacing.xl,
+            background: theme.colors.black,
+            color: theme.colors.white,
+            borderRadius: theme.radius.xxl,
+            textDecoration: 'none',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: theme.shadows.lg,
+          }}
+        >
+          <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+            <p
+              style={{
+                fontFamily: theme.fontFamily.display,
+                fontSize: theme.fontSize.title,
+                fontWeight: theme.fontWeight.extrabold,
+                color: theme.colors.white,
+                margin: `0 0 ${theme.spacing.xs}px 0`,
+                lineHeight: theme.lineHeight.snug,
+                letterSpacing: theme.letterSpacing.tight,
+              }}
+            >
+              Need help with your account?
+            </p>
+            <p
+              style={{
+                fontSize: theme.fontSize.sm,
+                color: 'rgba(255,255,255,0.72)',
+                margin: 0,
+              }}
+            >
+              Contact Support 24/7
+            </p>
+          </div>
+          <svg
+            viewBox="0 0 24 24"
+            width="80"
+            height="80"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            aria-hidden
+            style={{
+              position: 'absolute',
+              right: -20,
+              top: -20,
+              opacity: 0.18,
+              color: theme.colors.white,
+            }}
+          >
+            <path d="M12 1a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v3a4 4 0 0 1-4 4h-1v2a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-2H4a4 4 0 0 1-4-4V9a3 3 0 0 1 3-3h1V5a4 4 0 0 1 4-4z" strokeLinecap="round" strokeLinejoin="round" transform="translate(4 1)" />
+          </svg>
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden
+            style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}
+          >
+            <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
+            <polyline points="12 5 19 12 12 19" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+      </div>
+
+      <style jsx>{pressableStyle}</style>
+      <style jsx>{`
+        .ns-toggle:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 3px;
+        }
+        .ns-save:active {
+          transform: scale(0.97);
+        }
+        .ns-save:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 3px;
+        }
+        .ns-disable:active {
+          transform: scale(0.97);
+        }
+        .ns-disable:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 3px;
+        }
+        .ns-support:active {
+          transform: scale(0.99);
+        }
+        .ns-support:focus-visible {
+          outline: 2px solid ${theme.colors.white};
+          outline-offset: 3px;
+        }
+      `}</style>
+    </MobileLayout>
   );
 }

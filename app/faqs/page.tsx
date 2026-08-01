@@ -1,136 +1,431 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { MobileLayout } from '@/components/layout/MobileLayout';
+import { theme } from '@/lib/mobile/theme/theme';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { useApp } from '@/components/context/AppContext';
+
+/**
+ * FaqsPage — Pattern C rewrite.
+ *
+ * The previous file used undefined Tailwind utility classes
+ * (`bg-surface`, `text-primary`, `text-headline-lg-mobile`,
+ * `material-symbols-outlined`, etc.) and Material Symbols font icons — it
+ * rendered unstyled in production. This rewrite rebuilds the FAQ layout
+ * from scratch with MobileLayout + tokens + inline SVG icons.
+ *
+ * Semantic content preserved 1:1:
+ *  - Header ("FAQs" + sub-copy)
+ *  - Search bar (now functional — filters the Q&A list)
+ *  - Categories: Orders / Payments / Shipping & Returns
+ *  - All 6 original questions; the one answer the original provided verbatim
+ *    ("Orders can be cancelled within 30 minutes…"); the others (which the
+ *    original left collapsed without answers) are filled in to match the
+ *    answers given on /help-support, /shipping-policy, /return-refund-policy,
+ *    /payment-methods so the FAQ actually delivers on its promises.
+ *  - "Still need help?" CTA → /contact-us
+ */
+type FaqItem = { q: string; a: string };
+type FaqCategory = { title: string; icon: React.ReactNode; items: FaqItem[] };
+
+const CATEGORIES: FaqCategory[] = [
+  {
+    title: 'Orders',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
+        <path d="M16 10a4 4 0 0 1-8 0" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+    items: [
+      {
+        q: 'How can I track my order?',
+        a: 'A tracking number is emailed to you once your order ships. You can also see live status by tapping TRACK ORDER on the order in My Orders, which opens the real-time Express Shipment timeline.',
+      },
+      {
+        q: 'Can I cancel my order?',
+        a: 'Orders can be cancelled within 30 minutes of placement. After this window, our fulfillment center begins processing for high-speed delivery. Please contact our VIP concierge for urgent requests.',
+      },
+    ],
+  },
+  {
+    title: 'Payments',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="2" y1="10" x2="22" y2="10" strokeLinecap="round" />
+      </svg>
+    ),
+    items: [
+      {
+        q: 'What payment methods do you accept?',
+        a: 'We accept Visa, Mastercard, American Express, UPI (Google Pay / PhonePe / Paytm), Apple Pay, and Google Pay. All saved cards and digital wallets can be managed under Payment Methods.',
+      },
+      {
+        q: 'Are my payment details secure?',
+        a: 'Yes — all transactions are processed through a PCI-DSS compliant encrypted gateway using AES-256. We never store your full card number on our servers.',
+      },
+    ],
+  },
+  {
+    title: 'Shipping & Returns',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <rect x="1" y="3" width="15" height="13" rx="1" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 8h4l3 3v5h-7V8z" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    ),
+    items: [
+      {
+        q: 'How long does shipping take?',
+        a: 'Prepaid orders ship via BlueDart Express and arrive within 2-4 business days across India. Standard Shipping takes 5-7 business days; Premium Overnight is next-day.',
+      },
+      {
+        q: 'What is your return policy?',
+        a: 'We offer a 7-day hassle-free return or size exchange for unworn sneakers with all original tags attached. Refunds are processed to your original payment method within 5-7 business days.',
+      },
+    ],
+  },
+];
 
 export default function FaqsPage() {
+  const { showToast } = useApp();
+  const [query, setQuery] = useState('');
+  const [openKey, setOpenKey] = useState<string | null>('Orders-1');
+
+  const normalize = (s: string) => s.toLowerCase().trim();
+  const q = normalize(query);
+
+  const filtered = CATEGORIES.map((cat) => ({
+    ...cat,
+    items: cat.items.filter(
+      (it) =>
+        q === '' ||
+        normalize(it.q).includes(q) ||
+        normalize(it.a).includes(q) ||
+        normalize(cat.title).includes(q),
+    ),
+  })).filter((cat) => cat.items.length > 0);
+
   return (
-    <>
+    <MobileLayout headerVariant="back" title="FAQs">
+      <div
+        style={{
+          padding: `0 ${theme.spacing.pad}px`,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxl,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: theme.spacing.xxl,
+        }}
+      >
+        {/* HEADER */}
+        <div>
+          <h2
+            style={{
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.h1,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.textPrimary,
+              letterSpacing: theme.letterSpacing.tight,
+              margin: `0 0 ${theme.spacing.xs}px 0`,
+              lineHeight: theme.lineHeight.tight,
+            }}
+          >
+            FAQs
+          </h2>
+          <p
+            style={{
+              fontSize: theme.fontSize.md,
+              color: theme.colors.textSecondary,
+              lineHeight: theme.lineHeight.relaxed,
+              margin: 0,
+            }}
+          >
+            Everything you need to know about your luxury sneaker experience.
+          </p>
+        </div>
 
-{/* Main Viewport Shell */}
-<div className="relative mx-auto w-[390px] h-[844px] bg-white overflow-hidden flex flex-col">
-{/* TopAppBar */}
-<header className="docked full-width top-0 z-50 bg-surface dark:bg-background flex justify-between items-center w-full px-6 py-4">
-<div className="flex items-center gap-4">
-<button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform text-primary dark:text-on-background">
-<span className="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
-</button>
-<h1 className="text-headline-lg-mobile font-headline-lg-mobile font-extrabold tracking-tighter text-primary dark:text-on-background">LNKICKS</h1>
-</div>
-<div className="flex gap-4">
-<span className="material-symbols-outlined text-primary dark:text-on-background" data-icon="notifications">notifications</span>
-</div>
-</header>
-{/* Page Content */}
-<main className="flex-1 overflow-y-auto px-6 pt-4 pb-32">
-{/* Header Section */}
-<div className="mb-stack-lg">
-<h2 className="text-display-lg-mobile font-display-lg-mobile text-primary mb-2">FAQs</h2>
-<p className="text-body-md font-body-md text-secondary">Everything you need to know about your luxury sneaker experience.</p>
-</div>
-{/* Search Bar (Style Guidance Reference) */}
-<div className="mb-section-gap relative">
-<div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-<span className="material-symbols-outlined text-outline" data-icon="search">search</span>
-</div>
-<input className="w-full bg-[#F5F5F5] border-none rounded-xl py-4 pl-12 pr-4 text-body-md font-body-md focus:ring-1 focus:ring-primary" placeholder="Search questions..." type="text" />
-</div>
-{/* FAQ Categories */}
-<div className="space-y-section-gap">
-{/* Category: Orders */}
-<section>
-<h3 className="text-title-lg font-title-lg text-primary mb-stack-md flex items-center gap-2">
-<span className="material-symbols-outlined text-secondary" data-icon="shopping_bag">shopping_bag</span>
-                        Orders
-                    </h3>
-<div className="space-y-4">
-{/* Accordion Item 1 */}
-<div className="bg-white border border-[#EEEEEE] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<button className="w-full flex justify-between items-center p-4 text-left hover:bg-surface-container-low transition-colors">
-<span className="text-label-lg font-label-lg text-on-surface">How can I track my order?</span>
-<span className="material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
-</button>
-</div>
-{/* Accordion Item 2 */}
-<div className="bg-white border border-[#EEEEEE] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<button className="w-full flex justify-between items-center p-4 text-left border-b border-[#EEEEEE] bg-surface-container-low">
-<span className="text-label-lg font-label-lg text-primary">Can I cancel my order?</span>
-<span className="material-symbols-outlined text-primary" data-icon="expand_less">expand_less</span>
-</button>
-<div className="p-4 bg-white">
-<p className="text-body-md font-body-md text-secondary leading-relaxed">
-                                    Orders can be cancelled within 30 minutes of placement. After this window, our fulfillment center begins processing for high-speed delivery. Please contact our VIP concierge for urgent requests.
-                                </p>
-</div>
-</div>
-</div>
-</section>
-{/* Category: Payments */}
-<section className="mt-section-gap">
-<h3 className="text-title-lg font-title-lg text-primary mb-stack-md flex items-center gap-2">
-<span className="material-symbols-outlined text-secondary" data-icon="payments">payments</span>
-                        Payments
-                    </h3>
-<div className="space-y-4">
-<div className="bg-white border border-[#EEEEEE] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<button className="w-full flex justify-between items-center p-4 text-left hover:bg-surface-container-low transition-colors">
-<span className="text-label-lg font-label-lg text-on-surface">What payment methods do you accept?</span>
-<span className="material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
-</button>
-</div>
-<div className="bg-white border border-[#EEEEEE] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<button className="w-full flex justify-between items-center p-4 text-left hover:bg-surface-container-low transition-colors">
-<span className="text-label-lg font-label-lg text-on-surface">Are my payment details secure?</span>
-<span className="material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
-</button>
-</div>
-</div>
-</section>
-{/* Category: Shipping & Returns */}
-<section className="mt-section-gap">
-<h3 className="text-title-lg font-title-lg text-primary mb-stack-md flex items-center gap-2">
-<span className="material-symbols-outlined text-secondary" data-icon="local_shipping">local_shipping</span>
-                        Shipping &amp; Returns
-                    </h3>
-<div className="space-y-4">
-<div className="bg-white border border-[#EEEEEE] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<button className="w-full flex justify-between items-center p-4 text-left hover:bg-surface-container-low transition-colors">
-<span className="text-label-lg font-label-lg text-on-surface">How long does shipping take?</span>
-<span className="material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
-</button>
-</div>
-<div className="bg-white border border-[#EEEEEE] rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-<button className="w-full flex justify-between items-center p-4 text-left hover:bg-surface-container-low transition-colors">
-<span className="text-label-lg font-label-lg text-on-surface">What is your return policy?</span>
-<span className="material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
-</button>
-</div>
-</div>
-</section>
-{/* Help Banner */}
-<div className="mt-section-gap bg-primary rounded-2xl p-6 text-center shadow-[0px_10px_30px_rgba(0,0,0,0.08)]">
-<h4 className="text-headline-md font-headline-md text-on-primary mb-2">Still need help?</h4>
-<p className="text-body-md font-body-md text-on-primary opacity-80 mb-6">Our 24/7 Concierge team is here to assist with any further questions.</p>
-<button className="w-full bg-white text-primary py-4 rounded-full font-label-lg text-label-lg hover:opacity-90 transition-opacity">
-                        Contact Support
-                    </button>
-</div>
-</div>
-</main>
-{/* BottomNavBar (Filtered Visibility: Suppressed on Task-Focused Screens, but shown here as FAQ is part of navigation) */}
-<nav className="fixed bottom-0 w-full h-[84px] z-50 bg-surface-container-lowest dark:bg-surface-container-low shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] flex justify-around items-center px-10 pb-8">
-<button className="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
-<span className="material-symbols-outlined" data-icon="home">home</span>
-</button>
-<button className="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
-<span className="material-symbols-outlined" data-icon="search">search</span>
-</button>
-<button className="flex items-center justify-center text-secondary dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-background transition-colors">
-<span className="material-symbols-outlined" data-icon="favorite">favorite</span>
-</button>
-<button className="flex items-center justify-center text-primary dark:text-on-background scale-110">
-<span className="material-symbols-outlined" data-icon="person" style={{ fontVariationSettings: '\'FILL\' 1' }}>person</span>
-</button>
-</nav>
-</div>
+        {/* SEARCH */}
+        <div style={{ position: 'relative' }}>
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: theme.spacing.lg,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: theme.colors.textTertiary,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" strokeLinecap="round" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => {
+              haptic.light();
+              setQuery(e.target.value);
+            }}
+            placeholder="Search questions..."
+            className="faq-search"
+            style={{
+              width: '100%',
+              background: theme.colors.grey100,
+              border: `1px solid ${theme.colors.grey200}`,
+              borderRadius: theme.radius.lg,
+              padding: `${theme.spacing.md + 2}px ${theme.spacing.md}px ${theme.spacing.md + 2}px ${theme.spacing.xxl + theme.spacing.lg}px`,
+              fontSize: theme.fontSize.md,
+              fontFamily: theme.fontFamily.body,
+              color: theme.colors.textPrimary,
+              outline: 'none',
+            }}
+          />
+        </div>
 
-    </>
+        {/* CATEGORIES */}
+        {filtered.length === 0 ? (
+          <div
+            style={{
+              padding: `${theme.spacing.xxl}px ${theme.spacing.lg}px`,
+              textAlign: 'center',
+              color: theme.colors.textSecondary,
+              fontSize: theme.fontSize.md,
+            }}
+          >
+            No FAQs match “{query}”.
+          </div>
+        ) : (
+          filtered.map((cat) => (
+            <section key={cat.title}>
+              <h3
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.sm,
+                  fontFamily: theme.fontFamily.display,
+                  fontSize: theme.fontSize.title,
+                  fontWeight: theme.fontWeight.extrabold,
+                  color: theme.colors.textPrimary,
+                  margin: `0 0 ${theme.spacing.md}px 0`,
+                  letterSpacing: theme.letterSpacing.tight,
+                  lineHeight: theme.lineHeight.tight,
+                }}
+              >
+                <span style={{ color: theme.colors.textSecondary }}>{cat.icon}</span>
+                {cat.title}
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: theme.spacing.md,
+                }}
+              >
+                {cat.items.map((it, idx) => {
+                  const key = `${cat.title}-${idx}`;
+                  const open = openKey === key;
+                  return (
+                    <div
+                      key={key}
+                      style={{
+                        background: theme.colors.white,
+                        border: `1px solid ${open ? theme.colors.black : theme.colors.grey150}`,
+                        borderRadius: theme.radius.lg,
+                        overflow: 'hidden',
+                        boxShadow: theme.shadows.xs,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          haptic.selection();
+                          setOpenKey(open ? null : key);
+                        }}
+                        aria-expanded={open}
+                        className="pressable faq-row"
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: theme.spacing.md,
+                          padding: theme.spacing.lg,
+                          background: open ? theme.colors.grey50 : 'transparent',
+                          border: 'none',
+                          borderBottom: open
+                            ? `1px solid ${theme.colors.grey150}`
+                            : '1px solid transparent',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          color: theme.colors.textPrimary,
+                          fontFamily: theme.fontFamily.body,
+                          fontSize: theme.fontSize.lg,
+                          fontWeight: theme.fontWeight.semibold,
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>{it.q}</span>
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="18"
+                          height="18"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          aria-hidden
+                          style={{
+                            flexShrink: 0,
+                            transition: 'transform 200ms cubic-bezier(0.16,1,0.3,1)',
+                            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+                            color: open ? theme.colors.textPrimary : theme.colors.textTertiary,
+                          }}
+                        >
+                          <polyline
+                            points="6 9 12 15 18 9"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      {open && (
+                        <div
+                          style={{
+                            padding: theme.spacing.lg,
+                            background: theme.colors.white,
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: theme.fontSize.md,
+                              color: theme.colors.textSecondary,
+                              lineHeight: theme.lineHeight.relaxed,
+                              margin: 0,
+                            }}
+                          >
+                            {it.a}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))
+        )}
+
+        {/* STILL NEED HELP BANNER */}
+        <div
+          style={{
+            background: theme.colors.black,
+            borderRadius: theme.radius.xxl,
+            padding: theme.spacing.xxl,
+            textAlign: 'center',
+            boxShadow: theme.shadows.lg,
+          }}
+        >
+          <h4
+            style={{
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.title,
+              fontWeight: theme.fontWeight.extrabold,
+              color: theme.colors.white,
+              margin: `0 0 ${theme.spacing.xs}px 0`,
+              letterSpacing: theme.letterSpacing.tight,
+            }}
+          >
+            Still need help?
+          </h4>
+          <p
+            style={{
+              fontSize: theme.fontSize.md,
+              color: 'rgba(255,255,255,0.8)',
+              margin: `0 0 ${theme.spacing.xl}px 0`,
+              lineHeight: theme.lineHeight.relaxed,
+            }}
+          >
+            Our 24/7 Concierge team is here to assist with any further questions.
+          </p>
+          <Link
+            href="/contact-us"
+            onClick={() => haptic.medium()}
+            className="pressable-strong faq-cta"
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: `${theme.spacing.lg + 2}px ${theme.spacing.md}px`,
+              background: theme.colors.white,
+              color: theme.colors.black,
+              borderRadius: theme.radius.pill,
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.bold,
+              textDecoration: 'none',
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+            }}
+          >
+            Contact Support
+          </Link>
+        </div>
+
+        {/* SECONDARY LINK */}
+        <div style={{ textAlign: 'center' }}>
+          <Link
+            href="/help-support"
+            onClick={() => {
+              haptic.light();
+              showToast('Opening Help & Support');
+            }}
+            className="pressable faq-link"
+            style={{
+              fontSize: theme.fontSize.md,
+              fontWeight: theme.fontWeight.semibold,
+              color: theme.colors.textSecondary,
+              textDecoration: 'underline',
+            }}
+          >
+            Back to Help &amp; Support
+          </Link>
+        </div>
+      </div>
+
+      <style jsx>{pressableStyle}</style>
+      <style jsx>{`
+        .faq-search:focus {
+          border-color: ${theme.colors.black};
+          box-shadow: 0 0 0 3px ${theme.colors.focusRing};
+        }
+        .faq-row:active {
+          transform: scale(0.99);
+        }
+        .faq-row:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: -2px;
+        }
+        .faq-cta:active {
+          transform: scale(0.97);
+        }
+        .faq-cta:focus-visible {
+          outline: 2px solid ${theme.colors.white};
+          outline-offset: 3px;
+        }
+        .faq-link:focus-visible {
+          outline: 2px solid ${theme.colors.black};
+          outline-offset: 3px;
+        }
+      `}</style>
+    </MobileLayout>
   );
 }

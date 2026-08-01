@@ -93,7 +93,13 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-function MobileBottomNavImpl() {
+function MobileBottomNavImpl({
+  hideCartFab = false,
+}: {
+  /** Hide the center cart FAB (used on /cart and /checkout to avoid
+   *  double-cart UX — user is already in the cart flow). */
+  hideCartFab?: boolean;
+} = {}) {
   const pathname = usePathname() || '/';
   const { cart } = useApp();
   const cartCount = cart.reduce((sum, i) => sum + (i.qty || 1), 0);
@@ -144,60 +150,62 @@ function MobileBottomNavImpl() {
         ))}
       </div>
 
-      {/* Center FAB — Cart action */}
-      <Link
-        href="/cart"
-        aria-label={cartCount > 0 ? `Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'Cart'}
-        onPointerDown={() => haptic.medium()}
-        className="pressable mbn-fab"
-        style={{
-          position: 'absolute',
-          top: -22,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 60,
-          height: 60,
-          borderRadius: '50%',
-          background: theme.colors.black,
-          color: theme.colors.white,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: theme.shadows.lg,
-          border: `3px solid ${theme.colors.white}`,
-          textDecoration: 'none',
-          zIndex: theme.zIndex.fab,
-        }}
-      >
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        {cartCount > 0 && (
-          <span
-            aria-hidden
-            style={{
-              position: 'absolute',
-              top: -2,
-              right: -2,
-              background: theme.colors.white,
-              color: theme.colors.black,
-              fontSize: 9.5,
-              fontWeight: theme.fontWeight.extrabold,
-              minWidth: 18,
-              height: 18,
-              borderRadius: theme.radius.pill,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: `0 ${theme.spacing.xs}px`,
-              border: `2px solid ${theme.colors.black}`,
-              boxSizing: 'border-box',
-            }}
-          >
-            {cartCount}
-          </span>
-        )}
-      </Link>
+      {/* Center FAB — Cart action (hidden on /cart and /checkout via hideCartFab) */}
+      {!hideCartFab && (
+        <Link
+          href="/cart"
+          aria-label={cartCount > 0 ? `Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'Cart'}
+          onPointerDown={() => haptic.medium()}
+          className="pressable mbn-fab"
+          style={{
+            position: 'absolute',
+            top: -22,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            background: theme.colors.black,
+            color: theme.colors.white,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: theme.shadows.lg,
+            border: `3px solid ${theme.colors.white}`,
+            textDecoration: 'none',
+            zIndex: theme.zIndex.fab,
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          {cartCount > 0 && (
+            <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                background: theme.colors.white,
+                color: theme.colors.black,
+                fontSize: 9.5,
+                fontWeight: theme.fontWeight.extrabold,
+                minWidth: 18,
+                height: 18,
+                borderRadius: theme.radius.pill,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: `0 ${theme.spacing.xs}px`,
+                border: `2px solid ${theme.colors.black}`,
+                boxSizing: 'border-box',
+              }}
+            >
+              {cartCount}
+            </span>
+          )}
+        </Link>
+      )}
 
       <style jsx>{pressableStyle}</style>
       <style jsx>{`

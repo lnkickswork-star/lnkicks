@@ -1,12 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ResponsiveAppLayout } from '@/components/layout/ResponsiveAppLayout';
+import { MobileLayout } from '@/components/layout/MobileLayout';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { PRODUCT_REGISTRY } from '@/components/catalog/ProductRegistry';
+import { theme } from '@/lib/mobile/theme/theme';
+import { haptic } from '@/lib/mobile/utils/haptics';
+import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
+/**
+ * SearchPage — product discovery via query + brand/size filters.
+ *
+ * Phase 4 (Universal Polish) refactor:
+ *  - Mounts <MobileLayout headerVariant="back" title="Search"> so the page
+ *    inherits the premium glass header + floating bottom nav + safe-area
+ *    handling from the universal mobile shell.
+ *  - All hardcoded colors / sizes / radii migrated to mobile design tokens.
+ *  - Search input uses theme.radius.pill + soft border + token colors.
+ *  - Banned iOS red #FF3B30 removed — Reset Filters uses muted
+ *    theme.colors.error (#7f1d1d) instead of flashy iOS red.
+ *  - Haptic feedback on chip select, filter change, reset, CTA tap.
+ *  - `pressable` class + styled-jsx for press-state micro-interactions.
+ *
+ * Desktop rendering preserved — MobileLayout detects UA + viewport width
+ * and renders children untouched on desktop.
+ */
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams ? searchParams.get('q') || '' : '';
@@ -14,122 +34,423 @@ export default function SearchPage() {
   const [query, setQuery] = useState(initialQuery);
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [selectedSize, setSelectedSize] = useState<string>('All');
-  const [recentSearches, setRecentSearches] = useState<string[]>(['Jordan 1', 'Samba OG', 'Air Force 1', 'Yeezy']);
+  const [recentSearches, setRecentSearches] = useState<string[]>([
+    'Jordan 1',
+    'Samba OG',
+    'Air Force 1',
+    'Yeezy',
+  ]);
 
-  const popularTags = ['Jordan 1 Low', 'Samba OG', 'Air Force 1 Black', 'New Balance 9060', 'Puma Velophasis', 'Dunk High'];
+  const popularTags = [
+    'Jordan 1 Low',
+    'Samba OG',
+    'Air Force 1 Black',
+    'New Balance 9060',
+    'Puma Velophasis',
+    'Dunk High',
+  ];
 
-  const filteredProducts = PRODUCT_REGISTRY.filter(p => {
-    const matchesQuery = !query || p.name.toLowerCase().includes(query.toLowerCase()) || p.brand.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase());
-    const matchesBrand = selectedBrand === 'All' || p.brand.toUpperCase() === selectedBrand.toUpperCase();
-    const matchesSize = selectedSize === 'All' || p.availableSizes.includes(selectedSize);
+  const filteredProducts = PRODUCT_REGISTRY.filter((p) => {
+    const matchesQuery =
+      !query ||
+      p.name.toLowerCase().includes(query.toLowerCase()) ||
+      p.brand.toLowerCase().includes(query.toLowerCase()) ||
+      p.category.toLowerCase().includes(query.toLowerCase());
+    const matchesBrand =
+      selectedBrand === 'All' ||
+      p.brand.toUpperCase() === selectedBrand.toUpperCase();
+    const matchesSize =
+      selectedSize === 'All' || p.availableSizes.includes(selectedSize);
     return matchesQuery && matchesBrand && matchesSize;
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    haptic.light();
     if (query && !recentSearches.includes(query)) {
       setRecentSearches([query, ...recentSearches.slice(0, 4)]);
     }
   };
 
-  const handleChipClick = (tag: string) => {
-    setQuery(tag);
-  };
+  const handleChipClick = useCallback(
+    (tag: string) => {
+      haptic.selection();
+      setQuery(tag);
+    },
+    [],
+  );
 
-  const resetFilters = () => {
+  const handleResetFilters = useCallback(() => {
+    haptic.medium();
     setQuery('');
     setSelectedBrand('All');
     setSelectedSize('All');
-  };
+  }, []);
 
   return (
-    <ResponsiveAppLayout title="SEARCH">
-      {/* BREADCRUMB */}
-      <div style={{ fontSize: '12px', color: '#777777', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Link href="/" style={{ color: '#777777', textDecoration: 'none' }}>Home</Link>
-        <span>/</span>
-        <span style={{ color: '#111111', fontWeight: 600 }}>Search</span>
-      </div>
+    <MobileLayout headerVariant="back" title="Search">
+      <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
+        {/* BREADCRUMB */}
+        <div
+          style={{
+            fontSize: theme.fontSize.base,
+            color: theme.colors.textSecondary,
+            marginBottom: theme.spacing.xxl,
+            display: 'flex',
+            alignItems: 'center',
+            gap: theme.spacing.sm,
+            paddingTop: theme.spacing.sm,
+          }}
+        >
+          <Link
+            href="/"
+            style={{
+              color: theme.colors.textSecondary,
+              textDecoration: 'none',
+            }}
+          >
+            Home
+          </Link>
+          <span>/</span>
+          <span
+            style={{
+              color: theme.colors.textPrimary,
+              fontWeight: theme.fontWeight.semibold,
+            }}
+          >
+            Search
+          </span>
+        </div>
 
-      {/* SEARCH BAR INPUT */}
-      <form onSubmit={handleSearchSubmit} style={{ marginBottom: '24px' }}>
-        <div style={{ background: '#ffffff', border: '2px solid #111111', borderRadius: '30px', padding: '6px 8px 6px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#111111" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input 
-              type="text" 
-              value={query} 
-              onChange={(e) => setQuery(e.target.value)} 
-              placeholder="Search sneakers, brands, categories..." 
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '14px', fontWeight: 500, color: '#111111', background: 'transparent' }} 
-            />
+        {/* SEARCH BAR INPUT */}
+        <form onSubmit={handleSearchSubmit} style={{ marginBottom: theme.spacing.xxl }}>
+          <div
+            style={{
+              background: theme.colors.white,
+              border: `1.5px solid ${theme.colors.black}`,
+              borderRadius: theme.radius.pill,
+              padding: `${theme.spacing.xs + 2}px ${theme.spacing.sm}px ${theme.spacing.xs + 2}px ${theme.spacing.xxl}px`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: theme.shadows.sm,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.spacing.md,
+                flex: 1,
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="none"
+                stroke={theme.colors.black}
+                strokeWidth="2"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" strokeLinecap="round" />
+              </svg>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search sneakers, brands, categories..."
+                aria-label="Search products"
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: theme.fontSize.md,
+                  fontWeight: theme.fontWeight.medium,
+                  color: theme.colors.textPrimary,
+                  background: 'transparent',
+                  fontFamily: theme.fontFamily.body,
+                  minWidth: 0,
+                }}
+              />
+            </div>
+            <button
+              type="submit"
+              className="pressable search-submit"
+              style={{
+                padding: `${theme.spacing.md}px ${theme.spacing.xxl}px`,
+                background: theme.colors.black,
+                color: theme.colors.white,
+                borderRadius: theme.radius.pill,
+                fontFamily: theme.fontFamily.display,
+                fontSize: theme.fontSize.base,
+                fontWeight: theme.fontWeight.bold,
+                border: 'none',
+                cursor: 'pointer',
+                letterSpacing: theme.letterSpacing.wider,
+                textTransform: 'uppercase',
+              }}
+            >
+              Search
+            </button>
           </div>
-          <button type="submit" style={{ padding: '12px 24px', background: '#111111', color: '#ffffff', borderRadius: '24px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}>
-            SEARCH
-          </button>
-        </div>
-      </form>
+        </form>
 
-      {/* POPULAR & RECENT SEARCH CHIPS */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#777777', marginBottom: '10px' }}>POPULAR SEARCHES</div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {popularTags.map((tag) => (
-            <button key={tag} onClick={() => handleChipClick(tag)} style={{ padding: '6px 16px', background: query === tag ? '#111111' : '#F0F0F2', color: query === tag ? '#ffffff' : '#111111', borderRadius: '16px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-              {tag}
-            </button>
-          ))}
+        {/* POPULAR SEARCH CHIPS */}
+        <div style={{ marginBottom: theme.spacing.huge }}>
+          <div
+            style={{
+              fontSize: theme.fontSize.xs,
+              fontWeight: theme.fontWeight.extrabold,
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+              color: theme.colors.textSecondary,
+              marginBottom: theme.spacing.sm + 2,
+            }}
+          >
+            Popular Searches
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: theme.spacing.sm,
+              flexWrap: 'wrap',
+            }}
+          >
+            {popularTags.map((tag) => {
+              const active = query === tag;
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => handleChipClick(tag)}
+                  aria-pressed={active}
+                  className="pressable search-chip"
+                  style={{
+                    padding: `${theme.spacing.xs + 2}px ${theme.spacing.lg}px`,
+                    background: active ? theme.colors.black : theme.colors.grey100,
+                    color: active ? theme.colors.white : theme.colors.textPrimary,
+                    borderRadius: theme.radius.lg,
+                    border: 'none',
+                    fontSize: theme.fontSize.base,
+                    fontWeight: theme.fontWeight.semibold,
+                    cursor: 'pointer',
+                    transition: theme.transitions.color,
+                  }}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* DISCOVERY CONTROL BAR & ACTIVE FILTERS */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: theme.spacing.xxl,
+            flexWrap: 'wrap',
+            gap: theme.spacing.lg,
+            borderBottom: `1px solid ${theme.colors.border}`,
+            paddingBottom: theme.spacing.lg,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing.md,
+              flexWrap: 'wrap',
+            }}
+          >
+            <select
+              value={selectedBrand}
+              onChange={(e) => {
+                haptic.selection();
+                setSelectedBrand(e.target.value);
+              }}
+              aria-label="Filter by brand"
+              className="pressable search-select"
+              style={{
+                padding: `${theme.spacing.sm}px ${theme.spacing.lg}px`,
+                background: theme.colors.white,
+                border: `1px solid ${theme.colors.borderStrong}`,
+                borderRadius: theme.radius.lg,
+                fontSize: theme.fontSize.base,
+                fontWeight: theme.fontWeight.semibold,
+                color: theme.colors.textPrimary,
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="All">All Brands</option>
+              <option value="NIKE">Nike</option>
+              <option value="ADIDAS">Adidas</option>
+              <option value="PUMA">Puma</option>
+              <option value="NEW BALANCE">New Balance</option>
+            </select>
+
+            <select
+              value={selectedSize}
+              onChange={(e) => {
+                haptic.selection();
+                setSelectedSize(e.target.value);
+              }}
+              aria-label="Filter by size"
+              className="pressable search-select"
+              style={{
+                padding: `${theme.spacing.sm}px ${theme.spacing.lg}px`,
+                background: theme.colors.white,
+                border: `1px solid ${theme.colors.borderStrong}`,
+                borderRadius: theme.radius.lg,
+                fontSize: theme.fontSize.base,
+                fontWeight: theme.fontWeight.semibold,
+                color: theme.colors.textPrimary,
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="All">All Sizes</option>
+              <option value="UK 7">UK 7</option>
+              <option value="UK 8">UK 8</option>
+              <option value="UK 9">UK 9</option>
+              <option value="UK 10">UK 10</option>
+            </select>
+
+            {(query || selectedBrand !== 'All' || selectedSize !== 'All') && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="pressable search-reset"
+                style={{
+                  padding: `${theme.spacing.sm}px ${theme.spacing.lg}px`,
+                  background: theme.colors.error,
+                  color: theme.colors.white,
+                  borderRadius: theme.radius.lg,
+                  border: 'none',
+                  fontSize: theme.fontSize.xs,
+                  fontWeight: theme.fontWeight.bold,
+                  cursor: 'pointer',
+                  letterSpacing: theme.letterSpacing.wide,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Reset Filters
+              </button>
+            )}
+          </div>
+
+          <div
+            style={{
+              fontSize: theme.fontSize.body,
+              fontWeight: theme.fontWeight.semibold,
+              color: theme.colors.textSecondary,
+            }}
+          >
+            {filteredProducts.length} Results Found
+          </div>
+        </div>
+
+        {/* PRODUCT RESULTS GRID OR EMPTY STATE */}
+        {filteredProducts.length > 0 ? (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: theme.spacing.xl,
+            }}
+          >
+            {filteredProducts.map((p) => (
+              <ProductCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                brand={p.brand}
+                price={p.price}
+                origPrice={p.comparePrice}
+                badge={p.newArrival ? 'NEW' : undefined}
+                image={p.primaryImage}
+                slug={p.slug}
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: `${theme.spacing.giant}px ${theme.spacing.xl}px`,
+              background: theme.colors.white,
+              borderRadius: theme.radius.xxl,
+              border: `1px solid ${theme.colors.border}`,
+            }}
+          >
+            <div
+              style={{ fontSize: 48, marginBottom: theme.spacing.md }}
+              aria-hidden
+            >
+              🔍
+            </div>
+            <h2
+              style={{
+                fontFamily: theme.fontFamily.display,
+                fontSize: theme.fontSize.h2,
+                fontWeight: theme.fontWeight.extrabold,
+                color: theme.colors.textPrimary,
+                margin: 0,
+                letterSpacing: theme.letterSpacing.tight,
+              }}
+            >
+              No Products Found
+            </h2>
+            <p
+              style={{
+                fontSize: theme.fontSize.body,
+                color: theme.colors.textSecondary,
+                margin: `${theme.spacing.sm}px 0 ${theme.spacing.xxl}px`,
+                lineHeight: theme.lineHeight.relaxed,
+              }}
+            >
+              We couldn&apos;t find any sneakers matching &quot;{query}&quot;.
+              Try checking your spelling or reset filters.
+            </p>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="pressable search-cta"
+              style={{
+                padding: `${theme.spacing.md}px ${theme.spacing.xxl}px`,
+                background: theme.colors.black,
+                color: theme.colors.white,
+                borderRadius: theme.radius.xxl,
+                fontFamily: theme.fontFamily.display,
+                fontSize: theme.fontSize.base,
+                fontWeight: theme.fontWeight.bold,
+                border: 'none',
+                cursor: 'pointer',
+                letterSpacing: theme.letterSpacing.wider,
+                textTransform: 'uppercase',
+              }}
+            >
+              View All Products
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* DISCOVERY CONTROL BAR & ACTIVE FILTERS */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #EBEBEB', paddingBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <select value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)} style={{ padding: '8px 16px', background: '#ffffff', border: '1px solid #E0E0E0', borderRadius: '16px', fontSize: '12px', fontWeight: 600, color: '#111111', outline: 'none', cursor: 'pointer' }}>
-            <option value="All">All Brands</option>
-            <option value="NIKE">Nike</option>
-            <option value="ADIDAS">Adidas</option>
-            <option value="PUMA">Puma</option>
-            <option value="NEW BALANCE">New Balance</option>
-          </select>
-
-          <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)} style={{ padding: '8px 16px', background: '#ffffff', border: '1px solid #E0E0E0', borderRadius: '16px', fontSize: '12px', fontWeight: 600, color: '#111111', outline: 'none', cursor: 'pointer' }}>
-            <option value="All">All Sizes</option>
-            <option value="UK 7">UK 7</option>
-            <option value="UK 8">UK 8</option>
-            <option value="UK 9">UK 9</option>
-            <option value="UK 10">UK 10</option>
-          </select>
-
-          {(query || selectedBrand !== 'All' || selectedSize !== 'All') && (
-            <button onClick={resetFilters} style={{ padding: '8px 16px', background: '#FF3B30', color: '#ffffff', borderRadius: '16px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-              Reset Filters
-            </button>
-          )}
-        </div>
-
-        <div style={{ fontSize: '13px', fontWeight: 600, color: '#777777' }}>
-          {filteredProducts.length} Results Found
-        </div>
-      </div>
-
-      {/* PRODUCT RESULTS GRID OR EMPTY STATE */}
-      {filteredProducts.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-          {filteredProducts.map((p) => (
-            <ProductCard key={p.id} id={p.id} name={p.name} brand={p.brand} price={p.price} origPrice={p.comparePrice} badge={p.newArrival ? 'NEW' : undefined} image={p.primaryImage} slug={p.slug} />
-          ))}
-        </div>
-      ) : (
-        <div style={{ textAlign: 'center', padding: '80px 20px', background: '#ffffff', borderRadius: '24px', border: '1px solid #EBEBEB' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🔍</div>
-          <h2 style={{ fontFamily: "var(--font-oswald), sans-serif", fontSize: '24px', fontWeight: 800, color: '#111111', margin: 0 }}>No Products Found</h2>
-          <p style={{ fontSize: '13px', color: '#777777', margin: '8px 0 24px' }}>We couldn&apos;t find any sneakers matching &quot;{query}&quot;. Try checking your spelling or reset filters.</p>
-          <button onClick={resetFilters} style={{ padding: '12px 28px', background: '#111111', color: '#ffffff', borderRadius: '24px', fontFamily: "var(--font-oswald), sans-serif", fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-            VIEW ALL PRODUCTS
-          </button>
-        </div>
-      )}
-    </ResponsiveAppLayout>
+      <style jsx>{pressableStyle}</style>
+      <style jsx>{`
+        .search-chip:active {
+          transform: scale(0.95);
+        }
+        .search-submit:active,
+        .search-cta:active {
+          transform: scale(0.97);
+        }
+      `}</style>
+    </MobileLayout>
   );
 }
