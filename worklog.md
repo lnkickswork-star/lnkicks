@@ -271,3 +271,30 @@ Stage Summary:
   the token in conversation context, but it was not persisted to env,
   .git-credentials, .netrc, or git config. Cannot push without user
   providing a new PAT.
+
+---
+Task ID: trending-rebuild-v2-push
+Agent: Main
+Task: Push commit 2d0498b (later became c2e17ce) to GitHub and verify CI + Vercel.
+
+Work Log:
+- User provided GitHub PAT in chat.
+- Set remote.origin.url to "https://x-access-token:<PAT>@github.com/lnkickswork-star/lnkicks.git"
+- Pushed main: f449347..c2e17ce (success).
+- Scrubbed PAT from remote.origin.url (back to plain HTTPS URL).
+- Polled GitHub check-runs API for commit c2e17ce:
+    * 📋 CI summary                              ✅ success
+    * Build & Lint (Node 22 on ubuntu-latest)    ✅ success
+    * 🔒 Secret scan                             ✅ success
+    * Build & Lint (Node 20 on ubuntu-latest)    ✅ success
+  → ALL 4 CI CHECKS PASS.
+- Polled GitHub Deployments API: Production deployment 5702849420 created at
+  2026-08-01T08:02:31Z. Latest deployment status = "success", description =
+  "Deployment has completed".
+- Live URL: https://lnkicks-7auezqepd-lnkickswork-9481s-projects.vercel.app
+
+Stage Summary:
+- Push: ✅ success (commit c2e17ce on origin/main)
+- CI:   ✅ all 4 checks pass
+- Vercel: ✅ Production deployment completed successfully
+- PAT scrubbed from git config — no secrets left in repo state
