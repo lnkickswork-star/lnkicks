@@ -820,3 +820,84 @@ Stage Summary:
 - /offline.html route adds 0 B to JS bundle (route handler returns raw HTML)
 - Desktop homepage remains untouched (verified: git diff components/desktop/ clean)
 - 1 commit ahead of origin/main (54d0fda) — needs user-provided PAT to push
+
+---
+Task ID: phase-2-mobile-ui-refinement
+Agent: main
+Task: Phase 2 mobile homepage UI refinement — Hero Banner redesign (Adidas reference), Popular Shoes → horizontal carousel, New Arrivals → SNKRS-style premium banner, footer consistency.
+
+Work Log:
+- Read worklog + examined existing MobileHeroBanner / MobilePopularShoes / MobileNewArrivals / MobileBottomNav
+- Analyzed uploaded Adidas.jpg reference via VLM — extracted design DNA:
+  * Asymmetric split (left ~40-45% product, right ~55-60% text)
+  * Cool grey canvas (#f0f0f0)
+  * Massive geometric display headline + small lead word ("kick up the COOL")
+  * Underlined text CTA ("SHOP NOW") — no button shape
+  * Generous negative space + soft drop shadow under floating shoe
+  * "Quiet Luxury / Streetwear Minimalist" aesthetic
+- Rewrote MobileHeroBanner:
+  * CSS grid: 42fr (image) / 58fr (text) — matches reference split
+  * Cool grey bg for light variant (theme.colors.grey150 = #f0f0f0)
+  * Dark variant inverts to matte black bg + white text
+  * Big display headline (40px Oswald black, uppercase) + small lead word
+  * Single-sentence subtitle (Inter, soft grey)
+  * Underlined "SHOP NOW" text CTA with arrow icon (NOT a button shape)
+  * Floating shoe on left with rotate(-12deg) + drop-shadow-lg
+  * LN wordmark watermark for editorial flair
+  * Height 200px (taller than previous 180, more room for headline)
+  * Same carousel mechanics: 3 banners, auto-advance 5s, dots, snap-scroll,
+    prefers-reduced-motion respected, haptic on interaction
+- Converted MobilePopularShoes from 2-col grid → horizontal swipe carousel:
+  * Cards now have fixed width: 165px (peek/preview pattern, ~2.2 cards visible)
+  * Container: display:flex, overflowX:auto, scroll-snap-type:x mandatory
+  * -webkit-overflow-scrolling: touch for iOS momentum
+  * Scrollbar hidden via scrollbarWidth:none + ::-webkit-scrollbar display:none
+  * Page gutter on both edges so first/last cards breathe
+  * Trailing spacer div so last card can scroll into the right gutter
+  * Card design 100% preserved (image area / brand / name / rating / price /
+    + add-to-cart button)
+  * All existing business logic preserved (addToCart integration, haptic,
+    Link to product page, focus-visible ring)
+- Redesigned MobileNewArrivals as premium promotional banner:
+  * Matte black background (theme.colors.black)
+  * CSS grid: 58fr (left text) / 42fr (right image) — premium split
+  * Left side: NEW pill (white-on-black) → brand label → big display
+    headline (Oswald h2 extrabold) → description → price row →
+    [Shop Now white pill CTA] + [outline-circle + add-to-cart button]
+  * Right side: large floating shoe image (rotate(-12deg), drop-shadow-lg)
+    wrapped in Link to product page
+  * Same radius.hero (28px) + shadows.lg as Hero Banner for visual rhythm
+  * "NEW" oversized watermark in bottom-right corner for editorial detail
+  * Hover state: shoe rotates further + scales, CTA lifts
+  * Active state: card scales 0.99, CTA scales 0.94, add-to-cart scales 0.88
+- Verified footer consistency:
+  * MobileHome.tsx already only renders MobileBottomNav (Phase 1 removed
+    MobileFooter informational footer)
+  * No other mobile page imports MobileFooter (verified via grep)
+  * components/layout/MobileFooter.tsx is dead code (no imports) — left alone
+- Updated MobileHome.tsx section comments to reflect Phase 2 design
+
+Stage Summary:
+- Lint: ✅ PASSES — only the existing `<img>` warning (codebase convention)
+- Types: ✅ PASSES — npx tsc --noEmit reports zero errors
+- Build: ✅ PASSES — 42 routes, / 35.3 kB + 131 kB First Load JS
+- Files modified: 4 (MobileHome.tsx comments, MobileHeroBanner.tsx,
+  MobilePopularShoes.tsx, MobileNewArrivals.tsx)
+- Desktop homepage: ZERO changes (verified: git diff components/desktop/ clean)
+- All existing business logic preserved:
+  * AppContext.addToCart integration intact on both Popular + New Arrivals
+  * All product hrefs preserved (Link to /product/[slug] routes)
+  * Haptic feedback on all taps (light/medium/selection)
+  * Focus-visible rings + ARIA labels
+  * prefers-reduced-motion respected (carousel auto-advance)
+  * Safe-area padding preserved
+  * Image lazy-loading + decoding="async" preserved
+- Design system compliance:
+  * All tokens from @/lib/mobile/theme (no hardcoded values)
+  * Inline styles + styled-jsx (no Tailwind) — matches codebase convention
+  * Inter + Oswald via next/font/google
+  * matte black + cool grey + pure white palette (no blue, no gradients)
+- Mobile flow now matches Phase 2 spec:
+  Header → Search → Brand Categories → Hero Banner Slider →
+  Popular Shoes (horizontal carousel) → New Arrivals (SNKRS-style banner) →
+  Recommended → Brands → Newsletter → Floating Bottom Nav

@@ -9,6 +9,12 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * MobileHeroBanner — premium swipeable banner carousel.
  *
+ * Design reference: Adidas editorial banner — cool grey canvas, asymmetric
+ * split (left ~42% product image / right ~58% text), oversized geometric
+ * display headline ("kick up the COOL" style), small subtitle sentence,
+ * underlined "SHOP NOW" text CTA (no button shape), generous negative
+ * space, soft drop shadow under the floating sneaker.
+ *
  * Layout contract:
  *   - 3 promotional banners, swipeable horizontally
  *   - Auto-advance every 5 seconds (pauses on touch / hover / focus)
@@ -16,21 +22,27 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  *   - Page indicator dots below the carousel
  *   - Rounded corners (radius.hero = 28px)
  *   - Full width with theme.pad side margins
- *   - Premium height — 180px (16:9-ish on a 440px container, taller on narrow phones)
+ *   - Height 200px — tall enough for the headline + image, short enough
+ *     to keep Popular Shoes above the fold
  *
- * Banner anatomy:
- *   ┌─────────────────────────────────────────────┐
- *   │  Eyebrow chip (top-left)                    │
- *   │                                              │
- *   │  Title (large display)         [shoe image] │
- *   │  Subtitle (one line)                        │
- *   │  CTA arrow →                                │
- *   └─────────────────────────────────────────────┘
+ * Banner anatomy (per Adidas reference):
+ *   ┌────────────────────────────────────────────────────┐
+ *   │                          │                         │
+ *   │                          │  EYEBROW                │
+ *   │   [floating shoe PNG]    │  KICK UP THE            │
+ *   │   drop-shadow            │  COOL                   │
+ *   │                          │  Sub-copy sentence.     │
+ *   │                          │  ─── SHOP NOW →         │
+ *   │                          │                         │
+ *   └────────────────────────────────────────────────────┘
+ *                       ▲
+ *              Cool grey background (#f0f0f0)
+ *              LN wordmark watermark for editorial flair
  *
  * Each banner tappable → product / category / collection route.
  *
- * LN KICKS theme: matte black banners with white text + floating shoe PNGs.
- * One banner inverts (white bg + black text) for visual rhythm.
+ * LN KICKS theme: cool grey canvas, pure black text, white product PNG.
+ * One banner inverts (matte black bg + white text) for visual rhythm.
  *
  * Phase 3 polish:
  *  - Design tokens (no hardcoded values)
@@ -45,44 +57,51 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 type Banner = {
   id: string;
   eyebrow: string;
-  title: string;
+  /** Small lead-in line above the big headline (e.g. "Step Into") */
+  lead: string;
+  /** Big bold display word (e.g. "LEGEND") */
+  display: string;
+  /** Single-sentence subtitle */
   subtitle: string;
   image: string;
   href: string;
-  /** Visual variant — 'dark' (matte black bg) or 'light' (white bg) */
-  variant: 'dark' | 'light';
+  /** Visual variant — 'light' (cool grey bg) or 'dark' (matte black bg) */
+  variant: 'light' | 'dark';
 };
 
 const BANNERS: Banner[] = [
   {
     id: 'hero-aj1-powder',
     eyebrow: 'Hyped Drops',
-    title: 'Air Jordan 1 Low',
-    subtitle: 'Powder Blue · Rs. 8,899',
+    lead: 'Step Into',
+    display: 'LEGEND',
+    subtitle: 'The pair you’ll want to be seen in.',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw',
     href: '/product/air-jordan-1-low-black-powder-blue',
-    variant: 'dark',
+    variant: 'light',
   },
   {
     id: 'hero-dunk-rose',
     eyebrow: 'Summer Edit',
-    title: 'Nike Dunk Low',
-    subtitle: 'Rose Whisper · Under Rs. 8,000',
+    lead: 'Kick Up The',
+    display: 'COOL',
+    subtitle: '“That shoe” you’ll want to be seen in.',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg',
     href: '/product/nike-dunk-low-rose-whisper',
-    variant: 'light',
+    variant: 'dark',
   },
   {
     id: 'hero-samba',
     eyebrow: 'Heritage Icons',
-    title: 'Adidas Samba OG',
-    subtitle: 'Wonder Silver · Timeless classic',
+    lead: 'Own The',
+    display: 'CLASSIC',
+    subtitle: 'Timeless silhouette, modern swagger.',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
     href: '/product/adidas-samba-og-wonder-silver',
-    variant: 'dark',
+    variant: 'light',
   },
 ];
 
@@ -188,7 +207,7 @@ function MobileHeroBannerImpl() {
             key={banner.id}
             banner={banner}
             isActive={idx === activeIndex}
-            ariaLabel={`Slide ${idx + 1} of ${BANNERS.length}: ${banner.title}`}
+            ariaLabel={`Slide ${idx + 1} of ${BANNERS.length}: ${banner.display}`}
           />
         ))}
       </div>
@@ -213,7 +232,7 @@ function MobileHeroBannerImpl() {
               type="button"
               role="tab"
               aria-selected={isActive}
-              aria-label={`Go to slide ${idx + 1}: ${banner.title}`}
+              aria-label={`Go to slide ${idx + 1}: ${banner.display}`}
               onClick={() => handleDotClick(idx)}
               className="mhb-dot"
               style={{
@@ -260,12 +279,13 @@ function BannerCardImpl({
   ariaLabel: string;
 }) {
   const isDark = banner.variant === 'dark';
-  const bg = isDark ? theme.colors.black : theme.colors.white;
+  // Light variant: cool grey canvas (#f0f0f0). Dark variant: matte black.
+  const bg = isDark ? theme.colors.black : theme.colors.grey150;
   const fg = isDark ? theme.colors.white : theme.colors.black;
-  const eyebrowBg = isDark ? 'rgba(255,255,255,0.14)' : theme.colors.grey100;
-  const eyebrowFg = isDark ? theme.colors.white : theme.colors.textSecondary;
+  const eyebrowFg = isDark ? 'rgba(255,255,255,0.7)' : theme.colors.textSecondary;
   const subtitleFg = isDark ? 'rgba(255,255,255,0.78)' : theme.colors.textSecondary;
-  const borderColor = isDark ? 'transparent' : theme.colors.grey150;
+  const underlineColor = isDark ? theme.colors.white : theme.colors.black;
+  const watermarkColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
 
   return (
     <Link
@@ -277,19 +297,19 @@ function BannerCardImpl({
       onPointerDown={() => haptic.light()}
       style={{
         position: 'relative',
-        display: 'flex',
+        display: 'grid',
+        // Left ~42% image / Right ~58% text — matches Adidas reference
+        gridTemplateColumns: '42fr 58fr',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: theme.spacing.md,
-        padding: `${theme.spacing.xl}px ${theme.spacing.xl}px ${theme.spacing.xl}px ${theme.spacing.xxl}px`,
+        gap: 0,
         background: bg,
         borderRadius: theme.radius.hero,
         overflow: 'hidden',
-        border: `1px solid ${borderColor}`,
+        border: 'none',
         boxShadow: isDark ? theme.shadows.lg : theme.shadows.sm,
         color: fg,
         textDecoration: 'none',
-        height: 180,
+        height: 200,
         boxSizing: 'border-box',
         margin: `0 ${theme.spacing.xs}px`,
       }}
@@ -299,22 +319,56 @@ function BannerCardImpl({
         aria-hidden
         style={{
           position: 'absolute',
-          bottom: -24,
-          left: -10,
+          bottom: -28,
+          left: -8,
           fontFamily: theme.fontFamily.display,
-          fontSize: 140,
+          fontSize: 150,
           fontWeight: theme.fontWeight.black,
-          color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+          color: watermarkColor,
           letterSpacing: '-0.06em',
           lineHeight: 1,
           pointerEvents: 'none',
           userSelect: 'none',
+          zIndex: 0,
         }}
       >
         LN
       </span>
 
-      {/* Left: text block */}
+      {/* ── Left: floating shoe image ─────────────────────────────── */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: theme.spacing.md,
+          overflow: 'hidden',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={banner.image}
+          alt=""
+          aria-hidden
+          draggable={false}
+          style={{
+            maxWidth: '115%',
+            maxHeight: '115%',
+            width: 'auto',
+            height: 'auto',
+            objectFit: 'contain',
+            filter: theme.dropShadows.lg,
+            transform: 'rotate(-12deg)',
+            transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
+          }}
+          className="mhb-shoe"
+        />
+      </div>
+
+      {/* ── Right: text block ─────────────────────────────────────── */}
       <div
         style={{
           position: 'relative',
@@ -322,40 +376,57 @@ function BannerCardImpl({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
-          gap: theme.spacing.sm,
-          flex: '1 1 auto',
-          minWidth: 0,
+          gap: theme.spacing.xs + 1,
+          padding: `${theme.spacing.lg}px ${theme.spacing.xl}px ${theme.spacing.lg}px 0`,
         }}
       >
-        {/* Eyebrow chip */}
+        {/* Eyebrow */}
         <span
           style={{
-            background: eyebrowBg,
             color: eyebrowFg,
             fontSize: theme.fontSize.xs,
             fontWeight: theme.fontWeight.bold,
             letterSpacing: theme.letterSpacing.wider,
             textTransform: 'uppercase',
-            padding: `${theme.spacing.xs + 1}px ${theme.spacing.sm + 2}px`,
-            borderRadius: theme.radius.pill,
           }}
         >
           {banner.eyebrow}
         </span>
 
-        {/* Title */}
+        {/* Display headline — small lead + big display word */}
         <h2
           style={{
             margin: 0,
             fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.h2,
-            fontWeight: theme.fontWeight.extrabold,
             lineHeight: theme.lineHeight.tight,
-            letterSpacing: theme.letterSpacing.tight,
+            letterSpacing: theme.letterSpacing.tightest,
             color: fg,
+            textTransform: 'uppercase',
           }}
         >
-          {banner.title}
+          <span
+            style={{
+              display: 'block',
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.medium,
+              letterSpacing: theme.letterSpacing.normal,
+              lineHeight: 1.1,
+              marginBottom: 2,
+              opacity: 0.85,
+            }}
+          >
+            {banner.lead}
+          </span>
+          <span
+            style={{
+              display: 'block',
+              fontSize: 40,
+              fontWeight: theme.fontWeight.black,
+              lineHeight: 0.95,
+            }}
+          >
+            {banner.display}
+          </span>
         </h2>
 
         {/* Subtitle */}
@@ -363,57 +434,39 @@ function BannerCardImpl({
           style={{
             margin: 0,
             fontSize: theme.fontSize.sm,
-            fontWeight: theme.fontWeight.medium,
+            fontWeight: theme.fontWeight.regular,
             color: subtitleFg,
             lineHeight: theme.lineHeight.snug,
-            maxWidth: 200,
+            maxWidth: 180,
           }}
         >
           {banner.subtitle}
         </p>
 
-        {/* CTA arrow */}
+        {/* Underline text CTA — Adidas reference style */}
         <span
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: theme.spacing.xs,
-            marginTop: theme.spacing.xs,
+            marginTop: theme.spacing.xs + 2,
             fontSize: theme.fontSize.xs,
             fontWeight: theme.fontWeight.bold,
             letterSpacing: theme.letterSpacing.wider,
             textTransform: 'uppercase',
             color: fg,
+            borderBottom: `1.5px solid ${underlineColor}`,
+            paddingBottom: 2,
           }}
+          className="mhb-cta"
         >
-          Shop now
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+          Shop Now
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden>
             <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
             <polyline points="12 5 19 12 12 19" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
       </div>
-
-      {/* Right: floating shoe image */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={banner.image}
-        alt=""
-        aria-hidden
-        draggable={false}
-        style={{
-          position: 'relative',
-          zIndex: 2,
-          flex: '0 0 auto',
-          width: 140,
-          height: 140,
-          objectFit: 'contain',
-          filter: theme.dropShadows.lg,
-          transform: 'rotate(-8deg)',
-          transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
-        }}
-        className="mhb-shoe"
-      />
 
       <style jsx>{`
         .mhb-card:active {
@@ -425,7 +478,10 @@ function BannerCardImpl({
         }
         @media (hover: hover) {
           .mhb-card:hover .mhb-shoe {
-            transform: rotate(-12deg) translateY(-4px);
+            transform: rotate(-16deg) translateY(-4px) scale(1.04);
+          }
+          .mhb-card:hover .mhb-cta {
+            transform: translateX(2px);
           }
         }
       `}</style>

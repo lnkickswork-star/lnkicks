@@ -40,13 +40,17 @@ const MobileServiceWorkerRegister = lazy(
  * gradients. Apple / Nike / GOAT / END Clothing inspired minimal luxury
  * aesthetic — adapted from a reference mobile shopping app screenshot.
  *
- * Section order (per UX spec refinement):
+ * Section order (per UX spec refinement — Phase 2):
  *   1. MobileHeader          — Menu / LNKICKS / Cart / Profile (wishlist removed)
  *   2. MobileSearch          — premium pill search bar
  *   3. MobileBrandShortcuts  — horizontal capsule brand pills (10 brands)
- *   4. MobileHeroBanner      — swipeable 3-banner carousel with auto-advance + dots
- *   5. MobilePopularShoes    — 2-col product grid with + add-to-cart
- *   6. MobileNewArrivals     — large featured product card
+ *   4. MobileHeroBanner      — Adidas-style editorial banner carousel
+ *                              (asymmetric product/text split, big display
+ *                              headline, underlined SHOP NOW CTA, dots)
+ *   5. MobilePopularShoes    — horizontal swipe carousel (snap-scroll, peek
+ *                              preview of next card, premium cards preserved)
+ *   6. MobileNewArrivals     — SNKRS-style promotional banner (matte black,
+ *                              left details / right large shoe image, CTA)
  *   7. MobileRecommended     — 2-col recommended grid (kept, lazy)
  *   8. MobileBrands          — brand wordmark marquee (kept, lazy)
  *   9. MobileNewsletter      — black email-capture card (kept, lazy)
@@ -211,13 +215,13 @@ export default function MobileHome() {
           {/* 2b. Quick Brand Shortcuts */}
           <MobileBrandShortcuts />
 
-          {/* 2c. Hero Banner Slider — 3 swipeable promotional banners */}
+          {/* 2c. Hero Banner Slider — Adidas-style editorial carousel */}
           <MobileHeroBanner />
 
-          {/* 2d. Popular Shoes — 2-col grid with + add-to-cart */}
+          {/* 2d. Popular Shoes — horizontal swipe carousel with peek preview */}
           <MobilePopularShoes products={popularShoes} />
 
-          {/* 2e. New Arrivals — large featured product */}
+          {/* 2e. New Arrivals — SNKRS-style premium promotional banner */}
           <MobileNewArrivals product={featuredArrival} />
 
           {/* 2f. Recommended For You — lazy (kept from previous architecture) */}

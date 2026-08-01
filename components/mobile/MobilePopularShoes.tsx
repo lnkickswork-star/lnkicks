@@ -9,20 +9,22 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import type { MobileProduct } from '@/components/mobile/mobileProducts';
 
 /**
- * MobilePopularShoes — 2-column product grid.
+ * MobilePopularShoes — horizontal swipe carousel of product cards.
  *
  * Visual contract (matches mobile reference):
  *   - Pure white section background
  *   - Section header: "Popular Shoes" (bold black) + "See all" link
- *   - 2-column CSS grid, 12px gap, full-bleed within page gutter
+ *   - HORIZONTAL swipe carousel (one row, scroll-snap)
+ *   - First/last cards inset by theme.pad for premium page gutter
  *   - Each card:
- *       1. Soft grey rounded image area (radius.lg) with floating shoe PNG
- *          (drop-shadow on the image, NOT card box-shadow)
- *       2. Brand label (small, uppercase, grey)
- *       3. Product name (bold black, 1 line, ellipsis)
- *       4. Price row: current price (bold black) + strike-through original
- *       5. Rating row: ★ stars + numeric rating
- *       6. Bottom-right: circular matte-black "+" Add-to-Cart button
+ *       • Fixed width ~165px (so 2.2 cards are visible — peak/preview pattern)
+ *       • 1. Soft grey rounded image area (radius.lg) with floating shoe PNG
+ *         (drop-shadow on the image, NOT card box-shadow)
+ *       • 2. Brand label (small, uppercase, grey)
+ *       • 3. Product name (bold black, 1-2 lines, ellipsis)
+ *       • 4. Price row: current price (bold black) + strike-through original
+ *       • 5. Rating row: ★ stars + numeric rating
+ *       • 6. Bottom-right: circular matte-black "+" Add-to-Cart button
  *
  * Add-to-cart integrates with AppContext.addToCart — adds the product
  * with qty=1 and triggers the global toast ("Item added to Shopping Cart!").
@@ -34,9 +36,12 @@ import type { MobileProduct } from '@/components/mobile/mobileProducts';
  *  - Haptic medium tick on Add-to-Cart
  *  - Pressed state on card (scale 0.98) and button (scale 0.92)
  *  - Focus-visible ring on the card link and the + button
- *  - ARIA: role="list/grid", aria-label per card, button has aria-label
+ *  - ARIA: role="list" with aria-label per card, button has aria-label
  *  - Memoized at the section level; cards are memoized separately
  *  - Image uses loading="lazy" + decoding="async" for scroll perf
+ *  - scroll-snap-type: x mandatory for premium snap feel
+ *  - -webkit-overflow-scrolling: touch for iOS momentum
+ *  - Scrollbar hidden for clean luxury look
  */
 
 /* ── Star renderer ────────────────────────────────────────────── */
@@ -60,14 +65,14 @@ function Stars({ rating }: { rating: number }) {
         style={{ flexShrink: 0 }}
       >
         <defs>
-          <linearGradient id={`star-half-${i}-${rating}`} x1="0" y1="0" x2="1" y2="0">
+          <linearGradient id={`mpstar-${i}-${rating}`} x1="0" y1="0" x2="1" y2="0">
             <stop offset={`${fill * 100}%`} stopColor={theme.colors.black} />
             <stop offset={`${fill * 100}%`} stopColor={theme.colors.grey300} />
           </linearGradient>
         </defs>
         <path
           d="M12 2l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.77l-5.91 3.39 1.13-6.57L2.45 8.94l6.6-.96L12 2z"
-          fill={fill === 1 ? theme.colors.black : fill === 0.5 ? `url(#star-half-${i}-${rating})` : theme.colors.grey300}
+          fill={fill === 1 ? theme.colors.black : fill === 0.5 ? `url(#mpstar-${i}-${rating})` : theme.colors.grey300}
         />
       </svg>,
     );
@@ -116,6 +121,10 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
         flexDirection: 'column',
         position: 'relative',
         border: `1px solid ${theme.colors.grey150}`,
+        // Fixed width so the carousel shows ~2.2 cards (peek/preview pattern)
+        width: 165,
+        flex: '0 0 auto',
+        scrollSnapAlign: 'start',
       }}
     >
       <Link
@@ -143,6 +152,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             alt={`${product.brand} ${product.name}`}
             loading="lazy"
             decoding="async"
+            draggable={false}
             style={{
               maxWidth: '90%',
               maxHeight: '90%',
@@ -359,24 +369,39 @@ function MobilePopularShoesImpl({
         </Link>
       </div>
 
-      {/* 2-col grid */}
+      {/* Horizontal swipe carousel */}
       <div
         role="list"
+        className="mps-scroller"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          display: 'flex',
           gap: theme.spacing.md,
-          padding: `0 ${theme.spacing.pad}px`,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          scrollSnapType: 'x mandatory',
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+          // Page gutter on both edges so first/last cards breathe
+          padding: `${theme.spacing.xs}px ${theme.spacing.pad}px ${theme.spacing.md}px`,
+          // Prevent vertical scroll capture
+          msOverflowStyle: 'none',
         }}
       >
         {products.map((p) => (
-          <div role="listitem" key={p.id}>
+          <div role="listitem" key={p.id} style={{ display: 'flex' }}>
             <PopularShoeCard product={p} />
           </div>
         ))}
+        {/* Trailing spacer so the last card can scroll into the page gutter */}
+        <div aria-hidden style={{ flex: '0 0 auto', width: 0 }} />
       </div>
 
       <style jsx>{pressableStyle}</style>
+      <style jsx>{`
+        .mps-scroller::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   );
 }
