@@ -3,14 +3,14 @@
 import React from 'react';
 
 /**
- * BrandsSection — infinite horizontal marquee of luxury brand wordmarks.
+ * BrandsSection — single infinite horizontal marquee of luxury brand wordmarks.
  *
- * Refinements (Phase 1.5):
+ * Refinements (Phase 1.5 → v2):
  *  - Renamed: "Brands at LN KICKS"
  *  - 11 brands: Nike, Jordan, Adidas, Puma, Reebok, Converse, Vans, HOKA,
  *    New Balance, ASICS, Yeezy
  *  - Continuous infinite horizontal scroll (CSS keyframes only — no JS)
- *  - Reverse-direction second row for visual depth
+ *  - ONE single marquee row (duplicate RTL row removed per user spec)
  *  - Each brand has unique typography to feel like a real logo lockup
  */
 
@@ -35,8 +35,8 @@ const BRANDS: Brand[] = [
 ];
 
 export default function BrandsSection() {
-  // Two duplicated tracks for seamless infinite scroll
-  const track1 = [...BRANDS, ...BRANDS];
+  // Single duplicated track for seamless infinite scroll
+  const track = [...BRANDS, ...BRANDS];
 
   return (
     <section
@@ -76,10 +76,10 @@ export default function BrandsSection() {
         </h2>
       </div>
 
-      {/* Marquee row 1 (left → right) */}
-      <div className="marquee-wrap" style={{ marginBottom: '24px' }}>
+      {/* Single marquee row (left → right) */}
+      <div className="marquee-wrap">
         <div className="marquee-track marquee-track-ltr">
-          {track1.map((brand, idx) => (
+          {track.map((brand, idx) => (
             <div
               key={`r1-${idx}`}
               className={`brand-item ${brand.className}`}
@@ -90,30 +90,6 @@ export default function BrandsSection() {
                 flexShrink: 0,
                 color: '#000',
                 opacity: 0.85,
-                transition: 'opacity 300ms ease, filter 300ms ease',
-                cursor: 'pointer',
-              }}
-            >
-              {brand.render}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Marquee row 2 (right → left, slower, different palette) */}
-      <div className="marquee-wrap">
-        <div className="marquee-track marquee-track-rtl">
-          {track1.map((brand, idx) => (
-            <div
-              key={`r2-${idx}`}
-              className={`brand-item ${brand.className}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0 56px',
-                flexShrink: 0,
-                color: '#000',
-                opacity: 0.7,
                 transition: 'opacity 300ms ease, filter 300ms ease',
                 cursor: 'pointer',
               }}
@@ -144,9 +120,6 @@ export default function BrandsSection() {
         .marquee-track-ltr {
           animation: lnk-brand-marquee-ltr 48s linear infinite;
         }
-        .marquee-track-rtl {
-          animation: lnk-brand-marquee-rtl 60s linear infinite;
-        }
         .marquee-wrap:hover .marquee-track {
           animation-play-state: paused;
         }
@@ -156,10 +129,6 @@ export default function BrandsSection() {
         @keyframes lnk-brand-marquee-ltr {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
-        }
-        @keyframes lnk-brand-marquee-rtl {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
         }
 
         /* Per-brand typography */

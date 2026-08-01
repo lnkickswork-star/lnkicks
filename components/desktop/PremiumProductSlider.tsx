@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useApp } from '@/components/context/AppContext';
 
 /**
  * PremiumProductSlider — luxury editorial floating-product slider.
@@ -18,11 +19,14 @@ import Link from 'next/link';
  *    4. Horizontal product row (5 visible on desktop, 3 tablet, 2 mobile)
  *
  *  Per-product (top → bottom):
- *    1. Pill badge (INSTANT SHIP / NEW DROP / LIMITED / etc.)
- *    2. Transparent PNG product image (~280px tall) with soft drop-shadow
- *    3. Brand name (small, uppercase, grey #999)
- *    4. Product name (medium, black #0A0A0A)
- *    5. Price row: red bold current + grey strikethrough original
+ *    1. Transparent PNG product image (~280px tall) with soft drop-shadow
+ *    2. Brand name (small, uppercase, grey #999)
+ *    3. Product name (medium, black #0A0A0A)
+ *    4. Price row: red bold current + grey strikethrough original
+ *    5. Single 'Add to Cart' CTA button
+ *
+ *  NO badges. NO best-seller pills. NO instant-ship chips. Per user spec,
+ *  the only chrome above each shoe is the shoe itself.
  *
  * ── Interaction ──
  *  - Click prev/next arrows
@@ -41,8 +45,12 @@ export interface SliderProduct {
   brand: string;
   name: string;
   price: string;
+  /** Numeric price used for cart line items (INR). */
+  priceValue: number;
   comparePrice?: string;
+  /** @deprecated Badges are no longer rendered. Kept for type backwards-compat. */
   badge?: string;
+  /** @deprecated Badge variants are no longer rendered. */
   badgeVariant?: 'black' | 'red' | 'gold' | 'cream';
   image: string;
   href: string;
@@ -60,12 +68,10 @@ interface PremiumProductSliderProps {
   autoplayMs?: number;
 }
 
-const BADGE_STYLES: Record<string, React.CSSProperties> = {
-  black: { background: '#0A0A0A', color: '#ffffff' },
-  red: { background: '#DC2626', color: '#ffffff' },
-  gold: { background: '#8B6F1F', color: '#ffffff' },
-  cream: { background: '#1a1a1a', color: '#F5E6C8' },
-};
+// Badge styles removed per spec — no badges above products.
+// SliderProduct.badge / badgeVariant fields remain on the type for
+// backwards compatibility with callers that still pass them, but they
+// are never read by this component.
 
 export default function PremiumProductSlider({
   title,
@@ -78,6 +84,9 @@ export default function PremiumProductSlider({
   id,
   autoplayMs = 5000,
 }: PremiumProductSliderProps) {
+  // ── Cart integration ──
+  const { addToCart, showToast } = useApp();
+
   // ── Guard: not enough products ──
   const safeVisible = {
     desktop: Math.min(visibleCount.desktop, Math.max(products.length, 1)),
@@ -467,12 +476,9 @@ export default function PremiumProductSlider({
                   boxSizing: 'border-box',
                 }}
               >
-                <Link
-                  href={product.href}
+                <div
                   className="pps-product"
                   style={{
-                    textDecoration: 'none',
-                    color: 'inherit',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -480,59 +486,50 @@ export default function PremiumProductSlider({
                     pointerEvents: isDragging ? 'none' : 'auto',
                   }}
                 >
-                  {/* Badge (or spacer to keep alignment) */}
-                  {product.badge ? (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '5px 12px',
-                        borderRadius: 999,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        marginBottom: 18,
-                        lineHeight: 1,
-                        ...(BADGE_STYLES[product.badgeVariant || 'black']),
-                      }}
-                    >
-                      {product.badge}
-                    </span>
-                  ) : (
-                    <div style={{ height: 28, marginBottom: 0 }} />
-                  )}
-
                   {/* Image — floating on white, NO card */}
-                  <div
-                    className="pps-image-wrap"
+                  <Link
+                    href={product.href}
+                    aria-label={`${product.brand} ${product.name} — ${product.price}`}
                     style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: 280,
+                      textDecoration: 'none',
+                      color: 'inherit',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      width: '100%',
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      loading="lazy"
-                      draggable={false}
-                      className="pps-product-img"
+                    <div
+                      className="pps-image-wrap"
                       style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'contain',
-                        filter: 'drop-shadow(0 20px 28px rgba(0,0,0,0.13))',
-                        transition:
-                          'transform 500ms cubic-bezier(0.16, 1, 0.3, 1), filter 500ms ease',
-                        userSelect: 'none',
-                        pointerEvents: 'none',
+                        position: 'relative',
+                        width: '100%',
+                        height: 280,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                    />
-                  </div>
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        loading="lazy"
+                        draggable={false}
+                        className="pps-product-img"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 20px 28px rgba(0,0,0,0.13))',
+                          transition:
+                            'transform 500ms cubic-bezier(0.16, 1, 0.3, 1), filter 500ms ease',
+                          userSelect: 'none',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    </div>
+                  </Link>
 
                   {/* Text block */}
                   <div
@@ -555,22 +552,27 @@ export default function PremiumProductSlider({
                     >
                       {product.brand}
                     </p>
-                    <h3
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 500,
-                        color: '#0A0A0A',
-                        lineHeight: 1.4,
-                        margin: '0 0 12px 0',
-                        minHeight: 42,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}
+                    <Link
+                      href={product.href}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
-                      {product.name}
-                    </h3>
+                      <h3
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 500,
+                          color: '#0A0A0A',
+                          lineHeight: 1.4,
+                          margin: '0 0 12px 0',
+                          minHeight: 42,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {product.name}
+                      </h3>
+                    </Link>
                     <div
                       style={{
                         display: 'flex',
@@ -578,6 +580,7 @@ export default function PremiumProductSlider({
                         justifyContent: 'center',
                         gap: 8,
                         flexWrap: 'wrap',
+                        marginBottom: 16,
                       }}
                     >
                       <span
@@ -602,8 +605,58 @@ export default function PremiumProductSlider({
                         </span>
                       )}
                     </div>
+                    {/* Single premium CTA — Add to Cart */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        addToCart({
+                          id: product.id,
+                          name: product.name,
+                          price: product.priceValue,
+                          image: product.image,
+                          qty: 1,
+                        });
+                        showToast(`${product.name} added to cart`);
+                      }}
+                      className="pps-cta"
+                      style={{
+                        background: '#0A0A0A',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 999,
+                        padding: '11px 24px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.16em',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        transition:
+                          'background-color 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      }}
+                      aria-label={`Add ${product.name} to cart`}
+                    >
+                      Add to Cart
+                      <svg
+                        width="12"
+                        height="12"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.4}
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -657,6 +710,14 @@ export default function PremiumProductSlider({
         .pps-product:hover .pps-product-img {
           transform: translateY(-10px);
           filter: drop-shadow(0 32px 42px rgba(0, 0, 0, 0.2));
+        }
+        .pps-cta:hover {
+          background-color: #1f1f1f !important;
+          transform: translateY(-1px);
+        }
+        .pps-cta:focus-visible {
+          outline: 2px solid #0a0a0a;
+          outline-offset: 3px;
         }
         @media (max-width: 1023px) {
           .pps-image-wrap {
