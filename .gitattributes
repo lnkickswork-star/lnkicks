@@ -1,7 +1,16 @@
+# Git LFS rules were previously enabled for *.png and *.jpg, but
+# git-lfs is not installed on the deployment targets (Vercel build
+# runner, shared hosting auto-deploy). This caused committed images
+# to ship as broken 131-byte LFS pointer files.
+#
+# PNG and JPG rules removed so new image assets commit as regular
+# Git blobs and deploy correctly to all environments.
+#
+# Existing pointer files in /public/*.png remain as legacy pointers
+# and are not used by the desktop homepage (which loads product
+# images from external Google-hosted URLs).
 lnkcks filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.psd filter=lfs diff=lfs merge=lfs -text
 *.exe filter=lfs diff=lfs merge=lfs -text
 *.dll filter=lfs diff=lfs merge=lfs -text
-*.png filter=lfs diff=lfs merge=lfs -text
-*.jpg filter=lfs diff=lfs merge=lfs -text
