@@ -193,9 +193,9 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           right: theme.spacing.cardPadding,
           width: 32,
           height: 32,
-          // Phase 11: rounded-square (squircle) per reference design — was '50%' circle.
-          // 10px ≈ 31% of 32px button, matching the iOS squircle look in the reference.
-          borderRadius: theme.radius.md,
+          // Phase 11 (revised): perfect CIRCLE per latest reference design
+          // (ChatGPT_Image_Aug_2__2026__03_30_02_PM). Solid black bg, white + icon.
+          borderRadius: '50%',
           background: theme.colors.primaryButton,
           color: theme.colors.buttonText,
           border: 'none',
