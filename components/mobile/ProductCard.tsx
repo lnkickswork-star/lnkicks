@@ -15,8 +15,8 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  *   - 24px internal padding, generous whitespace (Apple/Nike/GOAT feel).
  *   - Large centered product image (~45–50% of card height, contain mode).
  *   - Small BLUE category label above title (e.g. "Best Seller").
- *   - Bold 20px black product name (max 2 lines, left-aligned, -0.02em tracking).
- *   - Bold 16px black price near bottom-left (line-height 1.25).
+ *   - Bold 16px black product name (max 2 lines, left-aligned, -0.02em tracking).
+ *   - Bold 14px black price near bottom-left (line-height 1.25).
  *   - Signature BLACK QUARTER-CIRCLE "+" Add to Cart button integrated into
  *     the bottom-right corner — NOT floating, attached to the corner,
  *     clipped by the card's overflow:hidden so it follows the card curve.
@@ -308,11 +308,13 @@ function ProductCardImpl({
             gap: theme.spacing.xs,          // 4px
           }}
         >
-          {/* Category label — small blue, above title */}
+          {/* Category label — small blue, above title
+              Phase 14: 13px → 11px (premium mobile caption tier —
+              matches Nike SNKRS / GOAT / Adidas app label sizing). */}
           <span
             style={{
               fontFamily: theme.fontFamily.body,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: theme.fontWeight.medium,
               color: CATEGORY_BLUE,
               letterSpacing: theme.letterSpacing.normal,
@@ -322,14 +324,14 @@ function ProductCardImpl({
             {categoryLabel}
           </span>
 
-          {/* Title — 20px / 700 / line-height 1.2 / -0.02em / max 2 lines / left-aligned
-              Phase 13 typography refinement: 22px → 20px for premium mobile
-              ecommerce feel (Apple Store / Nike / GOAT / Adidas parity). */}
+          {/* Title — 16px / 700 / line-height 1.2 / -0.02em / max 2 lines / left-aligned
+              Phase 14: 20px → 16px (premium mobile ecommerce standard —
+              Nike SNKRS / GOAT / Adidas / Apple Store product-name sizing). */}
           <h3
             style={{
               margin: 0,
               fontFamily: theme.fontFamily.body,
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: theme.fontWeight.bold,
               lineHeight: 1.2,
               color: theme.colors.black,
@@ -339,15 +341,16 @@ function ProductCardImpl({
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              minHeight: 48, // 2 lines × 24px (20px × 1.2 line-height)
+              minHeight: 40, // 2 lines × ~20px (16px × 1.2 line-height)
               fontFeatureSettings: theme.fontFeatures,
             }}
           >
             {name}
           </h3>
 
-          {/* Price — 16px / 700 / line-height 1.25, optional comparePrice strikethrough
-              Phase 13 typography refinement: 22px → 16px (premium mobile parity). */}
+          {/* Price — 14px / 700 / line-height 1.25, optional comparePrice strikethrough
+              Phase 14: 16px → 14px (premium mobile price sizing —
+              Nike SNKRS / GOAT / Adidas parity). */}
           <div
             style={{
               marginTop: theme.spacing.sm, // 8px
@@ -359,7 +362,7 @@ function ProductCardImpl({
             <span
               style={{
                 fontFamily: theme.fontFamily.body,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: theme.fontWeight.bold,
                 lineHeight: 1.25,
                 color: theme.colors.black,
@@ -373,7 +376,7 @@ function ProductCardImpl({
               <span
                 style={{
                   fontFamily: theme.fontFamily.body,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: theme.fontWeight.regular,
                   color: theme.colors.textTertiary,
                   textDecoration: 'line-through',
