@@ -84,71 +84,11 @@ function MobileNewArrivalsImpl({
     <section
       aria-label="New Arrivals"
     >
-      {/* Editorial section header */}
-      <div
-        style={{
-          padding: `0 ${theme.spacing.sectionPadding}px`,
-          marginBottom: theme.spacing.sectionPadding,
-        }}
-      >
-        {/* Eyebrow — 12px / 500 / uppercase / 0.5px tracking */}
-        <p
-          style={{
-            fontFamily: theme.fontFamily.body,
-            fontSize: theme.fontSize.caption,
-            fontWeight: theme.fontWeight.medium,
-            color: theme.colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: theme.letterSpacing.brandName,
-            margin: `0 0 ${theme.spacing.sm}px 0`,
-            fontFeatureSettings: theme.fontFeatures,
-          }}
-        >
-          Just Landed
-        </p>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            gap: theme.spacing.md,
-          }}
-        >
-          {/* Section Heading — 24px / 700 / 30px line height */}
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: theme.fontFamily.body,
-              fontSize: theme.fontSize.section,
-              fontWeight: theme.fontWeight.bold,
-              letterSpacing: theme.letterSpacing.tight,
-              color: theme.colors.textPrimary,
-              lineHeight: theme.lineHeight.section,
-              fontFeatureSettings: theme.fontFeatures,
-            }}
-          >
-            New Arrivals
-          </h2>
-          <Link
-            href="/products?filter=new"
-            className="pressable"
-            style={{
-              fontFamily: theme.fontFamily.body,
-              fontSize: theme.fontSize.lg,
-              fontWeight: theme.fontWeight.semibold,
-              color: theme.colors.textPrimary,
-              textDecoration: 'none',
-              letterSpacing: theme.letterSpacing.normal,
-              whiteSpace: 'nowrap',
-              paddingBottom: 2,
-              borderBottom: `1.5px solid ${theme.colors.black}`,
-              fontFeatureSettings: theme.fontFeatures,
-            }}
-          >
-            See all
-          </Link>
-        </div>
-      </div>
+      {/* Phase 17: removed the "Just Landed / New Arrivals / See all" editorial
+          section header per user request — banner card stays exactly as is.
+          The banner below now appears directly under whatever precedes it on
+          the homepage, with the parent <main> flex gap (32px) controlling the
+          vertical rhythm. */}
 
       {/* Featured promotional banner */}
       <div style={{ padding: `0 ${theme.spacing.sectionPadding}px` }}>
