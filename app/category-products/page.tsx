@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MobileLayout } from '@/components/layout/MobileLayout';
-import { ProductCard } from '@/components/ui/ProductCard';
+import { ResponsiveProductCard } from '@/components/ResponsiveProductCard';
 import { PRODUCT_CATALOG } from '@/components/catalog/ProductCatalogRegistry';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
@@ -188,16 +188,7 @@ export default function CategoryProductsPage() {
           }}
         >
           {PRODUCT_CATALOG.map((p) => (
-            <ProductCard
-              key={p.id}
-              id={p.id}
-              name={p.name}
-              brand={p.brand}
-              price={p.price}
-              origPrice={p.origPrice}
-              badge={p.badge}
-              image={p.image}
-            />
+            <ResponsiveProductCard key={p.id} catalogProduct={p} />
           ))}
         </div>
       </div>

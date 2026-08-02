@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { MobileLayout } from '@/components/layout/MobileLayout';
-import { ProductCard } from '@/components/ui/ProductCard';
+import { ResponsiveProductCard } from '@/components/ResponsiveProductCard';
 import { PRODUCT_REGISTRY } from '@/components/catalog/ProductRegistry';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
@@ -365,17 +365,7 @@ export default function SearchPage() {
             }}
           >
             {filteredProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                brand={p.brand}
-                price={p.price}
-                origPrice={p.comparePrice}
-                badge={p.newArrival ? 'NEW' : undefined}
-                image={p.primaryImage}
-                slug={p.slug}
-              />
+              <ResponsiveProductCard key={p.id} product={p} />
             ))}
           </div>
         ) : (

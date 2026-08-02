@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileLayout } from '@/components/layout/MobileLayout';
-import { ProductCard } from '@/components/ui/ProductCard';
+import { ResponsiveProductCard } from '@/components/ResponsiveProductCard';
 import { PRODUCT_REGISTRY } from '@/components/catalog/ProductRegistry';
 import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
@@ -549,17 +549,7 @@ export default function ProductDetailPage() {
             }}
           >
             {PRODUCT_REGISTRY.slice(1, 5).map((p) => (
-              <ProductCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                brand={p.brand}
-                price={p.price}
-                origPrice={p.comparePrice}
-                badge={p.newArrival ? 'NEW' : undefined}
-                image={p.primaryImage}
-                slug={p.slug}
-              />
+              <ResponsiveProductCard key={p.id} product={p} />
             ))}
           </div>
         </div>

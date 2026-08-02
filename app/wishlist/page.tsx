@@ -2,26 +2,26 @@
 
 import React, { useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { MobileLayout } from '@/components/layout/MobileLayout';
 import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { ProductCard } from '@/components/mobile/ProductCard';
+import type { WishlistItem } from '@/types/wishlist';
 
 /**
  * WishlistPage — saved-items page.
  *
- * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="back" title="Wishlist"> so the page
- *    inherits the premium glass header + floating bottom nav + safe-area
- *    handling from the universal mobile shell.
- *  - All hardcoded colors / sizes / radii migrated to mobile design tokens.
- *  - Banned iOS red #FF3B30 removed — price is now BLACK (theme.colors.price),
- *    the "Move to Cart" CTA uses theme.colors.black background, and the
- *    remove-from-wishlist ✕ uses theme.colors.black (no harsh reds).
- *  - Haptic feedback on every tap (remove / move-to-cart / explore).
- *  - `pressable` class + styled-jsx for press-state micro-interactions.
+ * PHASE 12 REFACTOR
+ *   - Now uses the shared <ProductCard /> component for each saved item.
+ *   - The card itself is defined in components/mobile/ProductCard.tsx and
+ *     matches the Apple/Nike/GOAT-inspired master spec (white card, blue
+ *     category label, 22px bold title, signature quarter-circle + button).
+ *   - Wishlist-specific behavior preserved:
+ *       • Remove (✕) button in the top-right actionSlot
+ *       • "Move to Cart" CTA via onAddToCart override (so the toast says
+ *         "Moved to Cart" and the item is removed from wishlist after add)
  *
  * Desktop rendering preserved — MobileLayout detects UA + viewport width
  * and renders children untouched on desktop.
@@ -30,7 +30,7 @@ export default function WishlistPage() {
   const { wishlist, toggleWishlist, addToCart } = useApp();
 
   const handleRemove = useCallback(
-    (item: Parameters<typeof toggleWishlist>[0]) => {
+    (item: WishlistItem) => {
       haptic.light();
       toggleWishlist(item);
     },
@@ -38,7 +38,7 @@ export default function WishlistPage() {
   );
 
   const handleMoveToCart = useCallback(
-    (item: Parameters<typeof toggleWishlist>[0]) => {
+    (item: WishlistItem) => {
       haptic.medium();
       addToCart({
         id: item.id,
@@ -50,6 +50,43 @@ export default function WishlistPage() {
       toggleWishlist(item);
     },
     [addToCart, toggleWishlist],
+  );
+
+  // Normalize a wishlist item's image into a usable <img src>.
+  // WishlistItem.image is root-relative ("/foo.png") or undefined.
+  const resolveImage = (item: WishlistItem) => {
+    const src = item.image || '/jordan_powder_blue_nobg.png';
+    return src.startsWith('/') ? src : `/${src}`;
+  };
+
+  // Build a small ✕ remove button to pass into ProductCard's actionSlot.
+  const renderRemoveButton = (item: WishlistItem) => (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleRemove(item);
+      }}
+      aria-label={`Remove ${item.name} from wishlist`}
+      className="pressable wl-remove"
+      style={{
+        background: theme.colors.grey100,
+        border: 'none',
+        borderRadius: '50%',
+        width: 32,
+        height: 32,
+        color: theme.colors.black,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: theme.fontSize.body,
+        fontWeight: theme.fontWeight.bold,
+      }}
+    >
+      ✕
+    </button>
   );
 
   return (
@@ -111,120 +148,20 @@ export default function WishlistPage() {
             }}
           >
             {wishlist.map((item) => (
-              <div
+              <ProductCard
                 key={item.id}
-                style={{
-                  background: theme.colors.white,
-                  borderRadius: theme.radius.xxl,
-                  padding: theme.spacing.lg,
-                  border: `1px solid ${theme.colors.border}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  boxShadow: theme.shadows.xs,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleRemove(item)}
-                  aria-label={`Remove ${item.name} from wishlist`}
-                  className="pressable wl-remove"
-                  style={{
-                    position: 'absolute',
-                    top: theme.spacing.md,
-                    right: theme.spacing.md,
-                    background: theme.colors.grey100,
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: 32,
-                    height: 32,
-                    color: theme.colors.black,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: theme.fontSize.body,
-                    fontWeight: theme.fontWeight.bold,
-                  }}
-                >
-                  ✕
-                </button>
-
-                <div
-                  style={{
-                    height: 130,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: theme.spacing.md,
-                  }}
-                >
-                  <Image
-                    src={
-                      item.image
-                        ? item.image.startsWith('/')
-                          ? item.image
-                          : `/${item.image}`
-                        : '/jordan_powder_blue_nobg.png'
-                    }
-                    alt={item.name}
-                    width={110}
-                    height={110}
-                    style={{
-                      maxHeight: '110px',
-                      width: 'auto',
-                      height: 'auto',
-                      objectFit: 'contain',
-                      filter: theme.dropShadows.xs,
-                    }}
-                  />
-                </div>
-
-                <h3
-                  style={{
-                    fontSize: theme.fontSize.body,
-                    fontWeight: theme.fontWeight.semibold,
-                    color: theme.colors.textPrimary,
-                    margin: `0 0 ${theme.spacing.xs + 2}px`,
-                    minHeight: 34,
-                  }}
-                >
-                  {item.name}
-                </h3>
-                <div
-                  style={{
-                    fontSize: theme.fontSize.lg,
-                    fontWeight: theme.fontWeight.extrabold,
-                    color: theme.colors.price,
-                    marginBottom: theme.spacing.md + 2,
-                    letterSpacing: theme.letterSpacing.tight,
-                  }}
-                >
-                  ₹{item.price ? item.price.toLocaleString('en-IN') : '8,899'}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleMoveToCart(item)}
-                  className="pressable wl-move"
-                  aria-label={`Move ${item.name} to cart`}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
-                    background: theme.colors.black,
-                    color: theme.colors.white,
-                    borderRadius: theme.radius.xl,
-                    fontSize: theme.fontSize.base,
-                    fontWeight: theme.fontWeight.bold,
-                    border: 'none',
-                    cursor: 'pointer',
-                    letterSpacing: theme.letterSpacing.wider,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Move to Cart
-                </button>
-              </div>
+                id={item.id}
+                name={item.name}
+                image={resolveImage(item)}
+                price={item.price || 8899}
+                href="/products"
+                category="Saved"
+                ctaLabel="Move to Cart"
+                width="100%"
+                showToastOnAdd={false}
+                onAddToCart={() => handleMoveToCart(item)}
+                actionSlot={renderRemoveButton(item)}
+              />
             ))}
           </div>
         ) : (
@@ -295,9 +232,6 @@ export default function WishlistPage() {
       <style jsx>{`
         .wl-remove:active {
           transform: scale(0.9);
-        }
-        .wl-move:active {
-          transform: scale(0.97);
         }
         .wl-cta:active {
           transform: scale(0.97);
