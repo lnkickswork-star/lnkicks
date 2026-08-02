@@ -26,9 +26,9 @@ function MobileAdidasBannerImpl() {
     <section
       aria-label="Adidas promotional banner"
       style={{
-        // Phase 7: 24px vertical spacing (between brand chips and hero slider)
-        paddingTop: theme.spacing.cardGap,
-        paddingBottom: theme.spacing.cardGap,
+        // Phase 10: consistent 8px-system spacing (16px top, 20px bottom)
+        paddingTop: theme.spacing.sectionPadding,
+        paddingBottom: theme.spacing.sectionGap,
       }}
     >
       <div style={{ padding: `0 ${theme.spacing.sectionPadding}px` }}>

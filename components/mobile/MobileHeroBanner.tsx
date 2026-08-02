@@ -204,9 +204,9 @@ function MobileHeroBannerImpl() {
     <section
       aria-label="Featured promotions"
       style={{
-        // Phase 8: 20px section spacing (was 48px)
-        paddingTop: theme.spacing.sectionGap,
-        paddingBottom: theme.spacing.cardPadding,
+        // Phase 10: consistent 8px-system spacing (16px top, 20px bottom)
+        paddingTop: theme.spacing.sectionPadding,
+        paddingBottom: theme.spacing.sectionGap,
       }}
     >
       <div
@@ -218,8 +218,10 @@ function MobileHeroBannerImpl() {
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          // 16px side padding gives peek preview of next card
-          padding: `0 ${theme.spacing.sectionPadding}px`,
+          // Phase 10: 16px side padding for peek preview + 16px BOTTOM padding
+          // so card shadows aren't clipped by overflow-x:auto (CSS quirk:
+          // overflow-x:auto forces overflow-y:auto, clipping vertical shadows).
+          padding: `0 ${theme.spacing.sectionPadding}px ${theme.spacing.sectionPadding}px`,
           // Phase 9: 16px gap (was 8px) — clearer visual separation between cards
           gap: theme.spacing.xl,
         }}

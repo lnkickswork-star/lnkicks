@@ -36,8 +36,8 @@ function MobileNewsletterImpl() {
   return (
     <section
       style={{
-        // Phase 8: 24px top spacing, 20px bottom
-        padding: `${theme.spacing.sectionSpacing}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px`,
+        // Phase 10: consistent 8px-system spacing (20px top, 20px bottom)
+        padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px`,
       }}
     >
       <div

@@ -302,9 +302,9 @@ function MobilePopularShoesImpl({
     <section
       aria-label={title}
       style={{
-        // Phase 7: 48px section spacing
-        paddingTop: theme.spacing.sectionSpacing,
-        paddingBottom: theme.spacing.sm,
+        // Phase 10: consistent 8px-system spacing (20px top, 20px bottom)
+        paddingTop: theme.spacing.sectionGap,
+        paddingBottom: theme.spacing.sectionGap,
       }}
     >
       {/* Section header — 24px / 700 / 30px line height */}
@@ -387,7 +387,8 @@ function MobilePopularShoesImpl({
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: `${theme.spacing.xs}px ${theme.spacing.sectionPadding}px ${theme.spacing.md}px`,
+          // Phase 10: 16px bottom padding so card shadows aren't clipped
+          padding: `${theme.spacing.xs}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionPadding}px`,
           msOverflowStyle: 'none',
         }}
       >
