@@ -294,7 +294,9 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
             right: theme.spacing.cardPadding,
             width: 32,
             height: 32,
-            borderRadius: '50%',
+            // Phase 11: rounded-square (squircle) per reference design — was '50%' circle.
+            // 10px ≈ 31% of 32px button, matching the iOS squircle look in the reference.
+            borderRadius: theme.radius.md,
             background: theme.colors.primaryButton,
             color: theme.colors.buttonText,
             border: 'none',
