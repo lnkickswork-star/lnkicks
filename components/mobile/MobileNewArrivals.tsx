@@ -11,14 +11,17 @@ import type { MobileProduct } from '@/components/mobile/mobileProducts';
 /**
  * MobileNewArrivals — premium SNKRS / Apple-style feature banner.
  *
- * PHASE 7 PREMIUM REDESIGN
- *   - 32px radius (radius.heroCard) — luxury magazine cover feel
- *   - Cleaner asymmetric split with better proportions
- *   - Larger product image (no rotation — kept clean per spec)
- *   - Premium editorial shadow tier (shadows.editorial)
- *   - Floating Add-to-Cart button with ripple effect
- *   - Larger typography: hero 32px, price 22px
- *   - More breathing room — 32px internal padding
+ * PHASE 22 REDESIGN — matches Adobe Express reference design.
+ *   - Massive "NEW" watermark spanning the FULL card as a graphic
+ *     background element (centered, ~220px tall, very subtle).
+ *   - Removed description paragraph (cleaner, more editorial).
+ *   - Removed strikethrough original price — only current price shown
+ *     large and bold.
+ *   - "Shop Now" button uses dark charcoal (#262626) bg so it reads
+ *     as a distinct CTA against the pure black card (#0A0A0A).
+ *   - Larger product image, floats directly on black with strong
+ *     drop-shadow for depth.
+ *   - 50/50 grid split — image gets more breathing room.
  *
  * LN KICKS theme: matte black background, white text, white product PNG,
  * pure luxury. No blue, no gradients.
@@ -28,7 +31,8 @@ type MobileNewArrivalsProps = {
   product: MobileProduct;
   /** Optional collection label shown above product name (e.g. "Summer Drop") */
   collection?: string;
-  /** Optional one-line marketing description */
+  /** Optional one-line marketing description — DEPRECATED in Phase 22.
+   *  Kept for API compatibility but no longer rendered. */
   description?: string;
 };
 
@@ -56,7 +60,6 @@ function useRipple() {
 function MobileNewArrivalsImpl({
   product,
   collection = 'New Arrival',
-  description,
 }: MobileNewArrivalsProps) {
   const { addToCart } = useApp();
   const { ripples, trigger } = useRipple();
@@ -75,11 +78,6 @@ function MobileNewArrivalsImpl({
     });
   };
 
-  // Default description if none provided — uses brand + a short marketing line
-  const desc =
-    description ??
-    `Fresh ${product.brand} straight off the truck. Limited sizes available.`;
-
   return (
     <section
       aria-label="New Arrivals"
@@ -97,33 +95,39 @@ function MobileNewArrivalsImpl({
           style={{
             position: 'relative',
             background: theme.colors.black,
-            // Phase 8: 24px radius (was 32px) — more app-like
+            // Phase 7: 24px radius — luxury magazine cover feel
             borderRadius: theme.radius.productCard,
             overflow: 'hidden',
             display: 'grid',
-            gridTemplateColumns: '58fr 42fr',
-            minHeight: 240,
+            // Phase 22: 50/50 split — image gets more breathing room
+            gridTemplateColumns: '50fr 50fr',
+            minHeight: 260,
             // Phase 8: standard premium shadow
             boxShadow: theme.shadows.premium,
             border: 'none',
           }}
         >
-          {/* Decorative oversized wordmark watermark */}
+          {/* ── MASSIVE "NEW" watermark — spans full card as graphic ── */}
           <span
             aria-hidden
             style={{
               position: 'absolute',
-              bottom: -24,
-              right: -8,
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
               fontFamily: theme.fontFamily.display,
-              fontSize: 140,
+              // Phase 22: 220px — spans nearly the full card height
+              fontSize: 220,
               fontWeight: theme.fontWeight.black,
-              color: 'rgba(255,255,255,0.045)',
+              // Phase 22: slightly more visible (0.06) — reads as a graphic
+              // element, not just a faint texture
+              color: 'rgba(255,255,255,0.06)',
               letterSpacing: '-0.06em',
               lineHeight: 1,
               pointerEvents: 'none',
               userSelect: 'none',
               zIndex: 0,
+              whiteSpace: 'nowrap',
             }}
           >
             NEW
@@ -137,12 +141,11 @@ function MobileNewArrivalsImpl({
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              gap: theme.spacing.xs + 2,
-              // Phase 8: 20px internal padding (was 32px)
-              padding: `${theme.spacing.xl}px ${theme.spacing.cardPadding}px`,
+              gap: theme.spacing.sm,
+              padding: `${theme.spacing.xl + 4}px ${theme.spacing.xl}px`,
             }}
           >
-            {/* NEW eyebrow chip — Button style 13px / 600 */}
+            {/* NEW eyebrow chip — white pill with black text */}
             <span
               style={{
                 alignSelf: 'flex-start',
@@ -152,7 +155,7 @@ function MobileNewArrivalsImpl({
                 fontSize: theme.fontSize.xs,
                 fontWeight: theme.fontWeight.semibold,
                 letterSpacing: theme.letterSpacing.normal,
-                padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
+                padding: `${theme.spacing.xs}px ${theme.spacing.sm + 2}px`,
                 borderRadius: theme.radius.button,
                 fontFeatureSettings: theme.fontFeatures,
               }}
@@ -160,7 +163,7 @@ function MobileNewArrivalsImpl({
               {collection}
             </span>
 
-            {/* Brand label — 12px / 500 / uppercase / 0.5px tracking */}
+            {/* Brand label — uppercase tracked grey */}
             <span
               style={{
                 fontFamily: theme.fontFamily.body,
@@ -175,7 +178,7 @@ function MobileNewArrivalsImpl({
               {product.brand}
             </span>
 
-            {/* Display headline — Hero 32px / 700 / 38px line height */}
+            {/* Display headline — Hero 24px / 700 */}
             <h3
               style={{
                 margin: 0,
@@ -191,23 +194,8 @@ function MobileNewArrivalsImpl({
               {product.name}
             </h3>
 
-            {/* Description — Body 13px / 400 / 20px line height */}
-            <p
-              style={{
-                margin: 0,
-                fontFamily: theme.fontFamily.body,
-                fontSize: theme.fontSize.md,
-                fontWeight: theme.fontWeight.regular,
-                color: 'rgba(255,255,255,0.7)',
-                lineHeight: theme.lineHeight.body,
-                maxWidth: 180,
-                fontFeatureSettings: theme.fontFeatures,
-              }}
-            >
-              {desc}
-            </p>
-
-            {/* Price row — Phase 7: 22px / 700 */}
+            {/* Price — Phase 22: ONLY current price, large & bold.
+                Strikethrough original price removed per Adobe design. */}
             <div
               style={{
                 display: 'flex',
@@ -219,7 +207,7 @@ function MobileNewArrivalsImpl({
               <span
                 style={{
                   fontFamily: theme.fontFamily.body,
-                  fontSize: theme.fontSize.priceLg,
+                  fontSize: theme.fontSize.priceLg, // 17px
                   fontWeight: theme.fontWeight.bold,
                   color: theme.colors.white,
                   letterSpacing: theme.letterSpacing.normal,
@@ -228,21 +216,6 @@ function MobileNewArrivalsImpl({
               >
                 {product.price}
               </span>
-              {product.comparePrice && (
-                <span
-                  style={{
-                    fontFamily: theme.fontFamily.body,
-                    fontSize: theme.fontSize.md,
-                    color: 'rgba(255,255,255,0.45)',
-                    textDecoration: 'line-through',
-                    fontWeight: theme.fontWeight.medium,
-                    opacity: 0.6,
-                    fontFeatureSettings: theme.fontFeatures,
-                  }}
-                >
-                  {product.comparePrice}
-                </span>
-              )}
             </div>
 
             {/* CTA + Add-to-cart row */}
@@ -264,10 +237,12 @@ function MobileNewArrivalsImpl({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: theme.spacing.xs,
-                  background: theme.colors.primaryButton,
+                  // Phase 22: dark charcoal #262626 — distinct from pure
+                  // black card bg for clear depth perception
+                  background: '#262626',
                   color: theme.colors.buttonText,
                   height: theme.spacing.buttonHeight,
-                  padding: `0 ${theme.spacing.cardPadding}px`,
+                  padding: `0 ${theme.spacing.cardPadding + 4}px`,
                   borderRadius: theme.radius.button,
                   fontFamily: theme.fontFamily.body,
                   fontSize: theme.fontSize.md,
@@ -358,7 +333,7 @@ function MobileNewArrivalsImpl({
             </div>
           </div>
 
-          {/* ── Right: large sneaker image — clean, no rotation ──── */}
+          {/* ── Right: large sneaker image — floats directly on black ── */}
           <div
             style={{
               position: 'relative',
@@ -366,7 +341,7 @@ function MobileNewArrivalsImpl({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: theme.spacing.cardPadding,
+              padding: theme.spacing.md,
               overflow: 'hidden',
             }}
           >
@@ -391,13 +366,14 @@ function MobileNewArrivalsImpl({
                 draggable={false}
                 className="mna-img"
                 style={{
-                  // Phase 7: larger image, no rotation (clean editorial)
-                  maxWidth: '145%',
-                  maxHeight: '145%',
+                  // Phase 22: larger image — fills the right column,
+                  // strong drop-shadow for depth against the black bg
+                  maxWidth: '170%',
+                  maxHeight: '170%',
                   width: 'auto',
                   height: 'auto',
                   objectFit: 'contain',
-                  filter: theme.dropShadows.lg,
+                  filter: 'drop-shadow(0 20px 32px rgba(0,0,0,0.55))',
                   transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}`,
                 }}
               />
@@ -423,6 +399,9 @@ function MobileNewArrivalsImpl({
               }
               .mna-card:hover .mna-img {
                 transform: translateY(-4px) scale(1.04);
+              }
+              .mna-card:hover .mna-cta {
+                background: #333333;
               }
             }
             .mna-card:focus-within {
