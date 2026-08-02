@@ -220,7 +220,8 @@ function MobileHeroBannerImpl() {
           WebkitOverflowScrolling: 'touch',
           // 16px side padding gives peek preview of next card
           padding: `0 ${theme.spacing.sectionPadding}px`,
-          gap: theme.spacing.cardGap,
+          // Phase 9: 16px gap (was 8px) — clearer visual separation between cards
+          gap: theme.spacing.xl,
         }}
       >
         {BANNERS.map((banner, idx) => (
@@ -234,16 +235,21 @@ function MobileHeroBannerImpl() {
 
       <style jsx>{pressableStyle}</style>
       <style jsx>{`
-        .mhb-scroller::-webkit-scrollbar {
+        :global(.mhb-scroller) {
+          -webkit-overflow-scrolling: touch;
+        }
+        :global(.mhb-scroller::-webkit-scrollbar) {
           display: none;
         }
-        .mhb-scroller > * {
-          scroll-snap-align: center;
-          // Phase 9: narrower cards (72% width) — more peek preview of next
+        /* Phase 9: use :global() so the rule also applies to BannerCard-rendered
+           children (styled-jsx scoping would otherwise skip them). */
+        :global(.mhb-scroller > .mhb-card) {
+          scroll-snap-align: start;
           flex: 0 0 72%;
+          scroll-snap-stop: always;
         }
         @media (max-width: 380px) {
-          .mhb-scroller > * {
+          :global(.mhb-scroller > .mhb-card) {
             flex: 0 0 78%;
           }
         }
@@ -290,8 +296,8 @@ function BannerCardImpl({
         borderRadius: theme.radius.productCard,
         overflow: 'hidden',
         border: 'none',
-        // Phase 8: standard premium shadow
-        boxShadow: theme.shadows.premium,
+        // Phase 9: standard premium shadow — slightly stronger for clear separation
+        boxShadow: theme.shadows.premiumLg,
         color: fg,
         textDecoration: 'none',
         // Phase 9: 320px tall (was 340) — narrower cards need slightly less height
@@ -304,6 +310,11 @@ function BannerCardImpl({
         width: '72%',
         flex: '0 0 72%',
         maxWidth: 300,
+        // Phase 9: snap to start (was center) — prevents overlap during snap
+        scrollSnapAlign: 'start',
+        // Ensure this card stays in its own stacking context (no overlap)
+        isolation: 'isolate',
+        zIndex: 1,
       }}
     >
       {/* ── Eyebrow — 11px / 500 / uppercase / 0.5px tracking ── */}
