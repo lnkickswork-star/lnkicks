@@ -232,27 +232,12 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
           gap: 2,
         }}
       >
-        {/* Brand — 12px / 500 / uppercase / 0.5px tracking */}
-        <p
-          style={{
-            fontFamily: theme.fontFamily.body,
-            fontSize: theme.fontSize.caption,
-            color: theme.colors.textSecondary,
-            fontWeight: theme.fontWeight.medium,
-            textTransform: 'uppercase',
-            letterSpacing: theme.letterSpacing.brandName,
-            margin: 0,
-            fontFeatureSettings: theme.fontFeatures,
-          }}
-        >
-          {p.brand}
-        </p>
         <Link
           href={p.href}
           style={{ textDecoration: 'none', color: 'inherit' }}
           onPointerDown={() => haptic.selection()}
         >
-          {/* Product Name — Phase 8: 14px / 600 */}
+          {/* Product Name — Phase 9: only name, no brand/category text */}
           <h3
             style={{
               fontFamily: theme.fontFamily.body,
@@ -274,37 +259,12 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
           </h3>
         </Link>
 
-        {/* Rating row — Caption 12px / 400, minimal light gray */}
+        {/* Simple Price — Phase 9: single price only, no sale/compare price */}
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing.hairline + 2,
-            marginBottom: theme.spacing.xs,
-          }}
-        >
-          <Stars rating={p.rating || 5} />
-          <span
-            style={{
-              fontFamily: theme.fontFamily.body,
-              fontSize: theme.fontSize.caption,
-              color: theme.colors.textTertiary,
-              fontWeight: theme.fontWeight.regular,
-              marginLeft: 2,
-              fontFeatureSettings: theme.fontFeatures,
-            }}
-          >
-            {p.rating?.toFixed(1) || '5.0'}
-          </span>
-        </div>
-
-        {/* Price — Phase 7: 22px / 700 (was 18px); Original 14px / 500 / strikethrough / 60% opacity */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing.xs + 2,
-            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            marginTop: theme.spacing.xs,
             marginBottom: theme.spacing.sm,
           }}
         >
@@ -320,21 +280,6 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
           >
             {p.price}
           </span>
-          {p.comparePrice && (
-            <span
-              style={{
-                fontFamily: theme.fontFamily.body,
-                color: theme.colors.textTertiary,
-                fontSize: theme.fontSize.md,
-                textDecoration: 'line-through',
-                fontWeight: theme.fontWeight.medium,
-                opacity: 0.6,
-                fontFeatureSettings: theme.fontFeatures,
-              }}
-            >
-              {p.comparePrice}
-            </span>
-          )}
         </div>
 
         {/* Floating Add-to-Cart button — bottom-right corner with ripple */}
@@ -439,42 +384,3 @@ const RecommendedCard = memo(RecommendedCardImpl);
 
 export const MobileRecommended = memo(MobileRecommendedImpl);
 export default MobileRecommended;
-
-/* ──────────────────────────────────────────────────────────────────
- *  Stars — 5-star rating display (0.5 step).
- *  Minimal light gray stars (Phase 7 spec).
- *  Memoized — only re-renders when rating prop changes.
- * ────────────────────────────────────────────────────────────────── */
-const Stars = memo(function Stars({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  return (
-    <div
-      aria-hidden
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 1,
-      }}
-    >
-      {Array.from({ length: 5 }).map((_, i) => {
-        const filled = i < full;
-        const isHalf = i === full && half;
-        return (
-          <svg
-            key={i}
-            width="9"
-            height="9"
-            viewBox="0 0 24 24"
-            fill={filled || isHalf ? theme.colors.grey500 : 'none'}
-            stroke={filled || isHalf ? theme.colors.grey500 : theme.colors.grey300}
-            strokeWidth="2"
-            aria-hidden
-          >
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        );
-      })}
-    </div>
-  );
-});

@@ -11,80 +11,11 @@ import type { MobileProduct } from '@/components/mobile/mobileProducts';
 /**
  * MobilePopularShoes — horizontal swipe carousel of premium product cards.
  *
- * PHASE 7 PREMIUM REDESIGN
- *   GOAT / Apple Store / Nike App product card inspiration:
- *     - 24px radius (radius.productCard) — softer, premium corners
- *     - Image area takes ~62% of card height (was 50% aspect square)
- *     - 22px internal padding (was 16px) — luxury breathing room
- *     - Product Name: 20px / 600 (was 16px)
- *     - Price: 22px / 700 (was 18px)
- *     - Brand: 12px / 500 gray (unchanged)
- *     - Rating: small minimal light gray stars
- *     - Floating circular Add button bottom-right with RIPPLE effect
- *     - Card width 200px (was 175px) — bigger, more substantial
- *     - Apple-like tap scale (0.97) + image hover lift
- *
- * Add-to-cart integrates with AppContext.addToCart — adds the product
- * with qty=1 and triggers the global toast.
+ * PHASE 9 SIMPLIFIED CARD
+ *   - Removed: brand/category text, rating stars, sale/compare price
+ *   - Kept: product name, simple single price, + add to cart button (right corner)
+ *   - Inspired by reference design (Screenshot 650)
  */
-
-/* ── Star renderer (minimal, light gray) ──────────────────────── */
-function Stars({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  const hasHalf = rating - full >= 0.25 && rating - full < 0.75;
-  const total = 5;
-  const stars: React.ReactNode[] = [];
-  for (let i = 0; i < total; i++) {
-    let fill = 0;
-    if (i < full) fill = 1;
-    else if (i === full && hasHalf) fill = 0.5;
-    stars.push(
-      <svg
-        key={i}
-        viewBox="0 0 24 24"
-        width="9"
-        height="9"
-        aria-hidden
-        style={{ flexShrink: 0 }}
-      >
-        <defs>
-          <linearGradient
-            id={`mpstar-${i}-${rating}`}
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="0"
-          >
-            <stop offset={`${fill * 100}%`} stopColor={theme.colors.grey500} />
-            <stop offset={`${fill * 100}%`} stopColor={theme.colors.grey300} />
-          </linearGradient>
-        </defs>
-        <path
-          d="M12 2l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.77l-5.91 3.39 1.13-6.57L2.45 8.94l6.6-.96L12 2z"
-          fill={
-            fill === 1
-              ? theme.colors.grey500
-              : fill === 0.5
-                ? `url(#mpstar-${i}-${rating})`
-                : theme.colors.grey300
-          }
-        />
-      </svg>,
-    );
-  }
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 2,
-      }}
-      aria-label={`${rating} out of 5 stars`}
-    >
-      {stars}
-    </span>
-  );
-}
 
 /* ── Ripple effect for the Add button ─────────────────────────── */
 type Ripple = { id: number; x: number; y: number };
@@ -204,22 +135,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             gap: 2,
           }}
         >
-          {/* Brand — 12px / 500 / uppercase / 0.5px tracking */}
-          <span
-            style={{
-              fontFamily: theme.fontFamily.body,
-              fontSize: theme.fontSize.caption,
-              fontWeight: theme.fontWeight.medium,
-              letterSpacing: theme.letterSpacing.brandName,
-              textTransform: 'uppercase',
-              color: theme.colors.textSecondary,
-              fontFeatureSettings: theme.fontFeatures,
-            }}
-          >
-            {product.brand}
-          </span>
-
-          {/* Name — Phase 8: 14px / 600 */}
+          {/* Name — Phase 9: 14px / 600 (only name, no brand/category) */}
           <h3
             style={{
               margin: 0,
@@ -241,31 +157,11 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             {product.name}
           </h3>
 
-          {/* Rating — Caption 12px / 400, minimal light gray */}
-          {typeof product.rating === 'number' && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing.xs,
-                color: theme.colors.textTertiary,
-                fontFamily: theme.fontFamily.body,
-                fontSize: theme.fontSize.caption,
-                fontWeight: theme.fontWeight.regular,
-                fontFeatureSettings: theme.fontFeatures,
-              }}
-            >
-              <Stars rating={product.rating} />
-              <span>{product.rating.toFixed(1)}</span>
-            </div>
-          )}
-
-          {/* Price — Phase 7: 22px / 700 (was 18px) */}
+          {/* Simple Price — Phase 9: single price only, no sale/compare price */}
           <div
             style={{
               display: 'flex',
               alignItems: 'baseline',
-              gap: theme.spacing.sm,
               marginTop: theme.spacing.xs,
             }}
           >
@@ -281,21 +177,6 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             >
               {product.price}
             </span>
-            {product.comparePrice && (
-              <span
-                style={{
-                  fontFamily: theme.fontFamily.body,
-                  fontSize: theme.fontSize.md,
-                  fontWeight: theme.fontWeight.medium,
-                  color: theme.colors.textTertiary,
-                  textDecoration: 'line-through',
-                  opacity: 0.6,
-                  fontFeatureSettings: theme.fontFeatures,
-                }}
-              >
-                {product.comparePrice}
-              </span>
-            )}
           </div>
         </div>
       </Link>
