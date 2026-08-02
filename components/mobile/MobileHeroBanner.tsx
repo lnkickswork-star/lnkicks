@@ -1,63 +1,53 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
- * MobileHeroBanner — premium editorial hero carousel.
+ * MobileHeroBanner — simple full-width swipeable banner slider.
  *
- * DESIGN INTENT (LN KICKS premium refresh):
- *   Nike SNKRS + Apple Store + END Clothing editorial inspiration.
- *   Reimagined from the previous Adidas-style asymmetric split into a
- *   taller, more dramatic full-bleed editorial canvas.
+ * DESIGN INTENT (per user request, Phase 5 simplification):
+ *   - Simple, clean banner — NO 3D rotated shoe, NO asymmetric split,
+ *     NO drop-shadow depth, NO toggle dots / numeric indicators.
+ *   - Each slide is full-width, fits the mobile screen, swipeable with
+ *     snap.
+ *   - Premium B&W aesthetic preserved: alternating light (off-white) /
+ *     dark (matte black) variants for visual rhythm.
+ *   - Centered editorial composition: eyebrow → centered shoe image →
+ *     display headline → subtitle → CTA underline.
  *
  * Visual contract:
  *   - 3 promotional banners, swipeable horizontally with snap
- *   - Auto-advance every 6s (pauses on touch / hover / focus / reduced-motion)
- *   - Manual swipe with momentum + snap-to-card
- *   - Editorial page indicator (numeric "01 / 03" + thin progress line)
- *   - Full-bleed feel: banner extends edge-to-edge with theme.pad inner padding
- *   - Height 280px — tall enough for massive type + image, short enough to
- *     keep Popular Shoes near the fold
+ *   - No auto-advance, no dots, no numeric indicators (per spec)
+ *   - Full-bleed feel: banner extends edge-to-edge with theme.pad inner
+ *     padding
+ *   - Height 320px — tall enough for image + text, short enough to keep
+ *     Popular Shoes near the fold
  *
  * Banner anatomy (per slide):
  *   ┌────────────────────────────────────────────────────┐
- *   │  EYEBROW                                  01 / 03  │
  *   │                                                    │
- *   │         STEP INTO                                  │
- *   │         LEGEND.                                    │
+ *   │                  EYEBROW                           │
  *   │                                                    │
- *   │   [floating shoe PNG,                              │
- *   │    drop-shadow, rotated]                           │
+ *   │              [centered shoe PNG,                   │
+ *   │               no rotation, no shadow]              │
  *   │                                                    │
- *   │   Sub-copy sentence.                               │
- *   │   ─── SHOP NOW →                                   │
+ *   │                HEADLINE                            │
+ *   │              Subtitle line.                        │
+ *   │              ─── SHOP NOW →                        │
+ *   │                                                    │
  *   └────────────────────────────────────────────────────┘
  *              ▲
  *      Light variant: off-white canvas (#FAFAFA)
  *      Dark variant: matte black (#0A0A0A)
- *      LN wordmark watermark for editorial flair
  *
  * Each banner tappable → product / category / collection route.
  *
  * LN KICKS theme: pure B&W. Light slide = off-white canvas + black type.
  * Dark slide = matte black canvas + white type. Alternates for visual rhythm.
- *
- * Phase 4 polish:
- *  - All design tokens (no hardcoded values)
- *  - Editorial numeric page indicator (01 / 03) + progress line
- *  - Massive Oswald display type (72px) — Nike editorial scale
- *  - Taller 280px canvas with more breathing room
- *  - Off-white surface (#FAFAFA) on light variant — Apple Store warmth
- *  - Haptic selection tick on manual swipe / dot tap
- *  - Pressed state on banner (scale 0.99)
- *  - Focus-visible ring on banner + indicator
- *  - ARIA: role="region", aria-roledescription="carousel", per-slide label
- *  - Reduced motion respected (auto-advance disabled)
- *  - Memoized — only re-renders when activeIndex changes
  */
 
 type Banner = {
@@ -111,95 +101,17 @@ const BANNERS: Banner[] = [
   },
 ];
 
-/** Auto-advance interval (ms). */
-const AUTO_ADVANCE_MS = 6000;
-
 function MobileHeroBannerImpl() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const prefersReducedMotion = useRef(false);
-  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Detect prefers-reduced-motion once on mount
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    prefersReducedMotion.current = mq.matches;
-    const onChange = () => {
-      prefersReducedMotion.current = mq.matches;
-    };
-    mq.addEventListener?.('change', onChange);
-    return () => mq.removeEventListener?.('change', onChange);
-  }, []);
-
-  // Auto-advance — pauses while user is interacting
-  useEffect(() => {
-    if (prefersReducedMotion.current || isUserInteracting) return;
-    const id = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % BANNERS.length);
-    }, AUTO_ADVANCE_MS);
-    return () => clearInterval(id);
-  }, [isUserInteracting]);
-
-  // Sync scroll position to activeIndex whenever it changes (e.g. auto-advance)
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-    const slideWidth = scroller.offsetWidth;
-    scroller.scrollTo({ left: slideWidth * activeIndex, behavior: 'smooth' });
-  }, [activeIndex]);
-
-  // Update activeIndex when user manually scrolls (debounced via scroll end)
-  const handleScroll = useCallback(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-    const slideWidth = scroller.offsetWidth;
-    if (slideWidth === 0) return;
-    const idx = Math.round(scroller.scrollLeft / slideWidth);
-    if (idx !== activeIndex && idx >= 0 && idx < BANNERS.length) {
-      setActiveIndex(idx);
-      haptic.selection();
-    }
-  }, [activeIndex]);
-
-  // Touch interaction tracking — pause auto-advance while dragging
-  const handleTouchStart = useCallback(() => {
-    setIsUserInteracting(true);
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    // Resume auto-advance after 3 seconds of no interaction
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    resumeTimer.current = setTimeout(() => setIsUserInteracting(false), 3000);
-  }, []);
-
-  const handleDotClick = useCallback((idx: number) => {
-    haptic.selection();
-    setActiveIndex(idx);
-  }, []);
-
-  // Editorial numeric indicator: "01 / 03"
-  const formatNum = (n: number) => String(n + 1).padStart(2, '0');
-
   return (
     <section
       aria-label="Featured promotions"
-      aria-roledescription="carousel"
       style={{
-        paddingTop: theme.spacing.xxl,
+        paddingTop: theme.spacing.lg,
         paddingBottom: theme.spacing.lg,
       }}
     >
       <div
-        ref={scrollerRef}
-        onScroll={handleScroll}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
-        onMouseLeave={handleTouchEnd}
+        className="mhb-scroller"
         style={{
           display: 'flex',
           overflowX: 'auto',
@@ -209,99 +121,10 @@ function MobileHeroBannerImpl() {
           padding: `0 ${theme.spacing.pad}px`,
           gap: 0,
         }}
-        className="mhb-scroller"
       >
-        {BANNERS.map((banner, idx) => (
-          <BannerCard
-            key={banner.id}
-            banner={banner}
-            isActive={idx === activeIndex}
-            pageIndex={idx}
-            pageCount={BANNERS.length}
-            ariaLabel={`Slide ${idx + 1} of ${BANNERS.length}: ${banner.display}`}
-          />
+        {BANNERS.map((banner) => (
+          <BannerCard key={banner.id} banner={banner} />
         ))}
-      </div>
-
-      {/* Editorial page indicator: numeric + progress line */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: theme.spacing.md,
-          marginTop: theme.spacing.lg,
-          padding: `0 ${theme.spacing.pad}px`,
-        }}
-      >
-        {/* Left numeric: current slide */}
-        <span
-          aria-hidden
-          style={{
-            fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.sm,
-            fontWeight: theme.fontWeight.bold,
-            letterSpacing: theme.letterSpacing.wider,
-            color: theme.colors.textPrimary,
-            fontFeatureSettings: '"tnum"',
-          }}
-        >
-          {formatNum(activeIndex)}
-        </span>
-
-        {/* Progress line — segmented */}
-        <div
-          role="tablist"
-          aria-label="Select slide"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            flex: 1,
-            maxWidth: 120,
-          }}
-        >
-          {BANNERS.map((banner, idx) => {
-            const isActive = idx === activeIndex;
-            return (
-              <button
-                key={banner.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                aria-label={`Go to slide ${idx + 1}: ${banner.display}`}
-                onClick={() => handleDotClick(idx)}
-                className="mhb-dot"
-                style={{
-                  flex: isActive ? 1 : '0 0 auto',
-                  height: 2,
-                  borderRadius: theme.radius.pill,
-                  background: isActive ? theme.colors.black : theme.colors.grey300,
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  minWidth: isActive ? 0 : 18,
-                  transition: `flex ${theme.motion.duration.slow} ${theme.motion.easing.out}, background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}, min-width ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
-                }}
-              />
-            );
-          })}
-        </div>
-
-        {/* Right numeric: total slides */}
-        <span
-          aria-hidden
-          style={{
-            fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.sm,
-            fontWeight: theme.fontWeight.bold,
-            letterSpacing: theme.letterSpacing.wider,
-            color: theme.colors.textTertiary,
-            fontFeatureSettings: '"tnum"',
-          }}
-        >
-          {formatNum(BANNERS.length - 1)}
-        </span>
       </div>
 
       <style jsx>{pressableStyle}</style>
@@ -313,29 +136,13 @@ function MobileHeroBannerImpl() {
           scroll-snap-align: center;
           flex: 0 0 100%;
         }
-        .mhb-dot:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 3px;
-        }
       `}</style>
     </section>
   );
 }
 
 /* ── Single banner card ───────────────────────────────────────── */
-function BannerCardImpl({
-  banner,
-  isActive,
-  pageIndex,
-  pageCount,
-  ariaLabel,
-}: {
-  banner: Banner;
-  isActive: boolean;
-  pageIndex: number;
-  pageCount: number;
-  ariaLabel: string;
-}) {
+function BannerCardImpl({ banner }: { banner: Banner }) {
   const isDark = banner.variant === 'dark';
   // Light variant: off-white canvas (#FAFAFA) — Apple Store warmth.
   // Dark variant: matte black (#0A0A0A).
@@ -344,24 +151,19 @@ function BannerCardImpl({
   const eyebrowFg = isDark ? 'rgba(255,255,255,0.65)' : theme.colors.textSecondary;
   const subtitleFg = isDark ? 'rgba(255,255,255,0.72)' : theme.colors.textSecondary;
   const underlineColor = isDark ? theme.colors.white : theme.colors.black;
-  const watermarkColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.035)';
-  const pageIndexFg = isDark ? 'rgba(255,255,255,0.4)' : theme.colors.textTertiary;
 
   return (
     <Link
       href={banner.href}
-      aria-label={ariaLabel}
-      aria-hidden={!isActive}
-      tabIndex={isActive ? 0 : -1}
+      aria-label={`${banner.lead} ${banner.display}: ${banner.subtitle}`}
       className="mhb-card pressable"
       onPointerDown={() => haptic.light()}
       style={{
         position: 'relative',
-        display: 'grid',
-        // Asymmetric split: left ~45% image / right ~55% text
-        gridTemplateColumns: '45fr 55fr',
-        alignItems: 'stretch',
-        gap: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         background: bg,
         borderRadius: theme.radius.hero,
         overflow: 'hidden',
@@ -369,189 +171,121 @@ function BannerCardImpl({
         boxShadow: isDark ? theme.shadows.lg : theme.shadows.premium,
         color: fg,
         textDecoration: 'none',
-        height: 280,
+        // Tall enough for image + text block, short enough to fit mobile
+        // screen above the fold. Fits 360–440px viewports cleanly.
+        height: 340,
         boxSizing: 'border-box',
         margin: `0 ${theme.spacing.xs}px`,
+        padding: `${theme.spacing.xxl}px ${theme.spacing.xxl}px`,
       }}
     >
-      {/* Decorative oversized wordmark watermark — luxury editorial detail */}
+      {/* ── Eyebrow ─────────────────────────────────────────────── */}
       <span
-        aria-hidden
         style={{
-          position: 'absolute',
-          bottom: -42,
-          left: -12,
-          fontFamily: theme.fontFamily.display,
-          fontSize: 180,
-          fontWeight: theme.fontWeight.black,
-          color: watermarkColor,
-          letterSpacing: '-0.06em',
-          lineHeight: 1,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          zIndex: 0,
+          color: eyebrowFg,
+          fontSize: theme.fontSize.xs,
+          fontWeight: theme.fontWeight.bold,
+          letterSpacing: theme.letterSpacing.wider,
+          textTransform: 'uppercase',
+          marginBottom: theme.spacing.md,
         }}
       >
-        LN
+        {banner.eyebrow}
       </span>
 
-      {/* ── Left: floating shoe image ─────────────────────────────── */}
-      <div
+      {/* ── Centered shoe image — NO rotation, NO drop shadow ────── */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={banner.image}
+        alt=""
+        aria-hidden
+        draggable={false}
         style={{
-          position: 'relative',
-          zIndex: 2,
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: theme.spacing.lg,
-          overflow: 'hidden',
+          maxWidth: '65%',
+          maxHeight: 160,
+          width: 'auto',
+          height: 'auto',
+          objectFit: 'contain',
+          marginBottom: theme.spacing.lg,
+        }}
+      />
+
+      {/* ── Headline ────────────────────────────────────────────── */}
+      <h2
+        style={{
+          margin: 0,
+          fontFamily: theme.fontFamily.display,
+          lineHeight: theme.lineHeight.tight,
+          letterSpacing: theme.letterSpacing.tightest,
+          color: fg,
+          textTransform: 'uppercase',
+          textAlign: 'center',
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={banner.image}
-          alt=""
-          aria-hidden
-          draggable={false}
-          style={{
-            maxWidth: '125%',
-            maxHeight: '125%',
-            width: 'auto',
-            height: 'auto',
-            objectFit: 'contain',
-            filter: theme.dropShadows.lg,
-            transform: 'rotate(-14deg)',
-            transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
-          }}
-          className="mhb-shoe"
-        />
-      </div>
-
-      {/* ── Right: text block ─────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          gap: theme.spacing.xs + 2,
-          padding: `${theme.spacing.xxl}px ${theme.spacing.xxl}px ${theme.spacing.xxl}px 0`,
-        }}
-      >
-        {/* Top row: eyebrow + page index */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-            marginBottom: theme.spacing.xs,
-          }}
-        >
-          <span
-            style={{
-              color: eyebrowFg,
-              fontSize: theme.fontSize.xs,
-              fontWeight: theme.fontWeight.bold,
-              letterSpacing: theme.letterSpacing.wider,
-              textTransform: 'uppercase',
-            }}
-          >
-            {banner.eyebrow}
-          </span>
-          <span
-            aria-hidden
-            style={{
-              fontFamily: theme.fontFamily.display,
-              fontSize: 9.5,
-              fontWeight: theme.fontWeight.bold,
-              letterSpacing: theme.letterSpacing.wide,
-              color: pageIndexFg,
-              fontFeatureSettings: '"tnum"',
-            }}
-          >
-            {String(pageIndex + 1).padStart(2, '0')} / {String(pageCount).padStart(2, '0')}
-          </span>
-        </div>
-
-        {/* Display headline — small lead + massive display word */}
-        <h2
-          style={{
-            margin: 0,
-            fontFamily: theme.fontFamily.display,
-            lineHeight: theme.lineHeight.tight,
-            letterSpacing: theme.letterSpacing.tightest,
-            color: fg,
-            textTransform: 'uppercase',
-          }}
-        >
-          <span
-            style={{
-              display: 'block',
-              fontSize: theme.fontSize.lg,
-              fontWeight: theme.fontWeight.medium,
-              letterSpacing: theme.letterSpacing.normal,
-              lineHeight: 1.1,
-              marginBottom: 2,
-              opacity: 0.75,
-            }}
-          >
-            {banner.lead}
-          </span>
-          <span
-            style={{
-              display: 'block',
-              fontSize: theme.fontSize.heroLg,
-              fontWeight: theme.fontWeight.black,
-              lineHeight: 0.92,
-            }}
-          >
-            {banner.display}
-          </span>
-        </h2>
-
-        {/* Subtitle */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: theme.fontSize.sm,
-            fontWeight: theme.fontWeight.regular,
-            color: subtitleFg,
-            lineHeight: theme.lineHeight.snug,
-            maxWidth: 200,
-            marginTop: theme.spacing.xs,
-          }}
-        >
-          {banner.subtitle}
-        </p>
-
-        {/* Underline text CTA — editorial style */}
         <span
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: theme.spacing.xs,
-            marginTop: theme.spacing.md,
-            fontSize: theme.fontSize.xs,
-            fontWeight: theme.fontWeight.bold,
-            letterSpacing: theme.letterSpacing.wider,
-            textTransform: 'uppercase',
-            color: fg,
-            borderBottom: `1.5px solid ${underlineColor}`,
-            paddingBottom: 3,
+            display: 'block',
+            fontSize: theme.fontSize.lg,
+            fontWeight: theme.fontWeight.medium,
+            letterSpacing: theme.letterSpacing.normal,
+            lineHeight: 1.1,
+            marginBottom: 2,
+            opacity: 0.75,
           }}
-          className="mhb-cta"
         >
-          Shop Now
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden>
-            <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
-            <polyline points="12 5 19 12 12 19" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          {banner.lead}
         </span>
-      </div>
+        <span
+          style={{
+            display: 'block',
+            fontSize: theme.fontSize.hero,
+            fontWeight: theme.fontWeight.black,
+            lineHeight: 0.92,
+          }}
+        >
+          {banner.display}
+        </span>
+      </h2>
+
+      {/* ── Subtitle ────────────────────────────────────────────── */}
+      <p
+        style={{
+          margin: 0,
+          fontSize: theme.fontSize.sm,
+          fontWeight: theme.fontWeight.regular,
+          color: subtitleFg,
+          lineHeight: theme.lineHeight.snug,
+          maxWidth: 240,
+          textAlign: 'center',
+          marginTop: theme.spacing.xs,
+        }}
+      >
+        {banner.subtitle}
+      </p>
+
+      {/* ── Underline text CTA — editorial style ────────────────── */}
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: theme.spacing.xs,
+          marginTop: theme.spacing.md,
+          fontSize: theme.fontSize.xs,
+          fontWeight: theme.fontWeight.bold,
+          letterSpacing: theme.letterSpacing.wider,
+          textTransform: 'uppercase',
+          color: fg,
+          borderBottom: `1.5px solid ${underlineColor}`,
+          paddingBottom: 3,
+        }}
+        className="mhb-cta"
+      >
+        Shop Now
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden>
+          <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
+          <polyline points="12 5 19 12 12 19" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
 
       <style jsx>{`
         .mhb-card:active {
@@ -560,14 +294,6 @@ function BannerCardImpl({
         .mhb-card:focus-visible {
           outline: 2px solid ${theme.colors.black};
           outline-offset: 3px;
-        }
-        @media (hover: hover) {
-          .mhb-card:hover .mhb-shoe {
-            transform: rotate(-18deg) translateY(-6px) scale(1.05);
-          }
-          .mhb-card:hover .mhb-cta {
-            transform: translateX(3px);
-          }
         }
       `}</style>
     </Link>

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
-import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { transitions } from '@/lib/mobile/theme/motion';
 import { haptic } from '@/lib/mobile/utils/haptics';
@@ -11,12 +10,15 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * MobileHeader — premium minimal sticky header.
  *
- * Layout: [Menu icon] [LN KICKS centered] [Wishlist] [Cart] [Profile]
+ * Layout: [Menu icon] [LN KICKS centered] [Profile]
  *
- * White glass background, soft bottom border. Black icons. Live cart +
- * wishlist badges. Tapping the Menu icon calls `onMenuClick` which opens
- * a MobileMenuDrawer rendered at the page level (sibling of MobileBottomNav)
- * so the drawer's z-index isn't trapped inside this header's stacking context.
+ * White glass background, soft bottom border. Black icons. Tapping the
+ * Menu icon calls `onMenuClick` which opens a MobileMenuDrawer rendered
+ * at the page level (sibling of MobileBottomNav) so the drawer's z-index
+ * isn't trapped inside this header's stacking context.
+ *
+ * NOTE (Phase 5 simplification, per user request): the Cart icon has been
+ * REMOVED from the header. Cart is still reachable via the bottom nav.
  *
  * LN KICKS theme: pure white + black + soft grey.
  *
@@ -26,17 +28,12 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  *  - Pressed state (scale 0.96 + bg flash)
  *  - Focus-visible ring for keyboard navigation
  *  - Memoized to prevent re-render on every AppContext cart tick
- *    (the only state we care about — cart + wishlist counts — is read
- *    via useApp, so memoizing is safe)
  */
 function MobileHeaderImpl({
   onMenuClick,
 }: {
   onMenuClick: () => void;
 }) {
-  const { cart } = useApp();
-  const cartCount = cart.reduce((sum, i) => sum + (i.qty || 1), 0);
-
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -66,9 +63,10 @@ function MobileHeaderImpl({
           maxWidth: 440,
           margin: '0 auto',
           padding: `${theme.spacing.md}px ${theme.spacing.pad}px`,
-          // 3-column grid: Menu | centered wordmark | right cluster (Cart + Profile)
+          // 3-column grid: Menu | centered wordmark | Profile
+          // (Cart icon removed per Phase 5 spec — cart reachable via bottom nav)
           display: 'grid',
-          gridTemplateColumns: '36px 1fr 36px 36px',
+          gridTemplateColumns: '36px 1fr 36px',
           alignItems: 'center',
           gap: theme.spacing.hairline,
         }}
@@ -121,14 +119,7 @@ function MobileHeaderImpl({
           LNKICKS
         </Link>
 
-        {/* Right: Cart */}
-        <HeaderIconButton href="/cart" label="Cart" badge={cartCount}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </HeaderIconButton>
-
-        {/* Right: Profile */}
+        {/* Right: Profile (Cart icon removed per Phase 5 spec) */}
         <HeaderIconButton href="/profile" label="Profile" badge={0}>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
