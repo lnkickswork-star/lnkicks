@@ -68,13 +68,7 @@ function MobileRecommendedImpl() {
   );
 
   return (
-    <section
-      style={{
-        // Phase 10: consistent 8px-system spacing (20px top, 20px bottom)
-        paddingTop: theme.spacing.sectionGap,
-        paddingBottom: theme.spacing.sectionGap,
-      }}
-    >
+    <section>
       <div
         style={{
           padding: `0 ${theme.spacing.sectionPadding}px`,

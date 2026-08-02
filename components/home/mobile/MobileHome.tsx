@@ -205,7 +205,12 @@ export default function MobileHome() {
             paddingBottom: safeArea.bottomNavClearance,
             display: 'flex',
             flexDirection: 'column',
-            gap: 0,
+            // Phase 11: uniform 32px section gap (Apple/Nike/Samsung rhythm).
+            // Each child section no longer carries its own paddingTop/paddingBottom —
+            // the parent flex gap is the sole source of vertical spacing so all
+            // sections share the same breathing room. MobilePopularShoes adds a
+            // +8px marginTop to land a 40px gap from the promotional slider above.
+            gap: theme.spacing.vast,
           }}
         >
           {/* 2a. Search — 24px horizontal padding per Phase 6 spec */}

@@ -302,9 +302,11 @@ function MobilePopularShoesImpl({
     <section
       aria-label={title}
       style={{
-        // Phase 10: consistent 8px-system spacing (20px top, 20px bottom)
-        paddingTop: theme.spacing.sectionGap,
-        paddingBottom: theme.spacing.sectionGap,
+        // Phase 11: parent <main> provides a 32px flex gap above this section;
+        // add +8px marginTop so the Promotional Slider → Most Wanted transition
+        // equals 40px (per spec). No paddingTop/paddingBottom here — vertical
+        // rhythm is owned by the parent flex `gap`.
+        marginTop: theme.spacing.sm,
       }}
     >
       {/* Section header — 24px / 700 / 30px line height */}

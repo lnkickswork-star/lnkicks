@@ -40,7 +40,6 @@ function MobileBrandShortcutsImpl() {
   return (
     <section
       aria-label="Brand shortcuts"
-      style={{ paddingTop: theme.spacing.md }}
     >
       <div
         className="mbs-scroller"

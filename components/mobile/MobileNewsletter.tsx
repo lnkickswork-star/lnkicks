@@ -36,8 +36,9 @@ function MobileNewsletterImpl() {
   return (
     <section
       style={{
-        // Phase 10: consistent 8px-system spacing (20px top, 20px bottom)
-        padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px`,
+        // Phase 11: only horizontal page-gutter padding; vertical rhythm
+        // is owned by the parent <main> flex `gap` (32px).
+        padding: `0 ${theme.spacing.sectionPadding}px`,
       }}
     >
       <div

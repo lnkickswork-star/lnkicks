@@ -203,11 +203,6 @@ function MobileHeroBannerImpl() {
   return (
     <section
       aria-label="Featured promotions"
-      style={{
-        // Phase 10: consistent 8px-system spacing (16px top, 20px bottom)
-        paddingTop: theme.spacing.sectionPadding,
-        paddingBottom: theme.spacing.sectionGap,
-      }}
     >
       <div
         ref={scrollerRef}
