@@ -15,8 +15,8 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  *   - 24px internal padding, generous whitespace (Apple/Nike/GOAT feel).
  *   - Large centered product image (~45–50% of card height, contain mode).
  *   - Small BLUE category label above title (e.g. "Best Seller").
- *   - Bold 16px black product name (max 2 lines, left-aligned, -0.02em tracking).
- *   - Bold 14px black price near bottom-left (line-height 1.25).
+ *   - Semibold 14px black product name (max 2 lines, left-aligned, -0.02em tracking).
+ *   - Semibold 13px black price near bottom-left (line-height 1.25).
  *   - Signature BLACK QUARTER-CIRCLE "+" Add to Cart button integrated into
  *     the bottom-right corner — NOT floating, attached to the corner,
  *     clipped by the card's overflow:hidden so it follows the card curve.
@@ -297,24 +297,28 @@ function ProductCardImpl({
           )}
         </div>
 
-        {/* ── Body — 24px padding per spec, extra bottom for FAB clearance */}
+        {/* ── Body — 24px padding per spec, extra bottom for FAB clearance
+            Phase 15: reduced bottom padding 64 → 44 to eliminate the
+            excessive empty space below the price. The quarter-circle FAB
+            (60×60, positioned at bottom:0/right:0) overlaps the lower
+            portion of the body container, so the visible gap below the
+            price row is now tight and intentional. */}
         <div
           style={{
             padding: theme.spacing.section, // 24px
             paddingTop: theme.spacing.md,   // 12px — slightly tighter above title
-            paddingBottom: 64,              // FAB size + 4px gap (60 + 4)
+            paddingBottom: 44,              // FAB clearance (was 64 — too much whitespace)
             display: 'flex',
             flexDirection: 'column',
             gap: theme.spacing.xs,          // 4px
           }}
         >
           {/* Category label — small blue, above title
-              Phase 14: 13px → 11px (premium mobile caption tier —
-              matches Nike SNKRS / GOAT / Adidas app label sizing). */}
+              Phase 15: 11px → 10px (caption tier — mobile-optimized). */}
           <span
             style={{
               fontFamily: theme.fontFamily.body,
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: theme.fontWeight.medium,
               color: CATEGORY_BLUE,
               letterSpacing: theme.letterSpacing.normal,
@@ -324,15 +328,15 @@ function ProductCardImpl({
             {categoryLabel}
           </span>
 
-          {/* Title — 16px / 700 / line-height 1.2 / -0.02em / max 2 lines / left-aligned
-              Phase 14: 20px → 16px (premium mobile ecommerce standard —
-              Nike SNKRS / GOAT / Adidas / Apple Store product-name sizing). */}
+          {/* Title — 14px / 600 (semibold) / line-height 1.2 / -0.02em / max 2 lines / left-aligned
+              Phase 15: 16px → 14px, weight 700 → 600 (user requested smaller
+              text AND reduced boldness — premium mobile sizing). */}
           <h3
             style={{
               margin: 0,
               fontFamily: theme.fontFamily.body,
-              fontSize: 16,
-              fontWeight: theme.fontWeight.bold,
+              fontSize: 14,
+              fontWeight: theme.fontWeight.semibold,
               lineHeight: 1.2,
               color: theme.colors.black,
               letterSpacing: theme.letterSpacing.tight, // -0.02em
@@ -341,19 +345,19 @@ function ProductCardImpl({
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              minHeight: 40, // 2 lines × ~20px (16px × 1.2 line-height)
+              minHeight: 34, // 2 lines × ~17px (14px × 1.2 line-height)
               fontFeatureSettings: theme.fontFeatures,
             }}
           >
             {name}
           </h3>
 
-          {/* Price — 14px / 700 / line-height 1.25, optional comparePrice strikethrough
-              Phase 14: 16px → 14px (premium mobile price sizing —
-              Nike SNKRS / GOAT / Adidas parity). */}
+          {/* Price — 13px / 600 (semibold) / line-height 1.25, optional comparePrice strikethrough
+              Phase 15: 14px → 13px, weight 700 → 600 (user requested smaller
+              text AND reduced boldness). */}
           <div
             style={{
-              marginTop: theme.spacing.sm, // 8px
+              marginTop: theme.spacing.xs, // 4px (was sm/8px — tighter title→price gap)
               display: 'flex',
               alignItems: 'baseline',
               gap: theme.spacing.sm,
@@ -362,8 +366,8 @@ function ProductCardImpl({
             <span
               style={{
                 fontFamily: theme.fontFamily.body,
-                fontSize: 14,
-                fontWeight: theme.fontWeight.bold,
+                fontSize: 13,
+                fontWeight: theme.fontWeight.semibold,
                 lineHeight: 1.25,
                 color: theme.colors.black,
                 letterSpacing: theme.letterSpacing.normal,
@@ -376,7 +380,7 @@ function ProductCardImpl({
               <span
                 style={{
                   fontFamily: theme.fontFamily.body,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: theme.fontWeight.regular,
                   color: theme.colors.textTertiary,
                   textDecoration: 'line-through',
