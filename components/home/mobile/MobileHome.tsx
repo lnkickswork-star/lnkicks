@@ -27,8 +27,6 @@ import { safeArea } from '@/lib/mobile/utils/safeArea';
 //   - MobileCategories ("Browse by Category") has been REMOVED.
 //     Categories are still reachable via /categories route + bottom nav.
 const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
-const MobileBrands = lazy(() => import('@/components/mobile/MobileBrands'));
-const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
 const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav'));
 const MobileServiceWorkerRegister = lazy(
   () => import('@/components/mobile/MobileServiceWorkerRegister'),
@@ -41,7 +39,7 @@ const MobileServiceWorkerRegister = lazy(
  * gradients. Apple / Nike / GOAT / END Clothing inspired minimal luxury
  * aesthetic — pushed to editorial scale in the Phase 4 refresh.
  *
- * Section order (Phase 4 premium refresh):
+ * Section order (Phase 18 refresh):
  *   1. MobileHeader          — Menu / LNKICKS / Cart / Profile (sticky glass)
  *   2. MobileSearch          — premium off-white pill search
  *   3. MobileBrandShortcuts  — horizontal capsule brand pills (10 brands)
@@ -52,14 +50,19 @@ const MobileServiceWorkerRegister = lazy(
  *                              horizontal swipe carousel with peek preview
  *   6. MobileNewArrivals     — premium 280px SNKRS-style banner, bigger type
  *   7. MobileRecommended     — 2-col premium grid with grey tiles (lazy)
- *   8. MobileBrands          — brand wordmark marquee on off-white (lazy)
- *   9. MobileNewsletter      — black email-capture card (lazy)
- *  10. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
+ *   8. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
  *
  * REMOVED sections (per UX spec):
  *   - MobileFooter (informational footer) — BottomNav is the only navigation
  *   - MobileCategories ("Browse by Category") — categories reachable via
  *     /categories route + bottom nav
+ *   - MobileBrands ("Authenticated · Stocked · Trusted / Brands at LN KICKS"
+ *     + brand wordmark marquee) — removed per user request, Phase 18.
+ *       Component file retained at components/mobile/MobileBrands.tsx in case
+ *       it's needed again; just not mounted on the homepage.
+ *   - MobileNewsletter ("Sign up and save 10%" black email-capture card) —
+ *     removed per user request, Phase 18. Component file retained at
+ *     components/mobile/MobileNewsletter.tsx in case it's needed again.
  *
  * Architecture:
  *  - Pure white background, matte black primary buttons, off-white surfaces
@@ -238,18 +241,11 @@ export default function MobileHome() {
             <MobileRecommended />
           </Suspense>
 
-          {/* 2g. Brands — lazy */}
-          <Suspense fallback={<SectionSkeleton height={120} />}>
-            <MobileBrands />
-          </Suspense>
-
-          {/* 2h. Newsletter — lazy */}
-          <Suspense fallback={<SectionSkeleton height={280} />}>
-            <MobileNewsletter />
-          </Suspense>
-
-          {/* NOTE: MobileFooter (informational) has been REMOVED per UX spec.
-              The floating MobileBottomNav below is the sole navigation chrome. */}
+          {/* Phase 18: MobileBrands ("Authenticated · Stocked · Trusted /
+              Brands at LN KICKS" + marquee) and MobileNewsletter ("Sign up and
+              save 10%") have been REMOVED per user request. Component files
+              retained but no longer mounted. The floating MobileBottomNav
+              below is the sole navigation chrome. */}
         </main>
 
         {/* 3. Floating bottom nav with center FAB — lazy */}
