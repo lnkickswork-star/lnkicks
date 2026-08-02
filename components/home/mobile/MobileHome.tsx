@@ -27,6 +27,7 @@ import { safeArea } from '@/lib/mobile/utils/safeArea';
 //   - MobileCategories ("Browse by Category") has been REMOVED.
 //     Categories are still reachable via /categories route + bottom nav.
 const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
+const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
 const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav'));
 const MobileServiceWorkerRegister = lazy(
   () => import('@/components/mobile/MobileServiceWorkerRegister'),
@@ -39,7 +40,7 @@ const MobileServiceWorkerRegister = lazy(
  * gradients. Apple / Nike / GOAT / END Clothing inspired minimal luxury
  * aesthetic — pushed to editorial scale in the Phase 4 refresh.
  *
- * Section order (Phase 18 refresh):
+ * Section order (Phase 19 refresh):
  *   1. MobileHeader          — Menu / LNKICKS / Cart / Profile (sticky glass)
  *   2. MobileSearch          — premium off-white pill search
  *   3. MobileBrandShortcuts  — horizontal capsule brand pills (10 brands)
@@ -50,7 +51,8 @@ const MobileServiceWorkerRegister = lazy(
  *                              horizontal swipe carousel with peek preview
  *   6. MobileNewArrivals     — premium 280px SNKRS-style banner, bigger type
  *   7. MobileRecommended     — 2-col premium grid with grey tiles (lazy)
- *   8. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
+ *   8. MobileNewsletter      — 'Sign up and save 10%' CTA banner (lazy, bottom)
+ *   9. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
  *
  * REMOVED sections (per UX spec):
  *   - MobileFooter (informational footer) — BottomNav is the only navigation
@@ -60,9 +62,10 @@ const MobileServiceWorkerRegister = lazy(
  *     + brand wordmark marquee) — removed per user request, Phase 18.
  *       Component file retained at components/mobile/MobileBrands.tsx in case
  *       it's needed again; just not mounted on the homepage.
- *   - MobileNewsletter ("Sign up and save 10%" black email-capture card) —
- *     removed per user request, Phase 18. Component file retained at
- *     components/mobile/MobileNewsletter.tsx in case it's needed again.
+ *
+ * Phase 19 note: MobileNewsletter was removed in Phase 18, then RE-ADDED in
+ * Phase 19 with a redesigned button-based CTA ("Sign Up Now →" + "+" icon)
+ * per user reference image. The old email-input form version is gone.
  *
  * Architecture:
  *  - Pure white background, matte black primary buttons, off-white surfaces
@@ -241,11 +244,15 @@ export default function MobileHome() {
             <MobileRecommended />
           </Suspense>
 
-          {/* Phase 18: MobileBrands ("Authenticated · Stocked · Trusted /
-              Brands at LN KICKS" + marquee) and MobileNewsletter ("Sign up and
-              save 10%") have been REMOVED per user request. Component files
-              retained but no longer mounted. The floating MobileBottomNav
-              below is the sole navigation chrome. */}
+          {/* Phase 19: MobileNewsletter — 'Sign up and save 10%' CTA banner
+              (redesigned with button-based CTA per user reference image).
+              Mounted at the BOTTOM of the homepage, after Recommended.
+              MobileBrands ("Authenticated · Stocked · Trusted / Brands at
+              LN KICKS" + marquee) remains REMOVED per Phase 18 user request.
+              The floating MobileBottomNav below is the sole navigation chrome. */}
+          <Suspense fallback={<SectionSkeleton height={280} />}>
+            <MobileNewsletter />
+          </Suspense>
         </main>
 
         {/* 3. Floating bottom nav with center FAB — lazy */}
