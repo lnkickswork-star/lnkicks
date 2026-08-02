@@ -26,6 +26,17 @@ export const shadows = {
   xl: '0 20px 40px rgba(0,0,0,0.18)',
   /** Modals, drawers — maximum elevation */
   xxl: '0 32px 64px rgba(0,0,0,0.24), 0 8px 16px rgba(0,0,0,0.08)',
+  /**
+   * Premium resting elevation — extra-soft, wide-spread, Apple-quality.
+   * Use on featured product cards and editorial surfaces where the shadow
+   * should feel like the card is gently lifting off the page.
+   */
+  premium: '0 2px 4px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)',
+  /**
+   * Premium elevated — for hovered/featured states. Same character as
+   * `premium` but with more depth.
+   */
+  premiumLg: '0 4px 8px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.10)',
 } as const;
 
 // ── Drop shadows (for product PNGs, floating imagery) ────────────────

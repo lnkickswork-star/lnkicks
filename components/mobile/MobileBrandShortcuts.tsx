@@ -80,7 +80,7 @@ function MobileBrandShortcutsImpl() {
                 justifyContent: 'center',
                 padding: `${theme.spacing.sm + 2}px ${theme.spacing.lg + 2}px`,
                 borderRadius: theme.radius.pill,
-                background: isActive ? theme.colors.black : theme.colors.grey100,
+                background: isActive ? theme.colors.black : theme.colors.offWhite,
                 color: isActive ? theme.colors.white : theme.colors.textPrimary,
                 textDecoration: 'none',
                 fontSize: theme.fontSize.md,
@@ -89,6 +89,7 @@ function MobileBrandShortcutsImpl() {
                 whiteSpace: 'nowrap',
                 transition: `background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}, color ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
                 border: '1px solid transparent',
+                boxShadow: isActive ? 'none' : theme.shadows.hairline,
               }}
             >
               {b.label}

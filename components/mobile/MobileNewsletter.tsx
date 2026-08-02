@@ -36,7 +36,7 @@ function MobileNewsletterImpl() {
   return (
     <section
       style={{
-        padding: `${theme.spacing.huge + 4}px ${theme.spacing.pad}px ${theme.spacing.xxxl}px`,
+        padding: `${theme.spacing.section}px ${theme.spacing.pad}px ${theme.spacing.xxxl}px`,
       }}
     >
       <div

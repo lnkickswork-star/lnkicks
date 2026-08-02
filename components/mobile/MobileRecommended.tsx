@@ -13,15 +13,15 @@ import { MOBILE_RECOMMENDED } from './mobileProducts';
 /**
  * MobileRecommended — "Recommended For You" section.
  *
- * Algorithmic-feel 2-column grid of personalized picks. Premium floating
- * product presentation (no cards, no borders). Each tile: floating
- * sneaker + brand / name / rating / price + Add to Cart CTA.
+ * DESIGN INTENT (LN KICKS premium refresh):
+ *   2-column grid with soft grey surface tiles behind floating products.
+ *   Cleaner typography. More breathing room. Premium Add-to-Cart pill.
  *
- * LN KICKS theme: white bg, black text, red price, black CTA pill,
+ * LN KICKS theme: white bg, black text, black price, black CTA pill,
  * black star rating. Minimal luxury.
  *
- * Phase 3 polish: design tokens, haptics, pressed states, focus rings,
- * memoization, useCallback for addToCart, Stars memoized.
+ * Phase 4 polish: design tokens, haptics, pressed states, focus rings,
+ * memoization, useCallback for addToCart, Stars memoized, premium tiles.
  */
 function MobileRecommendedImpl() {
   const { addToCart, showToast } = useApp();
@@ -112,13 +112,19 @@ function MobileRecommendedImpl() {
         {MOBILE_RECOMMENDED.map((p) => (
           <article
             key={p.id}
+            className="mrec-tile"
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
+              background: theme.colors.white,
+              borderRadius: theme.radius.card,
+              border: `1px solid ${theme.colors.grey100}`,
+              boxShadow: theme.shadows.premium,
+              overflow: 'hidden',
+              transition: `transform ${theme.motion.duration.normal} ${theme.motion.easing.out}, box-shadow ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
             }}
           >
-            {/* Floating image — NO card */}
+            {/* Image area — soft grey tile, full-bleed within card */}
             <Link
               href={p.href}
               aria-label={`${p.brand} ${p.name} — ${p.price}`}
@@ -130,7 +136,9 @@ function MobileRecommendedImpl() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%',
-                height: 140,
+                height: 150,
+                background: theme.colors.grey100,
+                overflow: 'hidden',
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -141,8 +149,8 @@ function MobileRecommendedImpl() {
                 draggable={false}
                 className="mrec-img"
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
+                  maxWidth: '88%',
+                  maxHeight: '88%',
                   objectFit: 'contain',
                   filter: dropShadows.md,
                   transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}, filter ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
@@ -152,9 +160,11 @@ function MobileRecommendedImpl() {
 
             <div
               style={{
-                textAlign: 'center',
-                marginTop: theme.spacing.md + 2,
-                width: '100%',
+                padding: `${theme.spacing.md}px ${theme.spacing.md}px ${theme.spacing.lg}px`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: theme.spacing.xs,
               }}
             >
               <p
@@ -164,7 +174,7 @@ function MobileRecommendedImpl() {
                   fontWeight: theme.fontWeight.bold,
                   textTransform: 'uppercase',
                   letterSpacing: '0.16em',
-                  margin: `0 0 ${theme.spacing.xs}px 0`,
+                  margin: 0,
                 }}
               >
                 {p.brand}
@@ -180,7 +190,7 @@ function MobileRecommendedImpl() {
                     fontWeight: theme.fontWeight.semibold,
                     color: theme.colors.textPrimary,
                     lineHeight: theme.lineHeight.normal,
-                    margin: `0 0 ${theme.spacing.xs + 2}px 0`,
+                    margin: 0,
                     minHeight: 36,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -197,9 +207,8 @@ function MobileRecommendedImpl() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
                   gap: theme.spacing.hairline + 2,
-                  marginBottom: theme.spacing.sm,
+                  marginBottom: theme.spacing.xs,
                 }}
               >
                 <Stars rating={p.rating || 5} />
@@ -219,10 +228,9 @@ function MobileRecommendedImpl() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
                   gap: theme.spacing.xs + 2,
                   flexWrap: 'wrap',
-                  marginBottom: theme.spacing.md,
+                  marginBottom: theme.spacing.sm,
                 }}
               >
                 <span
@@ -287,13 +295,19 @@ function MobileRecommendedImpl() {
       </div>
 
       <style jsx>{`
-        .mrec-img:hover {
-          transform: translateY(-6px);
-          filter: ${dropShadows.lg};
-        }
-        .mrec-cta:hover {
-          background-color: ${theme.colors.grey800} !important;
-          transform: translateY(-1px);
+        @media (hover: hover) {
+          .mrec-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: ${theme.shadows.premiumLg};
+          }
+          .mrec-tile:hover .mrec-img {
+            transform: translateY(-4px) scale(1.04);
+            filter: ${dropShadows.lg};
+          }
+          .mrec-cta:hover {
+            background-color: ${theme.colors.grey800} !important;
+            transform: translateY(-1px);
+          }
         }
       `}</style>
       <style jsx>{pressableStyle}</style>

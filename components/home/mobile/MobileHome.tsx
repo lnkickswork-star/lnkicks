@@ -38,22 +38,21 @@ const MobileServiceWorkerRegister = lazy(
  *
  * Premium white + matte-black + soft grey theme. NO blue, NO colorful
  * gradients. Apple / Nike / GOAT / END Clothing inspired minimal luxury
- * aesthetic — adapted from a reference mobile shopping app screenshot.
+ * aesthetic — pushed to editorial scale in the Phase 4 refresh.
  *
- * Section order (per UX spec refinement — Phase 2):
- *   1. MobileHeader          — Menu / LNKICKS / Cart / Profile (wishlist removed)
- *   2. MobileSearch          — premium pill search bar
+ * Section order (Phase 4 premium refresh):
+ *   1. MobileHeader          — Menu / LNKICKS / Cart / Profile (sticky glass)
+ *   2. MobileSearch          — premium off-white pill search
  *   3. MobileBrandShortcuts  — horizontal capsule brand pills (10 brands)
- *   4. MobileHeroBanner      — Adidas-style editorial banner carousel
- *                              (asymmetric product/text split, big display
- *                              headline, underlined SHOP NOW CTA, dots)
- *   5. MobilePopularShoes    — horizontal swipe carousel (snap-scroll, peek
- *                              preview of next card, premium cards preserved)
- *   6. MobileNewArrivals     — SNKRS-style promotional banner (matte black,
- *                              left details / right large shoe image, CTA)
- *   7. MobileRecommended     — 2-col recommended grid (kept, lazy)
- *   8. MobileBrands          — brand wordmark marquee (kept, lazy)
- *   9. MobileNewsletter      — black email-capture card (kept, lazy)
+ *   4. MobileHeroBanner      — dramatic editorial carousel (280px tall,
+ *                              massive 56px Oswald display, off-white/black
+ *                              alternating, editorial numeric indicator)
+ *   5. MobilePopularShoes    — premium 24px-radius cards, soft shadow,
+ *                              horizontal swipe carousel with peek preview
+ *   6. MobileNewArrivals     — premium 280px SNKRS-style banner, bigger type
+ *   7. MobileRecommended     — 2-col premium grid with grey tiles (lazy)
+ *   8. MobileBrands          — brand wordmark marquee on off-white (lazy)
+ *   9. MobileNewsletter      — black email-capture card (lazy)
  *  10. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
  *
  * REMOVED sections (per UX spec):
@@ -62,7 +61,7 @@ const MobileServiceWorkerRegister = lazy(
  *     /categories route + bottom nav
  *
  * Architecture:
- *  - Pure white background, matte black primary buttons, soft grey surfaces
+ *  - Pure white background, matte black primary buttons, off-white surfaces
  *  - Inline styles + styled-jsx (no Tailwind) — matches desktop convention
  *  - Inter + Oswald via next/font/google (already wired in app/layout.tsx)
  *  - External CDN image URLs (LFS pointers in /public/ are broken)
@@ -130,7 +129,7 @@ export default function MobileHome() {
   // verified CDN image + valid href). Could be parameterized later.
   const featuredArrival = MOBILE_TRENDING[0];
 
-  // Popular Shoes — 4 products in a 2x2 grid. Mix of TRENDING + RECOMMENDED
+  // Popular Shoes — 4 products. Mix of TRENDING + RECOMMENDED
   // gives brand variety (Air Jordan, Nike, Adidas, New Balance).
   const popularShoes = [
     MOBILE_TRENDING[0],
@@ -215,13 +214,13 @@ export default function MobileHome() {
           {/* 2b. Quick Brand Shortcuts */}
           <MobileBrandShortcuts />
 
-          {/* 2c. Hero Banner Slider — Adidas-style editorial carousel */}
+          {/* 2c. Hero Banner Slider — dramatic editorial carousel */}
           <MobileHeroBanner />
 
-          {/* 2d. Popular Shoes — horizontal swipe carousel with peek preview */}
+          {/* 2d. Popular Shoes — premium 24px-radius cards */}
           <MobilePopularShoes products={popularShoes} />
 
-          {/* 2e. New Arrivals — SNKRS-style premium promotional banner */}
+          {/* 2e. New Arrivals — premium SNKRS-style promotional banner */}
           <MobileNewArrivals product={featuredArrival} />
 
           {/* 2f. Recommended For You — lazy (kept from previous architecture) */}

@@ -20,6 +20,8 @@ export const radius = {
   xl: 18,
   /** 22px — large hero cards */
   xxl: 22,
+  /** 24px — premium product cards (Apple/GOAT style) */
+  card: 24,
   /** 28px — hero banners, big editorial cards */
   hero: 28,
   /** 999px — fully rounded (pills, circles, bottom nav) */

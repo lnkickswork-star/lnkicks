@@ -7,50 +7,56 @@ import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
- * MobileHeroBanner — premium swipeable banner carousel.
+ * MobileHeroBanner — premium editorial hero carousel.
  *
- * Design reference: Adidas editorial banner — cool grey canvas, asymmetric
- * split (left ~42% product image / right ~58% text), oversized geometric
- * display headline ("kick up the COOL" style), small subtitle sentence,
- * underlined "SHOP NOW" text CTA (no button shape), generous negative
- * space, soft drop shadow under the floating sneaker.
+ * DESIGN INTENT (LN KICKS premium refresh):
+ *   Nike SNKRS + Apple Store + END Clothing editorial inspiration.
+ *   Reimagined from the previous Adidas-style asymmetric split into a
+ *   taller, more dramatic full-bleed editorial canvas.
  *
- * Layout contract:
- *   - 3 promotional banners, swipeable horizontally
- *   - Auto-advance every 5 seconds (pauses on touch / hover / focus)
+ * Visual contract:
+ *   - 3 promotional banners, swipeable horizontally with snap
+ *   - Auto-advance every 6s (pauses on touch / hover / focus / reduced-motion)
  *   - Manual swipe with momentum + snap-to-card
- *   - Page indicator dots below the carousel
- *   - Rounded corners (radius.hero = 28px)
- *   - Full width with theme.pad side margins
- *   - Height 200px — tall enough for the headline + image, short enough
- *     to keep Popular Shoes above the fold
+ *   - Editorial page indicator (numeric "01 / 03" + thin progress line)
+ *   - Full-bleed feel: banner extends edge-to-edge with theme.pad inner padding
+ *   - Height 280px — tall enough for massive type + image, short enough to
+ *     keep Popular Shoes near the fold
  *
- * Banner anatomy (per Adidas reference):
+ * Banner anatomy (per slide):
  *   ┌────────────────────────────────────────────────────┐
- *   │                          │                         │
- *   │                          │  EYEBROW                │
- *   │   [floating shoe PNG]    │  KICK UP THE            │
- *   │   drop-shadow            │  COOL                   │
- *   │                          │  Sub-copy sentence.     │
- *   │                          │  ─── SHOP NOW →         │
- *   │                          │                         │
+ *   │  EYEBROW                                  01 / 03  │
+ *   │                                                    │
+ *   │         STEP INTO                                  │
+ *   │         LEGEND.                                    │
+ *   │                                                    │
+ *   │   [floating shoe PNG,                              │
+ *   │    drop-shadow, rotated]                           │
+ *   │                                                    │
+ *   │   Sub-copy sentence.                               │
+ *   │   ─── SHOP NOW →                                   │
  *   └────────────────────────────────────────────────────┘
- *                       ▲
- *              Cool grey background (#f0f0f0)
- *              LN wordmark watermark for editorial flair
+ *              ▲
+ *      Light variant: off-white canvas (#FAFAFA)
+ *      Dark variant: matte black (#0A0A0A)
+ *      LN wordmark watermark for editorial flair
  *
  * Each banner tappable → product / category / collection route.
  *
- * LN KICKS theme: cool grey canvas, pure black text, white product PNG.
- * One banner inverts (matte black bg + white text) for visual rhythm.
+ * LN KICKS theme: pure B&W. Light slide = off-white canvas + black type.
+ * Dark slide = matte black canvas + white type. Alternates for visual rhythm.
  *
- * Phase 3 polish:
- *  - Design tokens (no hardcoded values)
+ * Phase 4 polish:
+ *  - All design tokens (no hardcoded values)
+ *  - Editorial numeric page indicator (01 / 03) + progress line
+ *  - Massive Oswald display type (72px) — Nike editorial scale
+ *  - Taller 280px canvas with more breathing room
+ *  - Off-white surface (#FAFAFA) on light variant — Apple Store warmth
  *  - Haptic selection tick on manual swipe / dot tap
  *  - Pressed state on banner (scale 0.99)
- *  - Focus-visible ring on dots + banner
- *  - ARIA: role="region", aria-roledescription="carousel", aria-label per slide
- *  - Reduced motion respected (auto-advance disabled if user prefers reduced motion)
+ *  - Focus-visible ring on banner + indicator
+ *  - ARIA: role="region", aria-roledescription="carousel", per-slide label
+ *  - Reduced motion respected (auto-advance disabled)
  *  - Memoized — only re-renders when activeIndex changes
  */
 
@@ -65,7 +71,7 @@ type Banner = {
   subtitle: string;
   image: string;
   href: string;
-  /** Visual variant — 'light' (cool grey bg) or 'dark' (matte black bg) */
+  /** Visual variant — 'light' (off-white bg) or 'dark' (matte black bg) */
   variant: 'light' | 'dark';
 };
 
@@ -106,7 +112,7 @@ const BANNERS: Banner[] = [
 ];
 
 /** Auto-advance interval (ms). */
-const AUTO_ADVANCE_MS = 5000;
+const AUTO_ADVANCE_MS = 6000;
 
 function MobileHeroBannerImpl() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -174,13 +180,16 @@ function MobileHeroBannerImpl() {
     setActiveIndex(idx);
   }, []);
 
+  // Editorial numeric indicator: "01 / 03"
+  const formatNum = (n: number) => String(n + 1).padStart(2, '0');
+
   return (
     <section
       aria-label="Featured promotions"
       aria-roledescription="carousel"
       style={{
         paddingTop: theme.spacing.xxl,
-        paddingBottom: theme.spacing.md,
+        paddingBottom: theme.spacing.lg,
       }}
     >
       <div
@@ -207,47 +216,92 @@ function MobileHeroBannerImpl() {
             key={banner.id}
             banner={banner}
             isActive={idx === activeIndex}
+            pageIndex={idx}
+            pageCount={BANNERS.length}
             ariaLabel={`Slide ${idx + 1} of ${BANNERS.length}: ${banner.display}`}
           />
         ))}
       </div>
 
-      {/* Page indicator dots */}
+      {/* Editorial page indicator: numeric + progress line */}
       <div
-        role="tablist"
-        aria-label="Select slide"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: theme.spacing.sm,
-          marginTop: theme.spacing.md,
+          gap: theme.spacing.md,
+          marginTop: theme.spacing.lg,
+          padding: `0 ${theme.spacing.pad}px`,
         }}
       >
-        {BANNERS.map((banner, idx) => {
-          const isActive = idx === activeIndex;
-          return (
-            <button
-              key={banner.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-label={`Go to slide ${idx + 1}: ${banner.display}`}
-              onClick={() => handleDotClick(idx)}
-              className="mhb-dot"
-              style={{
-                width: isActive ? 22 : 7,
-                height: 7,
-                borderRadius: theme.radius.pill,
-                background: isActive ? theme.colors.black : theme.colors.grey300,
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                transition: `width ${theme.motion.duration.normal} ${theme.motion.easing.out}, background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
-              }}
-            />
-          );
-        })}
+        {/* Left numeric: current slide */}
+        <span
+          aria-hidden
+          style={{
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.sm,
+            fontWeight: theme.fontWeight.bold,
+            letterSpacing: theme.letterSpacing.wider,
+            color: theme.colors.textPrimary,
+            fontFeatureSettings: '"tnum"',
+          }}
+        >
+          {formatNum(activeIndex)}
+        </span>
+
+        {/* Progress line — segmented */}
+        <div
+          role="tablist"
+          aria-label="Select slide"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            flex: 1,
+            maxWidth: 120,
+          }}
+        >
+          {BANNERS.map((banner, idx) => {
+            const isActive = idx === activeIndex;
+            return (
+              <button
+                key={banner.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-label={`Go to slide ${idx + 1}: ${banner.display}`}
+                onClick={() => handleDotClick(idx)}
+                className="mhb-dot"
+                style={{
+                  flex: isActive ? 1 : '0 0 auto',
+                  height: 2,
+                  borderRadius: theme.radius.pill,
+                  background: isActive ? theme.colors.black : theme.colors.grey300,
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  minWidth: isActive ? 0 : 18,
+                  transition: `flex ${theme.motion.duration.slow} ${theme.motion.easing.out}, background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}, min-width ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Right numeric: total slides */}
+        <span
+          aria-hidden
+          style={{
+            fontFamily: theme.fontFamily.display,
+            fontSize: theme.fontSize.sm,
+            fontWeight: theme.fontWeight.bold,
+            letterSpacing: theme.letterSpacing.wider,
+            color: theme.colors.textTertiary,
+            fontFeatureSettings: '"tnum"',
+          }}
+        >
+          {formatNum(BANNERS.length - 1)}
+        </span>
       </div>
 
       <style jsx>{pressableStyle}</style>
@@ -272,20 +326,26 @@ function MobileHeroBannerImpl() {
 function BannerCardImpl({
   banner,
   isActive,
+  pageIndex,
+  pageCount,
   ariaLabel,
 }: {
   banner: Banner;
   isActive: boolean;
+  pageIndex: number;
+  pageCount: number;
   ariaLabel: string;
 }) {
   const isDark = banner.variant === 'dark';
-  // Light variant: cool grey canvas (#f0f0f0). Dark variant: matte black.
-  const bg = isDark ? theme.colors.black : theme.colors.grey150;
+  // Light variant: off-white canvas (#FAFAFA) — Apple Store warmth.
+  // Dark variant: matte black (#0A0A0A).
+  const bg = isDark ? theme.colors.black : theme.colors.offWhite;
   const fg = isDark ? theme.colors.white : theme.colors.black;
-  const eyebrowFg = isDark ? 'rgba(255,255,255,0.7)' : theme.colors.textSecondary;
-  const subtitleFg = isDark ? 'rgba(255,255,255,0.78)' : theme.colors.textSecondary;
+  const eyebrowFg = isDark ? 'rgba(255,255,255,0.65)' : theme.colors.textSecondary;
+  const subtitleFg = isDark ? 'rgba(255,255,255,0.72)' : theme.colors.textSecondary;
   const underlineColor = isDark ? theme.colors.white : theme.colors.black;
-  const watermarkColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+  const watermarkColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.035)';
+  const pageIndexFg = isDark ? 'rgba(255,255,255,0.4)' : theme.colors.textTertiary;
 
   return (
     <Link
@@ -298,18 +358,18 @@ function BannerCardImpl({
       style={{
         position: 'relative',
         display: 'grid',
-        // Left ~42% image / Right ~58% text — matches Adidas reference
-        gridTemplateColumns: '42fr 58fr',
-        alignItems: 'center',
+        // Asymmetric split: left ~45% image / right ~55% text
+        gridTemplateColumns: '45fr 55fr',
+        alignItems: 'stretch',
         gap: 0,
         background: bg,
         borderRadius: theme.radius.hero,
         overflow: 'hidden',
         border: 'none',
-        boxShadow: isDark ? theme.shadows.lg : theme.shadows.sm,
+        boxShadow: isDark ? theme.shadows.lg : theme.shadows.premium,
         color: fg,
         textDecoration: 'none',
-        height: 200,
+        height: 280,
         boxSizing: 'border-box',
         margin: `0 ${theme.spacing.xs}px`,
       }}
@@ -319,10 +379,10 @@ function BannerCardImpl({
         aria-hidden
         style={{
           position: 'absolute',
-          bottom: -28,
-          left: -8,
+          bottom: -42,
+          left: -12,
           fontFamily: theme.fontFamily.display,
-          fontSize: 150,
+          fontSize: 180,
           fontWeight: theme.fontWeight.black,
           color: watermarkColor,
           letterSpacing: '-0.06em',
@@ -344,7 +404,7 @@ function BannerCardImpl({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: theme.spacing.md,
+          padding: theme.spacing.lg,
           overflow: 'hidden',
         }}
       >
@@ -355,13 +415,13 @@ function BannerCardImpl({
           aria-hidden
           draggable={false}
           style={{
-            maxWidth: '115%',
-            maxHeight: '115%',
+            maxWidth: '125%',
+            maxHeight: '125%',
             width: 'auto',
             height: 'auto',
             objectFit: 'contain',
             filter: theme.dropShadows.lg,
-            transform: 'rotate(-12deg)',
+            transform: 'rotate(-14deg)',
             transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
           }}
           className="mhb-shoe"
@@ -375,25 +435,49 @@ function BannerCardImpl({
           zIndex: 2,
           display: 'flex',
           flexDirection: 'column',
+          justifyContent: 'center',
           alignItems: 'flex-start',
-          gap: theme.spacing.xs + 1,
-          padding: `${theme.spacing.lg}px ${theme.spacing.xl}px ${theme.spacing.lg}px 0`,
+          gap: theme.spacing.xs + 2,
+          padding: `${theme.spacing.xxl}px ${theme.spacing.xxl}px ${theme.spacing.xxl}px 0`,
         }}
       >
-        {/* Eyebrow */}
-        <span
+        {/* Top row: eyebrow + page index */}
+        <div
           style={{
-            color: eyebrowFg,
-            fontSize: theme.fontSize.xs,
-            fontWeight: theme.fontWeight.bold,
-            letterSpacing: theme.letterSpacing.wider,
-            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            marginBottom: theme.spacing.xs,
           }}
         >
-          {banner.eyebrow}
-        </span>
+          <span
+            style={{
+              color: eyebrowFg,
+              fontSize: theme.fontSize.xs,
+              fontWeight: theme.fontWeight.bold,
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+            }}
+          >
+            {banner.eyebrow}
+          </span>
+          <span
+            aria-hidden
+            style={{
+              fontFamily: theme.fontFamily.display,
+              fontSize: 9.5,
+              fontWeight: theme.fontWeight.bold,
+              letterSpacing: theme.letterSpacing.wide,
+              color: pageIndexFg,
+              fontFeatureSettings: '"tnum"',
+            }}
+          >
+            {String(pageIndex + 1).padStart(2, '0')} / {String(pageCount).padStart(2, '0')}
+          </span>
+        </div>
 
-        {/* Display headline — small lead + big display word */}
+        {/* Display headline — small lead + massive display word */}
         <h2
           style={{
             margin: 0,
@@ -412,7 +496,7 @@ function BannerCardImpl({
               letterSpacing: theme.letterSpacing.normal,
               lineHeight: 1.1,
               marginBottom: 2,
-              opacity: 0.85,
+              opacity: 0.75,
             }}
           >
             {banner.lead}
@@ -420,9 +504,9 @@ function BannerCardImpl({
           <span
             style={{
               display: 'block',
-              fontSize: 40,
+              fontSize: theme.fontSize.heroLg,
               fontWeight: theme.fontWeight.black,
-              lineHeight: 0.95,
+              lineHeight: 0.92,
             }}
           >
             {banner.display}
@@ -437,26 +521,27 @@ function BannerCardImpl({
             fontWeight: theme.fontWeight.regular,
             color: subtitleFg,
             lineHeight: theme.lineHeight.snug,
-            maxWidth: 180,
+            maxWidth: 200,
+            marginTop: theme.spacing.xs,
           }}
         >
           {banner.subtitle}
         </p>
 
-        {/* Underline text CTA — Adidas reference style */}
+        {/* Underline text CTA — editorial style */}
         <span
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: theme.spacing.xs,
-            marginTop: theme.spacing.xs + 2,
+            marginTop: theme.spacing.md,
             fontSize: theme.fontSize.xs,
             fontWeight: theme.fontWeight.bold,
             letterSpacing: theme.letterSpacing.wider,
             textTransform: 'uppercase',
             color: fg,
             borderBottom: `1.5px solid ${underlineColor}`,
-            paddingBottom: 2,
+            paddingBottom: 3,
           }}
           className="mhb-cta"
         >
@@ -478,10 +563,10 @@ function BannerCardImpl({
         }
         @media (hover: hover) {
           .mhb-card:hover .mhb-shoe {
-            transform: rotate(-16deg) translateY(-4px) scale(1.04);
+            transform: rotate(-18deg) translateY(-6px) scale(1.05);
           }
           .mhb-card:hover .mhb-cta {
-            transform: translateX(2px);
+            transform: translateX(3px);
           }
         }
       `}</style>

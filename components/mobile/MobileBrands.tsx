@@ -21,10 +21,11 @@ function MobileBrandsImpl() {
     <section
       aria-label="Featured brands"
       style={{
-        paddingTop: theme.spacing.huge + 4,
+        paddingTop: theme.spacing.section,
         paddingBottom: theme.spacing.section,
-        background: theme.colors.white,
-        borderTop: `1px solid ${theme.colors.grey50}`,
+        background: theme.colors.offWhite,
+        borderTop: `1px solid ${theme.colors.grey100}`,
+        borderBottom: `1px solid ${theme.colors.grey100}`,
         overflow: 'hidden',
       }}
     >

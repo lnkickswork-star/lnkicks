@@ -47,6 +47,10 @@ export const fontSize = {
   hero: 38,
   /** 48px — splash wordmark */
   display: 48,
+  /** 56px — premium editorial hero headline (Nike-style) */
+  heroLg: 56,
+  /** 72px — premium editorial hero headline (massive display) */
+  heroXl: 72,
   /** 96px — giant watermark wordmark (splash) */
   watermark: 96,
 } as const;

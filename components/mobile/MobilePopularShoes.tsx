@@ -9,32 +9,42 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import type { MobileProduct } from '@/components/mobile/mobileProducts';
 
 /**
- * MobilePopularShoes — horizontal swipe carousel of product cards.
+ * MobilePopularShoes — horizontal swipe carousel of premium product cards.
  *
- * Visual contract (matches mobile reference):
+ * DESIGN INTENT (LN KICKS premium refresh):
+ *   GOAT / Apple Store / END Clothing product card inspiration.
+ *   Cards pushed to 24px radius (radius.card), premium soft shadow tier,
+ *   more whitespace inside, cleaner type hierarchy, better image treatment.
+ *
+ * Visual contract:
  *   - Pure white section background
- *   - Section header: "Popular Shoes" (bold black) + "See all" link
- *   - HORIZONTAL swipe carousel (one row, scroll-snap)
+ *   - Section header: editorial eyebrow + display title + "See all" link
+ *   - HORIZONTAL swipe carousel (one row, scroll-snap mandatory)
  *   - First/last cards inset by theme.pad for premium page gutter
  *   - Each card:
- *       • Fixed width ~165px (so 2.2 cards are visible — peak/preview pattern)
- *       • 1. Soft grey rounded image area (radius.lg) with floating shoe PNG
- *         (drop-shadow on the image, NOT card box-shadow)
- *       • 2. Brand label (small, uppercase, grey)
- *       • 3. Product name (bold black, 1-2 lines, ellipsis)
- *       • 4. Price row: current price (bold black) + strike-through original
- *       • 5. Rating row: ★ stars + numeric rating
- *       • 6. Bottom-right: circular matte-black "+" Add-to-Cart button
+ *       • Fixed width 175px (slightly wider for more breathing room)
+ *       • 24px radius (radius.card)
+ *       • Premium soft shadow (shadows.premium)
+ *       • Image area: soft grey rounded tile (radius.xl) with floating shoe PNG
+ *         Full-bleed image area extends to card edges with internal padding
+ *       • Brand label (small, uppercase, tracked-out grey)
+ *       • Product name (semibold black, 1-2 lines, ellipsis)
+ *       • Rating row: ★ stars + numeric rating (refined typography)
+ *       • Price row: current price (bold black) + strike-through original
+ *       • Bottom-right: circular matte-black "+" Add-to-Cart button
  *
  * Add-to-cart integrates with AppContext.addToCart — adds the product
  * with qty=1 and triggers the global toast ("Item added to Shopping Cart!").
  *
  * LN KICKS theme: matte black accents, soft grey surfaces, no blue.
  *
- * Phase 3 polish:
- *  - Design tokens (no hardcoded values)
+ * Phase 4 polish:
+ *  - All design tokens (no hardcoded values)
+ *  - 24px card radius (radius.card) — GOAT / Apple quality
+ *  - Premium shadow tier (shadows.premium) — extra-soft, wide-spread
+ *  - Editorial section header with eyebrow + display title
  *  - Haptic medium tick on Add-to-Cart
- *  - Pressed state on card (scale 0.98) and button (scale 0.92)
+ *  - Pressed state on card (scale 0.98) and button (scale 0.88)
  *  - Focus-visible ring on the card link and the + button
  *  - ARIA: role="list" with aria-label per card, button has aria-label
  *  - Memoized at the section level; cards are memoized separately
@@ -42,6 +52,7 @@ import type { MobileProduct } from '@/components/mobile/mobileProducts';
  *  - scroll-snap-type: x mandatory for premium snap feel
  *  - -webkit-overflow-scrolling: touch for iOS momentum
  *  - Scrollbar hidden for clean luxury look
+ *  - Hover: card lifts (translateY -2px) + shadow deepens
  */
 
 /* ── Star renderer ────────────────────────────────────────────── */
@@ -115,16 +126,19 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
       className="mps-card pressable"
       style={{
         background: theme.colors.white,
-        borderRadius: theme.radius.xl,
+        borderRadius: theme.radius.card,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        border: `1px solid ${theme.colors.grey150}`,
-        // Fixed width so the carousel shows ~2.2 cards (peek/preview pattern)
-        width: 165,
+        // Premium soft shadow + hairline border for definition on white bg
+        boxShadow: theme.shadows.premium,
+        border: `1px solid ${theme.colors.grey100}`,
+        // Slightly wider card for more breathing room
+        width: 175,
         flex: '0 0 auto',
         scrollSnapAlign: 'start',
+        transition: `transform ${theme.motion.duration.normal} ${theme.motion.easing.out}, box-shadow ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
       }}
     >
       <Link
@@ -132,7 +146,8 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
         aria-label={`${product.brand} ${product.name}, ${product.price}`}
         style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}
       >
-        {/* Image area — soft grey background with floating shoe */}
+        {/* Image area — soft grey background with floating shoe.
+            Full-bleed within the card; internal padding for the shoe. */}
         <div
           style={{
             background: theme.colors.grey100,
@@ -140,11 +155,11 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: theme.spacing.md,
+            padding: theme.spacing.lg,
             position: 'relative',
             overflow: 'hidden',
-            borderRadius: theme.radius.lg,
-            margin: theme.spacing.xs,
+            // Top corners rounded to match card; bottom flush
+            borderRadius: `${theme.radius.card}px ${theme.radius.card}px 0 0`,
           }}
         >
           <img
@@ -153,9 +168,10 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             loading="lazy"
             decoding="async"
             draggable={false}
+            className="mps-img"
             style={{
-              maxWidth: '90%',
-              maxHeight: '90%',
+              maxWidth: '92%',
+              maxHeight: '92%',
               objectFit: 'contain',
               filter: theme.dropShadows.md,
               transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
@@ -163,10 +179,10 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           />
         </div>
 
-        {/* Body */}
+        {/* Body — more whitespace, cleaner hierarchy */}
         <div
           style={{
-            padding: `${theme.spacing.xs}px ${theme.spacing.md}px ${theme.spacing.md}px`,
+            padding: `${theme.spacing.md}px ${theme.spacing.md}px ${theme.spacing.lg}px`,
             display: 'flex',
             flexDirection: 'column',
             gap: theme.spacing.xs,
@@ -199,7 +215,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              minHeight: 36,
+              minHeight: 38,
             }}
           >
             {product.name}
@@ -300,7 +316,11 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           outline-offset: 2px;
         }
         @media (hover: hover) {
-          .mps-card:hover img {
+          .mps-card:hover {
+            transform: translateY(-2px);
+            box-shadow: ${theme.shadows.premiumLg};
+          }
+          .mps-card:hover .mps-img {
             transform: translateY(-4px) scale(1.04);
           }
         }
@@ -327,46 +347,71 @@ function MobilePopularShoesImpl({
     <section
       aria-label={title}
       style={{
-        paddingTop: theme.spacing.xxl,
+        paddingTop: theme.spacing.section,
         paddingBottom: theme.spacing.sm,
       }}
     >
-      {/* Section header */}
+      {/* Editorial section header — eyebrow + display title + See all */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
           padding: `0 ${theme.spacing.pad}px`,
-          marginBottom: theme.spacing.lg,
+          marginBottom: theme.spacing.xxl,
         }}
       >
-        <h2
+        <div
           style={{
-            margin: 0,
-            fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.title,
-            fontWeight: theme.fontWeight.extrabold,
-            letterSpacing: theme.letterSpacing.tight,
-            color: theme.colors.textPrimary,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: theme.spacing.md,
           }}
         >
-          {title}
-        </h2>
-        <Link
-          href={seeAllHref}
-          className="pressable"
-          style={{
-            fontSize: theme.fontSize.sm,
-            fontWeight: theme.fontWeight.semibold,
-            color: theme.colors.textPrimary,
-            textDecoration: 'none',
-            letterSpacing: theme.letterSpacing.wide,
-            textTransform: 'uppercase',
-          }}
-        >
-          See all
-        </Link>
+          <div>
+            <p
+              style={{
+                fontSize: theme.fontSize.xs,
+                fontWeight: theme.fontWeight.bold,
+                color: theme.colors.textTertiary,
+                textTransform: 'uppercase',
+                letterSpacing: theme.letterSpacing.extreme,
+                margin: `0 0 ${theme.spacing.sm}px 0`,
+              }}
+            >
+              Most Wanted
+            </p>
+            <h2
+              style={{
+                margin: 0,
+                fontFamily: theme.fontFamily.display,
+                fontSize: theme.fontSize.h2,
+                fontWeight: theme.fontWeight.extrabold,
+                letterSpacing: theme.letterSpacing.tight,
+                color: theme.colors.textPrimary,
+                lineHeight: 1,
+                textTransform: 'uppercase',
+              }}
+            >
+              {title}
+            </h2>
+          </div>
+          <Link
+            href={seeAllHref}
+            className="pressable"
+            style={{
+              fontSize: theme.fontSize.sm,
+              fontWeight: theme.fontWeight.bold,
+              color: theme.colors.textPrimary,
+              textDecoration: 'none',
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              paddingBottom: 2,
+              borderBottom: `1.5px solid ${theme.colors.black}`,
+            }}
+          >
+            See all
+          </Link>
+        </div>
       </div>
 
       {/* Horizontal swipe carousel */}

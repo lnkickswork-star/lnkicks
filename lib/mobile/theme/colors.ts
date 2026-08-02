@@ -10,6 +10,8 @@
 export const colors = {
   // ── Core surfaces ────────────────────────────────────────────────
   white: '#ffffff',
+  /** Off-white editorial surface — Apple Store / END Clothing style */
+  offWhite: '#FAFAFA',
   black: '#0A0A0A',
 
   // ── Greys (soft, luxury) ─────────────────────────────────────────

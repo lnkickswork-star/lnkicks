@@ -53,8 +53,8 @@ function MobileHeaderImpl({
         top: 0,
         zIndex: theme.zIndex.header,
         background: theme.colors.glass,
-        backdropFilter: 'saturate(180%) blur(14px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(14px)',
+        backdropFilter: 'saturate(180%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
         borderBottom: scrolled
           ? `1px solid ${theme.colors.border}`
           : '1px solid transparent',
@@ -65,9 +65,8 @@ function MobileHeaderImpl({
         style={{
           maxWidth: 440,
           margin: '0 auto',
-          padding: `${theme.spacing.md}px ${theme.spacing.gutter}px`,
+          padding: `${theme.spacing.md}px ${theme.spacing.pad}px`,
           // 3-column grid: Menu | centered wordmark | right cluster (Cart + Profile)
-          // Wishlist icon was removed per UX spec — keep spacing balanced.
           display: 'grid',
           gridTemplateColumns: '36px 1fr 36px 36px',
           alignItems: 'center',

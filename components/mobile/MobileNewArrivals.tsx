@@ -11,14 +11,18 @@ import type { MobileProduct } from '@/components/mobile/mobileProducts';
 /**
  * MobileNewArrivals — premium promotional banner (SNKRS / Apple style).
  *
+ * DESIGN INTENT (LN KICKS premium refresh):
+ *   Taller, more editorial. Bigger display type. More breathing room.
+ *   Same matte black canvas + white type + floating product, but pushed
+ *   to a more dramatic, Apple-store-quality composition.
+ *
  * Design contract:
  *   - Full-width matte black card with radius.hero (28px)
- *   - Asymmetric split: LEFT (collection / product name / description /
- *     price / CTA) | RIGHT (large premium sneaker image)
- *   - Matches the visual weight of MobileHeroBanner — same radius, same
- *     premium shadow, same editorial typography
+ *   - Asymmetric split: LEFT (eyebrow / brand / display headline /
+ *     description / price / CTA) | RIGHT (large premium sneaker image)
+ *   - Taller 280px min-height (up from 240) for editorial scale
  *   - "NEW" eyebrow chip (matte black on white pill, top-left)
- *   - Large display headline in Oswald — collection or product name
+ *   - Large display headline in Oswald — product name, bigger now
  *   - One-sentence description (Inter, soft grey)
  *   - Price row (white bold + strike-through)
  *   - "Shop Now" CTA button (white pill on black, arrow icon)
@@ -28,14 +32,18 @@ import type { MobileProduct } from '@/components/mobile/mobileProducts';
  * pure luxury. No blue, no gradients. Inspired by Nike SNKRS app feature
  * cards + Apple Store product cards.
  *
- * Phase 3 polish:
- *  - Design tokens (no hardcoded values)
+ * Phase 4 polish:
+ *  - All design tokens (no hardcoded values)
+ *  - Taller 280px canvas for editorial scale
+ *  - Bigger display headline (fontSize.h2 → fontSize.h1)
+ *  - More padding inside for breathing room
  *  - Haptic medium tick on Add-to-Cart, selection tick on CTA
  *  - Pressed state on card (scale 0.99) and CTA (scale 0.94)
  *  - Focus-visible ring on the card link and the + button
  *  - ARIA: article + aria-label, button has descriptive aria-label
  *  - Memoized
  *  - Image uses loading="lazy" + decoding="async" for scroll perf
+ *  - Hover: image lifts + rotates further; CTA lifts
  */
 type MobileNewArrivalsProps = {
   product: MobileProduct;
@@ -74,39 +82,69 @@ function MobileNewArrivalsImpl({
     <section
       aria-label="New Arrivals"
       style={{
-        paddingTop: theme.spacing.xxl,
+        paddingTop: theme.spacing.section,
         paddingBottom: theme.spacing.sm,
       }}
     >
-      {/* Section header */}
+      {/* Editorial section header */}
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,
-          marginBottom: theme.spacing.lg,
+          marginBottom: theme.spacing.xxl,
         }}
       >
-        <h2
-          style={{
-            margin: 0,
-            fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.title,
-            fontWeight: theme.fontWeight.extrabold,
-            letterSpacing: theme.letterSpacing.tight,
-            color: theme.colors.textPrimary,
-          }}
-        >
-          New Arrivals
-        </h2>
         <p
           style={{
-            margin: `${theme.spacing.xs}px 0 0`,
-            fontSize: theme.fontSize.sm,
-            color: theme.colors.textSecondary,
-            fontWeight: theme.fontWeight.regular,
+            fontSize: theme.fontSize.xs,
+            fontWeight: theme.fontWeight.bold,
+            color: theme.colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: theme.letterSpacing.extreme,
+            margin: `0 0 ${theme.spacing.sm}px 0`,
           }}
         >
-          Fresh pairs, straight off the truck.
+          Just Landed
         </p>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: theme.spacing.md,
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontFamily: theme.fontFamily.display,
+              fontSize: theme.fontSize.h2,
+              fontWeight: theme.fontWeight.extrabold,
+              letterSpacing: theme.letterSpacing.tight,
+              color: theme.colors.textPrimary,
+              lineHeight: 1,
+              textTransform: 'uppercase',
+            }}
+          >
+            New Arrivals
+          </h2>
+          <Link
+            href="/products?filter=new"
+            className="pressable"
+            style={{
+              fontSize: theme.fontSize.sm,
+              fontWeight: theme.fontWeight.bold,
+              color: theme.colors.textPrimary,
+              textDecoration: 'none',
+              letterSpacing: theme.letterSpacing.wider,
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              paddingBottom: 2,
+              borderBottom: `1.5px solid ${theme.colors.black}`,
+            }}
+          >
+            See all
+          </Link>
+        </div>
       </div>
 
       {/* Featured promotional banner */}
@@ -121,7 +159,7 @@ function MobileNewArrivalsImpl({
             display: 'grid',
             // Left ~58% text / Right ~42% image — premium editorial split
             gridTemplateColumns: '58fr 42fr',
-            minHeight: 240,
+            minHeight: 280,
             boxShadow: theme.shadows.lg,
             border: 'none',
           }}
@@ -131,12 +169,12 @@ function MobileNewArrivalsImpl({
             aria-hidden
             style={{
               position: 'absolute',
-              bottom: -34,
-              right: -10,
+              bottom: -40,
+              right: -12,
               fontFamily: theme.fontFamily.display,
-              fontSize: 160,
+              fontSize: 180,
               fontWeight: theme.fontWeight.black,
-              color: 'rgba(255,255,255,0.05)',
+              color: 'rgba(255,255,255,0.045)',
               letterSpacing: '-0.06em',
               lineHeight: 1,
               pointerEvents: 'none',
@@ -156,7 +194,7 @@ function MobileNewArrivalsImpl({
               flexDirection: 'column',
               justifyContent: 'center',
               gap: theme.spacing.sm,
-              padding: `${theme.spacing.xxl}px ${theme.spacing.xl}px ${theme.spacing.xxl}px ${theme.spacing.xxl}px`,
+              padding: `${theme.spacing.huge}px ${theme.spacing.xxl}px ${theme.spacing.huge}px ${theme.spacing.xxl}px`,
             }}
           >
             {/* NEW eyebrow chip */}
@@ -169,7 +207,7 @@ function MobileNewArrivalsImpl({
                 fontWeight: theme.fontWeight.bold,
                 letterSpacing: theme.letterSpacing.wider,
                 textTransform: 'uppercase',
-                padding: `${theme.spacing.xs + 1}px ${theme.spacing.sm + 2}px`,
+                padding: `${theme.spacing.xs + 1}px ${theme.spacing.md}px`,
                 borderRadius: theme.radius.pill,
               }}
             >
@@ -183,7 +221,7 @@ function MobileNewArrivalsImpl({
                 fontWeight: theme.fontWeight.bold,
                 letterSpacing: theme.letterSpacing.wider,
                 textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.65)',
+                color: 'rgba(255,255,255,0.6)',
               }}
             >
               {product.brand}
@@ -194,7 +232,7 @@ function MobileNewArrivalsImpl({
               style={{
                 margin: 0,
                 fontFamily: theme.fontFamily.display,
-                fontSize: theme.fontSize.h2,
+                fontSize: theme.fontSize.h1,
                 fontWeight: theme.fontWeight.extrabold,
                 lineHeight: theme.lineHeight.tight,
                 letterSpacing: theme.letterSpacing.tight,
@@ -211,7 +249,7 @@ function MobileNewArrivalsImpl({
                 margin: 0,
                 fontSize: theme.fontSize.sm,
                 fontWeight: theme.fontWeight.regular,
-                color: 'rgba(255,255,255,0.72)',
+                color: 'rgba(255,255,255,0.7)',
                 lineHeight: theme.lineHeight.snug,
                 maxWidth: 220,
               }}
@@ -242,7 +280,7 @@ function MobileNewArrivalsImpl({
                 <span
                   style={{
                     fontSize: theme.fontSize.md,
-                    color: 'rgba(255,255,255,0.5)',
+                    color: 'rgba(255,255,255,0.45)',
                     textDecoration: 'line-through',
                     fontWeight: theme.fontWeight.regular,
                   }}
@@ -282,6 +320,7 @@ function MobileNewArrivalsImpl({
                   textDecoration: 'none',
                   border: 'none',
                   cursor: 'pointer',
+                  transition: `transform ${theme.motion.duration.instant} ${theme.motion.easing.out}, background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
                 }}
               >
                 Shop Now
@@ -303,11 +342,12 @@ function MobileNewArrivalsImpl({
                   borderRadius: '50%',
                   background: 'transparent',
                   color: theme.colors.white,
-                  border: `1.5px solid rgba(255,255,255,0.32)`,
+                  border: `1.5px solid rgba(255,255,255,0.3)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
+                  transition: `transform ${theme.motion.duration.instant} ${theme.motion.easing.out}, border-color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
                 }}
               >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
@@ -351,13 +391,13 @@ function MobileNewArrivalsImpl({
                 draggable={false}
                 className="mna-img"
                 style={{
-                  maxWidth: '130%',
-                  maxHeight: '130%',
+                  maxWidth: '135%',
+                  maxHeight: '135%',
                   width: 'auto',
                   height: 'auto',
                   objectFit: 'contain',
                   filter: theme.dropShadows.lg,
-                  transform: 'rotate(-12deg)',
+                  transform: 'rotate(-14deg)',
                   transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
                 }}
               />
@@ -390,7 +430,7 @@ function MobileNewArrivalsImpl({
             }
             @media (hover: hover) {
               .mna-card:hover .mna-img {
-                transform: rotate(-16deg) translateY(-4px) scale(1.04);
+                transform: rotate(-18deg) translateY(-6px) scale(1.05);
               }
               .mna-cta:hover {
                 background: ${theme.colors.grey200};

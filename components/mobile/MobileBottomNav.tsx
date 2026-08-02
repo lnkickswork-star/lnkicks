@@ -128,7 +128,7 @@ function MobileBottomNavImpl({
           position: 'relative',
           background: theme.colors.white,
           borderRadius: theme.radius.pill,
-          border: `1px solid ${theme.colors.grey150}`,
+          border: `1px solid ${theme.colors.grey100}`,
           boxShadow: theme.shadows.lg,
           display: 'grid',
           gridTemplateColumns: '1fr 1fr 64px 1fr 1fr',
