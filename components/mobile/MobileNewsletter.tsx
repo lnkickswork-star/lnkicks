@@ -36,22 +36,22 @@ function MobileNewsletterImpl() {
   return (
     <section
       style={{
-        // Phase 7: 48px top spacing, 32px bottom (was 24/28)
+        // Phase 8: 24px top spacing, 20px bottom
         padding: `${theme.spacing.sectionSpacing}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px`,
       }}
     >
       <div
         style={{
           background: theme.colors.black,
-          // Phase 7: 32px radius — luxury magazine cover
-          borderRadius: theme.radius.heroCard,
-          // Phase 7: 32px internal padding
-          padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
+          // Phase 8: 24px radius (was 32px)
+          borderRadius: theme.radius.productCard,
+          // Phase 8: 20px internal padding (was 32px)
+          padding: `${theme.spacing.xl}px ${theme.spacing.cardPadding}px`,
           color: theme.colors.white,
           position: 'relative',
           overflow: 'hidden',
-          // Phase 7: editorial shadow tier
-          boxShadow: theme.shadows.editorial,
+          // Phase 8: standard premium shadow
+          boxShadow: theme.shadows.premium,
         }}
       >
         {/* Background watermark */}
@@ -59,10 +59,10 @@ function MobileNewsletterImpl() {
           aria-hidden
           style={{
             position: 'absolute',
-            bottom: -30,
-            right: -10,
+            bottom: -20,
+            right: -8,
             fontFamily: theme.fontFamily.display,
-            fontSize: 120,
+            fontSize: 80,
             fontWeight: theme.fontWeight.black,
             color: 'rgba(255,255,255,0.04)',
             letterSpacing: '-0.04em',
@@ -157,8 +157,8 @@ function MobileNewsletterImpl() {
               aria-label="Subscribe to newsletter"
               className="pressable mnews-submit"
               style={{
-                width: 44,
-                height: 44,
+                width: 36,
+                height: 36,
                 borderRadius: '50%',
                 background: theme.colors.white,
                 color: theme.colors.textPrimary,
@@ -171,7 +171,7 @@ function MobileNewsletterImpl() {
                 transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}`,
               }}
             >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24" aria-hidden>
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 5l7 7-7 7" />
               </svg>
             </button>

@@ -112,9 +112,9 @@ function MobileHeroBannerImpl() {
     <section
       aria-label="Featured promotions"
       style={{
-        // Phase 7: 48px section spacing for editorial breathing room
-        paddingTop: theme.spacing.sectionSpacing,
-        paddingBottom: theme.spacing.sectionPadding,
+        // Phase 8: 20px section spacing (was 48px)
+        paddingTop: theme.spacing.sectionGap,
+        paddingBottom: theme.spacing.cardPadding,
       }}
     >
       <div
@@ -126,7 +126,7 @@ function MobileHeroBannerImpl() {
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          // 24px side padding gives peek preview of next card
+          // 16px side padding gives peek preview of next card
           padding: `0 ${theme.spacing.sectionPadding}px`,
           gap: theme.spacing.cardGap,
         }}
@@ -194,29 +194,27 @@ function BannerCardImpl({
         alignItems: 'center',
         justifyContent: 'center',
         background: bg,
-        // Phase 7: 32px radius — luxury magazine cover
-        borderRadius: theme.radius.heroCard,
+        // Phase 8: 24px radius (was 32px) — more app-like
+        borderRadius: theme.radius.productCard,
         overflow: 'hidden',
         border: 'none',
-        // Phase 7: editorial shadow tier — softer, wider spread
-        boxShadow: isDark
-          ? theme.shadows.editorial
-          : theme.shadows.editorial,
+        // Phase 8: standard premium shadow
+        boxShadow: theme.shadows.premium,
         color: fg,
         textDecoration: 'none',
-        // Phase 7: taller card for editorial scale (was 340px)
-        height: 460,
+        // Phase 8: 340px tall (was 460px) — standard mobile hero
+        height: 340,
         boxSizing: 'border-box',
-        // Phase 7: 28px internal padding for breathing room
-        padding: `${theme.spacing.sectionSpacing}px ${theme.spacing.sectionPadding}px`,
+        // Phase 8: 20px internal padding
+        padding: `${theme.spacing.xl}px ${theme.spacing.cardPadding}px`,
         transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
         // Each card width: 88% of viewport (peek preview of next card)
         width: '88%',
         flex: '0 0 88%',
-        maxWidth: 420,
+        maxWidth: 380,
       }}
     >
-      {/* ── Eyebrow — 12px / 500 / uppercase / 0.5px tracking ── */}
+      {/* ── Eyebrow — 11px / 500 / uppercase / 0.5px tracking ── */}
       <span
         style={{
           color: eyebrowFg,
@@ -225,14 +223,14 @@ function BannerCardImpl({
           fontWeight: theme.fontWeight.medium,
           letterSpacing: theme.letterSpacing.brandName,
           textTransform: 'uppercase',
-          marginBottom: theme.spacing.md,
+          marginBottom: theme.spacing.sm,
           fontFeatureSettings: theme.fontFeatures,
         }}
       >
         {banner.eyebrow}
       </span>
 
-      {/* ── Centered shoe image — larger (was 65% / 160px max) ──── */}
+      {/* ── Centered shoe image — Phase 8: smaller */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={banner.image}
@@ -241,13 +239,13 @@ function BannerCardImpl({
         draggable={false}
         className="mhb-img"
         style={{
-          // Phase 7: bigger image — up to 75% width, taller max
-          maxWidth: '75%',
-          maxHeight: 220,
+          // Phase 8: smaller image — up to 60% width, 160px max height
+          maxWidth: '60%',
+          maxHeight: 160,
           width: 'auto',
           height: 'auto',
           objectFit: 'contain',
-          marginBottom: theme.spacing.xl,
+          marginBottom: theme.spacing.md,
           // Subtle drop shadow for depth on light variant only
           filter: isDark ? 'none' : theme.dropShadows.md,
           opacity: isActive ? 1 : 0.85,
@@ -255,7 +253,7 @@ function BannerCardImpl({
         }}
       />
 
-      {/* ── Headline — Hero 32px / 700 / 38px line height ── */}
+      {/* ── Headline — Hero 24px / 700 (auto via tokens) ── */}
       <h2
         style={{
           margin: 0,
@@ -270,11 +268,11 @@ function BannerCardImpl({
         <span
           style={{
             display: 'block',
-            fontSize: theme.fontSize.lg,
+            fontSize: theme.fontSize.md,
             fontWeight: theme.fontWeight.regular,
             letterSpacing: theme.letterSpacing.normal,
             lineHeight: theme.lineHeight.snug,
-            marginBottom: theme.spacing.xs,
+            marginBottom: 2,
             opacity: 0.7,
           }}
         >
@@ -293,7 +291,7 @@ function BannerCardImpl({
         </span>
       </h2>
 
-      {/* ── Subtitle — Body 14px / 400 / 20px line height ─────── */}
+      {/* ── Subtitle — Body 13px / 400 (auto via tokens) ─────── */}
       <p
         style={{
           margin: 0,
@@ -302,29 +300,29 @@ function BannerCardImpl({
           fontWeight: theme.fontWeight.regular,
           color: subtitleFg,
           lineHeight: theme.lineHeight.body,
-          maxWidth: 280,
+          maxWidth: 240,
           textAlign: 'center',
-          marginTop: theme.spacing.sm,
+          marginTop: theme.spacing.xs,
           fontFeatureSettings: theme.fontFeatures,
         }}
       >
         {banner.subtitle}
       </p>
 
-      {/* ── Underline CTA — Button style 15px / 600 ────────────── */}
+      {/* ── Underline CTA — Button style 13px / 600 (auto via tokens) ── */}
       <span
         style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: theme.spacing.xs,
-          marginTop: theme.spacing.xl,
+          marginTop: theme.spacing.md,
           fontFamily: theme.fontFamily.body,
-          fontSize: theme.fontSize.lg,
+          fontSize: theme.fontSize.md,
           fontWeight: theme.fontWeight.semibold,
           letterSpacing: theme.letterSpacing.normal,
           color: fg,
           borderBottom: `1.5px solid ${underlineColor}`,
-          paddingBottom: 3,
+          paddingBottom: 2,
           fontFeatureSettings: theme.fontFeatures,
         }}
         className="mhb-cta"
@@ -332,8 +330,8 @@ function BannerCardImpl({
         Shop Now
         <svg
           viewBox="0 0 24 24"
-          width="12"
-          height="12"
+          width="10"
+          height="10"
           fill="none"
           stroke="currentColor"
           strokeWidth="2.6"

@@ -3,11 +3,12 @@
  *
  * 4px base unit. Linear progression. Calibrated for 360–440px viewports.
  *
- * PHASE 7 EDITORIAL PREMIUM REFRESH
- *   Section spacing  → 48–64px (more breathing room, magazine-like)
- *   Card padding     → 20–24px (luxury internal space)
- *   Card gap         → 16–20px (consistent grid rhythm)
- *   Button height    → 48px (unchanged — Apple HIG)
+ * PHASE 8 MOBILE-STANDARD REFRESH
+ *   Section spacing  → 20–32px (standard mobile app rhythm)
+ *   Card padding     → 12–14px (compact, information-dense)
+ *   Card gap         → 8–12px (tight grid)
+ *   Button height    → 44px (Material Design minimum)
+ *   Page gutter      → 16px (standard mobile page padding)
  *
  * Usage: import { spacing } from '@/lib/mobile/theme/spacing';
  */
@@ -27,60 +28,59 @@ export const spacing = {
   /** 14px — legacy content gutter horizontal (kept for backwards compat) */
   gutter: 14,
 
-  // ── Card system (Phase 7: 16–20px gaps, 20–24px padding) ─────────
-  /** 16px — minimum card gap */
-  cardGap: 16,
-  /** 16px — legacy `lg` token (alias of cardGap) */
-  lg: 16,
-  /** 18px — legacy section horizontal padding (kept for backwards compat) */
-  pad: 18,
-  /** 20px — preferred card gap (Phase 7) */
-  cardGapLg: 20,
-  /** 20px */
-  xl: 20,
-  /** 22px — preferred card padding (Phase 7) */
-  cardPadding: 22,
-  /** 24px — minimum section padding */
-  sectionPadding: 24,
-  /** 24px — legacy `xxl` token (alias of sectionPadding) */
-  xxl: 24,
-  /** 28px */
-  xxxl: 28,
+  // ── Card system (Phase 8: 8–12px gaps, 12–14px padding) ─────────
+  /** 8px — minimum card gap */
+  cardGap: 8,
+  /** 12px — legacy `lg` token (alias) */
+  lg: 12,
+  /** 14px — legacy section horizontal padding (kept for backwards compat) */
+  pad: 14,
+  /** 12px — preferred card gap (Phase 8) */
+  cardGapLg: 12,
+  /** 16px — page gutter / horizontal page padding */
+  xl: 16,
+  /** 14px — preferred card padding (Phase 8) */
+  cardPadding: 14,
+  /** 16px — minimum section padding */
+  sectionPadding: 16,
+  /** 20px — legacy `xxl` token */
+  xxl: 20,
+  /** 24px */
+  xxxl: 24,
 
-  // ── Section system (Phase 7: 48–64px section spacing) ────────────
-  /** 32px — small section gap */
-  sectionGap: 32,
-  /** 32px — legacy `huge` token (alias of sectionGap) */
-  huge: 32,
-  /** 36px — legacy section vertical padding (alias, prefer sectionPadding) */
-  section: 36,
-  /** 48px — preferred section top/bottom spacing (Phase 7) */
-  sectionSpacing: 48,
-  /** 48px — Button Height (Apple HIG, unchanged) */
-  buttonHeight: 48,
-  /** 48px — legacy `giant` token (alias of buttonHeight) */
+  // ── Section system (Phase 8: 20–32px section spacing) ────────────
+  /** 20px — small section gap */
+  sectionGap: 20,
+  /** 24px — legacy `huge` token */
+  huge: 24,
+  /** 24px — legacy section vertical padding */
+  section: 24,
+  /** 24px — preferred section top/bottom spacing (Phase 8) */
+  sectionSpacing: 24,
+  /** 44px — Button Height (Material minimum touch target) */
+  buttonHeight: 44,
+  /** 48px — legacy `giant` token */
   giant: 48,
-  /** 56px */
-  vast: 56,
-  /** 56px — preferred section gap between major blocks (Phase 7) */
-  sectionGapLg: 56,
-  /** 64px — maximum section spacing / Header Height */
-  headerHeight: 64,
-  /** 64px — legacy `mega` token (alias of headerHeight) */
+  /** 32px */
+  vast: 32,
+  /** 28px — preferred section gap between major blocks (Phase 8) */
+  sectionGapLg: 28,
+  /** 56px — Header Height */
+  headerHeight: 56,
+  /** 64px — legacy `mega` token */
   mega: 64,
-  /** 64px — maximum section spacing (Phase 7) */
-  sectionSpacingLg: 64,
-  /** 80px — Bottom Navigation Height */
-  bottomNavHeight: 80,
+  /** 32px — maximum section spacing (Phase 8) */
+  sectionSpacingLg: 32,
+  /** 64px — Bottom Navigation Height */
+  bottomNavHeight: 64,
 } as const;
 
 export type SpacingToken = keyof typeof spacing;
 
 /**
  * Page horizontal padding — applied to all sections that span full width.
- * 20px on phones ≥360px gives the editorial breathing room without
- * crowding iPhone SE (320px).
+ * 16px on phones ≥360px — standard mobile app page padding.
  */
-export const pageGutter = 20;
+export const pageGutter = 16;
 
 export default spacing;

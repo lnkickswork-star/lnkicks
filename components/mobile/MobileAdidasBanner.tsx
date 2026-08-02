@@ -39,10 +39,10 @@ function MobileAdidasBannerImpl() {
           className="mab-card pressable"
           style={{
             display: 'block',
-            // Phase 7: 28px rounded corners (radius.largeCard)
-            borderRadius: theme.radius.largeCard,
+            // Phase 8: 20px rounded corners (was 28px)
+            borderRadius: theme.radius.card,
             overflow: 'hidden',
-            boxShadow: theme.shadows.editorial,
+            boxShadow: theme.shadows.premium,
             border: 'none',
             position: 'relative',
             background: theme.colors.offWhite,

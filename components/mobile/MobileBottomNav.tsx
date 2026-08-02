@@ -42,7 +42,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Home',
     href: '/',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -52,7 +52,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Wishlist',
     href: '/wishlist',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
       </svg>
     ),
@@ -62,7 +62,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Profile',
     href: '/profile',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
@@ -72,7 +72,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Categories',
     href: '/categories',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <rect x="3" y="3" width="7" height="7" rx="1.5" strokeLinecap="round" />
         <rect x="14" y="3" width="7" height="7" rx="1.5" strokeLinecap="round" />
         <rect x="3" y="14" width="7" height="7" rx="1.5" strokeLinecap="round" />
@@ -111,23 +111,23 @@ function MobileBottomNavImpl({
         zIndex: theme.zIndex.nav,
       }}
     >
-      {/* Nav bar with notch for FAB — 80px height */}
+      {/* Nav bar with notch for FAB — 64px height */}
       <div
         style={{
           position: 'relative',
-          // Phase 7: glass background with stronger blur
+          // Phase 8: glass background with blur
           background: theme.colors.glass,
-          backdropFilter: 'saturate(180%) blur(24px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+          backdropFilter: 'saturate(180%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
           borderRadius: theme.radius.pill,
           border: `1px solid ${theme.colors.grey200}`,
-          // Phase 7: softer, wider-spread premium shadow
-          boxShadow: theme.shadows.lg,
+          // Phase 8: standard premium shadow
+          boxShadow: theme.shadows.md,
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 64px 1fr 1fr',
+          gridTemplateColumns: '1fr 1fr 52px 1fr 1fr',
           alignItems: 'center',
           height: theme.spacing.bottomNavHeight,
-          padding: `0 ${theme.spacing.sm}px`,
+          padding: `0 ${theme.spacing.xs}px`,
           boxSizing: 'border-box',
         }}
       >
@@ -153,28 +153,28 @@ function MobileBottomNavImpl({
           className="pressable mbn-fab"
           style={{
             position: 'absolute',
-            top: -22,
+            top: -18,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 60,
-            height: 60,
+            width: 48,
+            height: 48,
             borderRadius: '50%',
             background: theme.colors.primaryButton,
             color: theme.colors.buttonText,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            // Phase 7: deeper FAB elevation (shadows.fab)
+            // Phase 8: FAB elevation
             boxShadow: theme.shadows.fab,
-            border: `3px solid ${theme.colors.white}`,
+            border: `2.5px solid ${theme.colors.white}`,
             textDecoration: 'none',
             zIndex: theme.zIndex.fab,
-            // Phase 7: spring-like transition for tactile feedback
+            // Phase 8: spring-like transition for tactile feedback
             transition: `transform ${theme.duration.instant} ${theme.easing.spring}`,
           }}
         >
-          {/* Action icon = 22px */}
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+          {/* Action icon = 18px */}
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           {cartCount > 0 && (
@@ -186,15 +186,15 @@ function MobileBottomNavImpl({
                 right: -2,
                 background: theme.colors.white,
                 color: theme.colors.black,
-                fontSize: 9.5,
+                fontSize: 8.5,
                 fontWeight: theme.fontWeight.bold,
-                minWidth: 18,
-                height: 18,
+                minWidth: 16,
+                height: 16,
                 borderRadius: theme.radius.pill,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: `0 ${theme.spacing.xs}px`,
+                padding: `0 ${theme.spacing.xs - 1}px`,
                 border: `2px solid ${theme.colors.black}`,
                 boxSizing: 'border-box',
               }}
@@ -229,13 +229,13 @@ function NavButtonImpl({ item, active }: { item: NavItem; active: boolean }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 3,
+        gap: 2,
         padding: `${theme.spacing.xs}px`,
         borderRadius: theme.radius.pill,
         textDecoration: 'none',
         background: 'transparent',
         color: active ? theme.colors.textPrimary : theme.colors.textTertiary,
-        // Phase 7: spring transition for icon + color change
+        // Phase 8: spring transition for icon + color change
         transition: `color ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.spring}`,
       }}
     >
@@ -245,7 +245,7 @@ function NavButtonImpl({ item, active }: { item: NavItem; active: boolean }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          // Phase 7: scale active icon up slightly (1.05) for tactile feedback
+          // Phase 8: scale active icon up slightly (1.05) for tactile feedback
           transform: active ? 'scale(1.05)' : 'scale(1)',
           transition: `transform ${theme.duration.standard} ${theme.easing.spring}`,
         }}

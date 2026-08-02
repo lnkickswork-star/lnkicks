@@ -63,12 +63,12 @@ function MobileHeaderImpl({
         style={{
           maxWidth: 440,
           margin: '0 auto',
-          // Header height = 64px per Phase 6 spec (was md+xl padding ≈ 60px)
+          // Header height = 56px per Phase 8 spec (was 64px)
           height: theme.spacing.headerHeight,
           padding: `0 ${theme.spacing.sectionPadding}px`,
           // 3-column grid: Menu | centered wordmark | Profile
           display: 'grid',
-          gridTemplateColumns: '40px 1fr 40px',
+          gridTemplateColumns: '36px 1fr 36px',
           alignItems: 'center',
           gap: theme.spacing.hairline,
         }}
@@ -83,8 +83,8 @@ function MobileHeaderImpl({
           aria-label="Open menu"
           className="pressable mh-icon-btn"
           style={{
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -95,15 +95,15 @@ function MobileHeaderImpl({
             cursor: 'pointer',
           }}
         >
-          {/* Nav icon = 24px per Phase 6 spec */}
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          {/* Nav icon = 20px per Phase 8 spec */}
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
             <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
             <line x1="3" y1="12" x2="15" y2="12" strokeLinecap="round" />
             <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
           </svg>
         </button>
 
-        {/* Center: wordmark — Inter 700, 17px, slight tracking */}
+        {/* Center: wordmark — Inter 700, 15px, slight tracking */}
         <Link
           href="/"
           aria-label="LNKICKS home"
@@ -125,7 +125,7 @@ function MobileHeaderImpl({
 
         {/* Right: Profile (Cart icon removed per Phase 5 spec) */}
         <HeaderIconButton href="/profile" label="Profile" badge={0}>
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
@@ -166,8 +166,8 @@ function HeaderIconButtonImpl({
       aria-label={badge > 0 ? `${label}, ${badge} ${badge === 1 ? 'item' : 'items'}` : label}
       className="pressable mh-icon-link"
       style={{
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
@@ -188,10 +188,10 @@ function HeaderIconButtonImpl({
             right: 2,
             background: theme.colors.black,
             color: theme.colors.white,
-            fontSize: 8.5,
+            fontSize: 8,
             fontWeight: theme.fontWeight.extrabold,
-            minWidth: 14,
-            height: 14,
+            minWidth: 13,
+            height: 13,
             borderRadius: theme.radius.pill,
             display: 'flex',
             alignItems: 'center',

@@ -42,8 +42,8 @@ function Stars({ rating }: { rating: number }) {
       <svg
         key={i}
         viewBox="0 0 24 24"
-        width="11"
-        height="11"
+        width="9"
+        height="9"
         aria-hidden
         style={{ flexShrink: 0 }}
       >
@@ -134,17 +134,17 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
       className="mps-card pressable"
       style={{
         background: theme.colors.white,
-        // Phase 7: 24px radius — softer, premium
-        borderRadius: theme.radius.productCard,
+        // Phase 8: 20px radius (smaller, more app-like)
+        borderRadius: theme.radius.card,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        // Phase 7: premium editorial shadow
+        // Phase 8: standard premium shadow
         boxShadow: theme.shadows.premium,
         border: 'none',
-        // Phase 7: wider card (was 175px) for more breathing room
-        width: 200,
+        // Phase 8: 160px card width (was 200px) — standard mobile commerce card
+        width: 160,
         flex: '0 0 auto',
         scrollSnapAlign: 'start',
         transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
@@ -160,17 +160,17 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           flexDirection: 'column',
         }}
       >
-        {/* Image area — soft grey background, takes ~62% of card height */}
+        {/* Image area — transparent background per Phase 8 spec */}
         <div
           style={{
-            background: theme.colors.grey100,
-            // Phase 7: 4:3 aspect ratio (was 1:1) — image takes more space
+            background: 'transparent',
+            // Phase 8: 4:3 aspect ratio (was 1:1) — image takes more space
             aspectRatio: '4 / 3',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            // Phase 7: 22px image area padding (was 16px)
-            padding: theme.spacing.cardPadding,
+            // Phase 8: 10px image area padding
+            padding: theme.spacing.sm + 2,
             position: 'relative',
             overflow: 'hidden',
             borderRadius: `${theme.radius.productCard}px ${theme.radius.productCard}px 0 0`,
@@ -185,9 +185,9 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             draggable={false}
             className="mps-img"
             style={{
-              // Phase 7: bigger image — 95% of container (was 92%)
-              maxWidth: '95%',
-              maxHeight: '95%',
+              // Phase 8: 92% of container
+              maxWidth: '92%',
+              maxHeight: '92%',
               objectFit: 'contain',
               filter: theme.dropShadows.md,
               transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}`,
@@ -195,13 +195,13 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           />
         </div>
 
-        {/* Body — Phase 7: 22px card padding */}
+        {/* Body — Phase 8: 14px card padding */}
         <div
           style={{
-            padding: `${theme.spacing.md}px ${theme.spacing.cardPadding}px ${theme.spacing.cardPadding}px`,
+            padding: `${theme.spacing.xs + 2}px ${theme.spacing.cardPadding}px ${theme.spacing.cardPadding}px`,
             display: 'flex',
             flexDirection: 'column',
-            gap: theme.spacing.xs,
+            gap: 2,
           }}
         >
           {/* Brand — 12px / 500 / uppercase / 0.5px tracking */}
@@ -219,7 +219,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             {product.brand}
           </span>
 
-          {/* Name — Phase 7: 20px / 600 (was 16px) */}
+          {/* Name — Phase 8: 14px / 600 */}
           <h3
             style={{
               margin: 0,
@@ -233,7 +233,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              minHeight: 52,
+              minHeight: 38,
               letterSpacing: theme.letterSpacing.normal,
               fontFeatureSettings: theme.fontFeatures,
             }}
@@ -310,8 +310,8 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           position: 'absolute',
           bottom: theme.spacing.cardPadding,
           right: theme.spacing.cardPadding,
-          width: 42,
-          height: 42,
+          width: 32,
+          height: 32,
           borderRadius: '50%',
           background: theme.colors.primaryButton,
           color: theme.colors.buttonText,
@@ -320,17 +320,17 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          // Phase 7: deeper elevation for the floating action
+          // Phase 8: deeper elevation for the floating action
           boxShadow: theme.shadows.fab,
           zIndex: 2,
           overflow: 'hidden',
         }}
       >
-        {/* Card icon = 20px */}
+        {/* Card icon = 16px */}
         <svg
           viewBox="0 0 24 24"
-          width="20"
-          height="20"
+          width="16"
+          height="16"
           fill="none"
           stroke="currentColor"
           strokeWidth="2.4"

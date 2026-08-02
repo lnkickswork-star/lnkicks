@@ -177,8 +177,8 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
         display: 'flex',
         flexDirection: 'column',
         background: theme.colors.white,
-        // Phase 7: 24px radius — matches Popular/New cards
-        borderRadius: theme.radius.productCard,
+        // Phase 8: 20px radius (smaller, more app-like)
+        borderRadius: theme.radius.card,
         border: 'none',
         boxShadow: theme.shadows.premium,
         overflow: 'hidden',
@@ -186,7 +186,7 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
         transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
       }}
     >
-      {/* Image area — Phase 7: 4:3 aspect ratio (was 150px fixed height) */}
+      {/* Image area — Phase 8: 4:3 aspect ratio, transparent background */}
       <Link
         href={p.href}
         aria-label={`${p.brand} ${p.name} — ${p.price}`}
@@ -199,9 +199,9 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
           justifyContent: 'center',
           width: '100%',
           aspectRatio: '4 / 3',
-          background: theme.colors.grey100,
+          background: 'transparent',
           overflow: 'hidden',
-          padding: theme.spacing.cardPadding,
+          padding: theme.spacing.sm + 2,
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -213,8 +213,8 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
           draggable={false}
           className="mrec-img"
           style={{
-            maxWidth: '95%',
-            maxHeight: '95%',
+            maxWidth: '92%',
+            maxHeight: '92%',
             objectFit: 'contain',
             filter: dropShadows.md,
             transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}, filter ${theme.duration.slow} ${theme.easing.easeOut}`,
@@ -224,12 +224,12 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
 
       <div
         style={{
-          // Phase 7: 22px card padding
-          padding: `${theme.spacing.md}px ${theme.spacing.cardPadding}px ${theme.spacing.cardPadding}px`,
+          // Phase 8: 14px card padding
+          padding: `${theme.spacing.xs + 2}px ${theme.spacing.cardPadding}px ${theme.spacing.cardPadding}px`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
-          gap: theme.spacing.xs,
+          gap: 2,
         }}
       >
         {/* Brand — 12px / 500 / uppercase / 0.5px tracking */}
@@ -252,7 +252,7 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
           style={{ textDecoration: 'none', color: 'inherit' }}
           onPointerDown={() => haptic.selection()}
         >
-          {/* Product Name — Phase 7: 20px / 600 (was 16px) */}
+          {/* Product Name — Phase 8: 14px / 600 */}
           <h3
             style={{
               fontFamily: theme.fontFamily.body,
@@ -262,7 +262,7 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
               lineHeight: theme.lineHeight.product,
               letterSpacing: theme.letterSpacing.normal,
               margin: 0,
-              minHeight: 52,
+              minHeight: 38,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -347,8 +347,8 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
             position: 'absolute',
             bottom: theme.spacing.cardPadding,
             right: theme.spacing.cardPadding,
-            width: 42,
-            height: 42,
+            width: 32,
+            height: 32,
             borderRadius: '50%',
             background: theme.colors.primaryButton,
             color: theme.colors.buttonText,
@@ -362,11 +362,11 @@ function RecommendedCardImpl({ product: p, onAdd }: RecommendedCardProps) {
             overflow: 'hidden',
           }}
         >
-          {/* Card icon = 20px */}
+          {/* Card icon = 16px */}
           <svg
             viewBox="0 0 24 24"
-            width="20"
-            height="20"
+            width="16"
+            height="16"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.4"
@@ -463,8 +463,8 @@ const Stars = memo(function Stars({ rating }: { rating: number }) {
         return (
           <svg
             key={i}
-            width="11"
-            height="11"
+            width="9"
+            height="9"
             viewBox="0 0 24 24"
             fill={filled || isHalf ? theme.colors.grey500 : 'none'}
             stroke={filled || isHalf ? theme.colors.grey500 : theme.colors.grey300}

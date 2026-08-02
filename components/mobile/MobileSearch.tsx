@@ -29,14 +29,14 @@ function MobileSearchImpl() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: theme.spacing.md,
-        // Phase 7: 52px height (was 48px) for better touch target
-        height: 52,
-        // Phase 7: 20px horizontal padding (was 16px)
-        padding: `0 ${theme.spacing.xl}px`,
+        gap: theme.spacing.sm + 2,
+        // Phase 8: 44px height (Material Design minimum touch target)
+        height: 44,
+        // Phase 8: 14px horizontal padding
+        padding: `0 ${theme.spacing.md}px`,
         background: theme.colors.white,
         borderRadius: theme.radius.button,
-        // Phase 7: premium diffuse shadow + softer border
+        // Phase 8: lighter shadow + softer border
         boxShadow: theme.shadows.search,
         border: `1px solid ${theme.colors.grey200}`,
         textDecoration: 'none',
@@ -44,11 +44,11 @@ function MobileSearchImpl() {
         transition: `box-shadow ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}, border-color ${theme.duration.standard} ${theme.easing.easeOut}`,
       }}
     >
-      {/* Action icon = 22px per Phase 6 spec */}
+      {/* Action icon = 18px per Phase 8 spec */}
       <svg
         viewBox="0 0 24 24"
-        width="22"
-        height="22"
+        width="18"
+        height="18"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.2"
@@ -61,7 +61,7 @@ function MobileSearchImpl() {
       <span
         style={{
           fontFamily: theme.fontFamily.body,
-          fontSize: theme.fontSize.lg,
+          fontSize: theme.fontSize.md,
           fontWeight: theme.fontWeight.regular,
           color: theme.colors.textTertiary,
           letterSpacing: theme.letterSpacing.normal,

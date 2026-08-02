@@ -131,18 +131,18 @@ function MobileBrandsImpl() {
           }
         }
 
-        /* Brand wordmarks — Inter only, weights 300-700 per Phase 6 spec */
-        .mb-nike { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; font-style: italic; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-jordan { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-adidas { font-size: 26px; font-weight: 700; letter-spacing: 0.08em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-puma { font-size: 28px; font-weight: 700; font-style: italic; letter-spacing: -0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-reebok { font-size: 24px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-converse { font-size: 24px; font-weight: 700; letter-spacing: 0.14em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-vans { font-size: 30px; font-weight: 700; letter-spacing: 0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-hoka { font-size: 30px; font-weight: 700; letter-spacing: 0.06em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-newbalance { font-size: 22px; font-weight: 700; letter-spacing: 0.06em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-asics { font-size: 24px; font-weight: 700; letter-spacing: 0.16em; font-family: var(--font-inter), system-ui, sans-serif; }
-        .mb-yeezy { font-size: 30px; font-weight: 300; letter-spacing: 0.04em; font-style: italic; font-family: var(--font-inter), system-ui, sans-serif; }
+        /* Brand wordmarks — Phase 8: smaller sizes (was 22-30px, now 16-20px) */
+        .mb-nike { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; font-style: italic; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-jordan { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-adidas { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-puma { font-size: 20px; font-weight: 700; font-style: italic; letter-spacing: -0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-reebok { font-size: 17px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-converse { font-size: 17px; font-weight: 700; letter-spacing: 0.14em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-vans { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-hoka { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-newbalance { font-size: 16px; font-weight: 700; letter-spacing: 0.06em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-asics { font-size: 17px; font-weight: 700; letter-spacing: 0.16em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-yeezy { font-size: 20px; font-weight: 300; letter-spacing: 0.04em; font-style: italic; font-family: var(--font-inter), system-ui, sans-serif; }
       `}</style>
     </section>
   );

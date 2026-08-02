@@ -162,14 +162,14 @@ function MobileNewArrivalsImpl({
           style={{
             position: 'relative',
             background: theme.colors.black,
-            // Phase 7: 32px radius — luxury magazine cover
-            borderRadius: theme.radius.heroCard,
+            // Phase 8: 24px radius (was 32px) — more app-like
+            borderRadius: theme.radius.productCard,
             overflow: 'hidden',
             display: 'grid',
             gridTemplateColumns: '58fr 42fr',
-            minHeight: 320,
-            // Phase 7: editorial shadow tier
-            boxShadow: theme.shadows.editorial,
+            minHeight: 240,
+            // Phase 8: standard premium shadow
+            boxShadow: theme.shadows.premium,
             border: 'none',
           }}
         >
@@ -178,10 +178,10 @@ function MobileNewArrivalsImpl({
             aria-hidden
             style={{
               position: 'absolute',
-              bottom: -40,
-              right: -12,
+              bottom: -24,
+              right: -8,
               fontFamily: theme.fontFamily.display,
-              fontSize: 200,
+              fontSize: 140,
               fontWeight: theme.fontWeight.black,
               color: 'rgba(255,255,255,0.045)',
               letterSpacing: '-0.06em',
@@ -202,22 +202,22 @@ function MobileNewArrivalsImpl({
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              gap: theme.spacing.sm,
-              // Phase 7: 32px internal padding for breathing room
-              padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
+              gap: theme.spacing.xs + 2,
+              // Phase 8: 20px internal padding (was 32px)
+              padding: `${theme.spacing.xl}px ${theme.spacing.cardPadding}px`,
             }}
           >
-            {/* NEW eyebrow chip — Button style 15px / 600 */}
+            {/* NEW eyebrow chip — Button style 13px / 600 */}
             <span
               style={{
                 alignSelf: 'flex-start',
                 background: theme.colors.white,
                 color: theme.colors.black,
                 fontFamily: theme.fontFamily.body,
-                fontSize: theme.fontSize.lg,
+                fontSize: theme.fontSize.xs,
                 fontWeight: theme.fontWeight.semibold,
                 letterSpacing: theme.letterSpacing.normal,
-                padding: `${theme.spacing.xs + 1}px ${theme.spacing.md}px`,
+                padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
                 borderRadius: theme.radius.button,
                 fontFeatureSettings: theme.fontFeatures,
               }}
@@ -256,7 +256,7 @@ function MobileNewArrivalsImpl({
               {product.name}
             </h3>
 
-            {/* Description — Body 14px / 400 / 20px line height */}
+            {/* Description — Body 13px / 400 / 20px line height */}
             <p
               style={{
                 margin: 0,
@@ -265,7 +265,7 @@ function MobileNewArrivalsImpl({
                 fontWeight: theme.fontWeight.regular,
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: theme.lineHeight.body,
-                maxWidth: 220,
+                maxWidth: 180,
                 fontFeatureSettings: theme.fontFeatures,
               }}
             >
@@ -332,10 +332,10 @@ function MobileNewArrivalsImpl({
                   background: theme.colors.primaryButton,
                   color: theme.colors.buttonText,
                   height: theme.spacing.buttonHeight,
-                  padding: `0 ${theme.spacing.sectionPadding}px`,
+                  padding: `0 ${theme.spacing.cardPadding}px`,
                   borderRadius: theme.radius.button,
                   fontFamily: theme.fontFamily.body,
-                  fontSize: theme.fontSize.lg,
+                  fontSize: theme.fontSize.md,
                   fontWeight: theme.fontWeight.semibold,
                   letterSpacing: theme.letterSpacing.normal,
                   textDecoration: 'none',
@@ -348,8 +348,8 @@ function MobileNewArrivalsImpl({
                 Shop Now
                 <svg
                   viewBox="0 0 24 24"
-                  width="12"
-                  height="12"
+                  width="10"
+                  height="10"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.6"
@@ -386,11 +386,11 @@ function MobileNewArrivalsImpl({
                   transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}, border-color ${theme.duration.standard} ${theme.easing.easeOut}`,
                 }}
               >
-                {/* Action icon = 22px */}
+                {/* Action icon = 18px */}
                 <svg
                   viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
+                  width="18"
+                  height="18"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.4"
@@ -431,7 +431,7 @@ function MobileNewArrivalsImpl({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: theme.spacing.sectionPadding,
+              padding: theme.spacing.cardPadding,
               overflow: 'hidden',
             }}
           >

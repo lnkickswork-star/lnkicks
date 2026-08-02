@@ -73,10 +73,10 @@ function MobileBrandShortcutsImpl() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                // Phase 7: better padding (10px × 18px) for premium feel
-                padding: `${theme.spacing.sm + 2}px ${theme.spacing.xl + 2}px`,
+                // Phase 8: tighter padding (6px × 14px)
+                padding: `${theme.spacing.sm - 2}px ${theme.spacing.md}px`,
                 borderRadius: theme.radius.pill,
-                // Phase 7: white bg for inactive (was offWhite — too grey)
+                // Phase 8: white bg for inactive
                 background: isActive
                   ? theme.colors.primaryButton
                   : theme.colors.white,
@@ -89,13 +89,13 @@ function MobileBrandShortcutsImpl() {
                 fontWeight: theme.fontWeight.semibold,
                 letterSpacing: theme.letterSpacing.normal,
                 whiteSpace: 'nowrap',
-                minHeight: 40,
-                // Phase 7: softer shadow on active, hairline border on inactive
+                minHeight: 32,
+                // Phase 8: softer shadow on active, hairline border on inactive
                 boxShadow: isActive
                   ? theme.shadows.sm
                   : theme.shadows.hairline,
                 border: '1px solid transparent',
-                // Phase 7: spring-like transition for Apple-quality feedback
+                // Phase 8: spring-like transition for Apple-quality feedback
                 transition: `background-color ${theme.duration.standard} ${theme.easing.spring}, color ${theme.duration.standard} ${theme.easing.spring}, transform ${theme.duration.instant} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
                 fontFeatureSettings: theme.fontFeatures,
               }}

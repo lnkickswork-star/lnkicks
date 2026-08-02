@@ -41,73 +41,77 @@ export const fontFamily = {
 } as const;
 
 /**
- * Type scale — Phase 7 editorial premium refresh.
+ * Type scale — Phase 8 mobile-standard refresh.
+ *
+ * Calibrated to standard mobile-app text sizes (Apple HIG / Material).
+ * Smaller, tighter, more information-dense — like real shopping apps
+ * (Nike / GOAT / StockX / Amazon Shopping).
  *
  * HIERARCHY (per new spec):
- *   Brand         12px / 500 / gray
- *   Product Name  20–22px / 600
- *   Price         22–24px / 700
- *   Old Price     14px / 500 / strikethrough / 60% opacity
- *   Rating        12px / 400 / light gray
- *   Section       24px / 700
- *   Hero          32px / 700
- *   Body          14px / 400
- *   Caption       12px / 400
- *   Bottom Nav    11px / 500
+ *   Brand         10px / 500 / gray
+ *   Product Name  14px / 600
+ *   Price         15px / 700
+ *   Old Price     11px / 500 / strikethrough / 60% opacity
+ *   Rating        10px / 400 / light gray
+ *   Section       18px / 700
+ *   Hero          24px / 700
+ *   Body          13px / 400
+ *   Caption       11px / 400
+ *   Bottom Nav    10px / 500
  */
 export const fontSize = {
-  /** 9.5px — legacy micro (kept for backwards compat, prefer `navLabel`) */
-  micro: 9.5,
-  /** 10px — eyebrow / kicker labels */
-  xs: 10,
-  /** 11px — Bottom Navigation labels */
-  navLabel: 11,
-  /** 11px — small captions, status bar (alias of navLabel) */
-  sm: 11,
-  /** 12px — Caption / Brand Name / metadata */
-  caption: 12,
-  /** 12px — legacy `base` token (alias of caption) */
-  base: 12,
-  /** 13px — small body text */
-  body: 13,
-  /** 14px — Body / Original Price / secondary text */
-  md: 14,
-  /** 15px — Search Placeholder / Buttons / featured body */
-  lg: 15,
-  /** 16px — legacy Product Name (kept for backwards compat) */
-  productName: 16,
-  /** 17px — header wordmark, prominent labels (legacy) */
-  xl: 17,
-  /** 18px — legacy Price (kept for backwards compat) */
-  price: 18,
-  /** 20px — small headlines (legacy) */
-  xxl: 20,
-  /** 20px — preferred Product Name (Phase 7 spec) */
-  productNameLg: 20,
-  /** 22px — legacy title (alias of sectionSubtitle) */
-  title: 22,
-  /** 22px — preferred Product Name large (Phase 7 spec) */
-  productNameXl: 22,
-  /** 22px — preferred Price (Phase 7 spec) */
-  priceLg: 22,
-  /** 24px — Section Heading */
-  section: 24,
-  /** 24px — preferred Price large (Phase 7 spec) */
-  priceXl: 24,
-  /** 26px — legacy h2 (alias) */
-  h2: 26,
-  /** 30px — legacy h1 (alias) */
-  h1: 30,
-  /** 32px — Hero Heading */
-  hero: 32,
-  /** 38px — legacy hero splash (alias) */
-  heroLg: 38,
-  /** 48px — legacy splash wordmark */
-  display: 48,
-  /** 56px — legacy (retired) */
-  heroXl: 56,
-  /** 96px — legacy watermark (retired on mobile, kept for splash) */
-  watermark: 96,
+  /** 9px — legacy micro (kept for backwards compat, prefer `navLabel`) */
+  micro: 9,
+  /** 9px — eyebrow / kicker labels */
+  xs: 9,
+  /** 10px — Bottom Navigation labels */
+  navLabel: 10,
+  /** 10px — small captions, status bar (alias of navLabel) */
+  sm: 10,
+  /** 11px — Caption / Brand Name / metadata */
+  caption: 11,
+  /** 11px — legacy `base` token (alias of caption) */
+  base: 11,
+  /** 12px — small body text */
+  body: 12,
+  /** 13px — Body / Original Price / secondary text */
+  md: 13,
+  /** 13px — Search Placeholder / Buttons / featured body */
+  lg: 13,
+  /** 14px — legacy Product Name (kept for backwards compat) */
+  productName: 14,
+  /** 15px — header wordmark, prominent labels (legacy) */
+  xl: 15,
+  /** 15px — legacy Price (kept for backwards compat) */
+  price: 15,
+  /** 16px — small headlines (legacy) */
+  xxl: 16,
+  /** 14px — preferred Product Name (Phase 8 spec) */
+  productNameLg: 14,
+  /** 16px — legacy title (alias of sectionSubtitle) */
+  title: 16,
+  /** 16px — preferred Product Name large (Phase 8 spec) */
+  productNameXl: 16,
+  /** 15px — preferred Price (Phase 8 spec) */
+  priceLg: 15,
+  /** 18px — Section Heading */
+  section: 18,
+  /** 17px — preferred Price large (Phase 8 spec) */
+  priceXl: 17,
+  /** 20px — legacy h2 (alias) */
+  h2: 20,
+  /** 22px — legacy h1 (alias) */
+  h1: 22,
+  /** 24px — Hero Heading */
+  hero: 24,
+  /** 28px — legacy hero splash (alias) */
+  heroLg: 28,
+  /** 36px — legacy splash wordmark */
+  display: 36,
+  /** 42px — legacy (retired) */
+  heroXl: 42,
+  /** 72px — legacy watermark (retired on mobile, kept for splash) */
+  watermark: 72,
 } as const;
 
 /**
@@ -134,20 +138,20 @@ export const fontWeight = {
 export const lineHeight = {
   /** 1.0 — tight display */
   tightest: 1.0,
-  /** 1.05 — tight (legacy) */
-  tight: 1.05,
-  /** 1.15 — snug (legacy) */
-  snug: 1.15,
-  /** 1.1875 — 38/32 hero line height */
-  hero: 1.1875,
-  /** 1.25 — 30/24 section line height */
-  section: 1.25,
-  /** 1.375 — 22/16 product name line height */
-  product: 1.375,
+  /** 1.1 — tight (legacy) */
+  tight: 1.1,
+  /** 1.2 — snug (legacy) */
+  snug: 1.2,
+  /** 1.2 — 28/24 hero line height */
+  hero: 1.2,
+  /** 1.3 — 24/18 section line height */
+  section: 1.3,
+  /** 1.35 — 20/14 product name line height */
+  product: 1.35,
   /** 1.35 — normal (legacy) */
   normal: 1.35,
-  /** 1.4286 — 20/14 body line height */
-  body: 1.4286,
+  /** 1.45 — 19/13 body line height */
+  body: 1.45,
   /** 1.5 — relaxed (legacy) */
   relaxed: 1.5,
   /** 1.75 — loose (legacy) */
