@@ -29,6 +29,7 @@ import { safeArea } from '@/lib/mobile/utils/safeArea';
 const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
 const MobileTrustBanner = lazy(() => import('@/components/mobile/MobileTrustBanner'));
+const MobileEngagementPopup = lazy(() => import('@/components/mobile/MobileEngagementPopup'));
 const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav'));
 const MobileServiceWorkerRegister = lazy(
   () => import('@/components/mobile/MobileServiceWorkerRegister'),
@@ -55,6 +56,9 @@ const MobileServiceWorkerRegister = lazy(
  *   8. MobileNewsletter      — 'Sign up and save 10%' CTA banner (lazy, bottom)
  *   9. MobileTrustBanner     — 'About LN KICKS' brand-story / trust card (lazy)
  *  10. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
+ *  11. MobileEngagementPopup — 60s-dwell bottom-sheet lead-capture popup
+ *                              (lazy, mobile-only, self-gates on viewport
+ *                              + auth + sessionStorage; desktop untouched)
  *
  * REMOVED sections (per UX spec):
  *   - MobileFooter (informational footer) — BottomNav is the only navigation
@@ -273,6 +277,16 @@ export default function MobileHome() {
         {/* 3. Floating bottom nav with center FAB — lazy */}
         <Suspense fallback={null}>
           <MobileBottomNav />
+        </Suspense>
+
+        {/* 3b. Phase 21: MobileEngagementPopup — premium bottom-sheet
+              popup that slides up after 60s of dwell time on the mobile
+              homepage. Mobile-only (self-gates on window.innerWidth < 768
+              AND auth state). Skips if user is signed in. Shows once per
+              session. Desktop homepage is completely untouched — this
+              component is only ever mounted inside MobileHome. */}
+        <Suspense fallback={null}>
+          <MobileEngagementPopup />
         </Suspense>
 
         {/* 4. Menu drawer — rendered at page level so its z-index (1100)

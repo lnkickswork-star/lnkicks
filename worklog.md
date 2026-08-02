@@ -3414,3 +3414,65 @@ Stage Summary:
   return-refund-policy, privacy-policy, terms-conditions, cancellation-
   policy, not-found) now mount the universal MobileLayout shell with
   design-token-driven styling and the LN KICKS luxury minimal aesthetic.
+
+---
+Task ID: P20-P21
+Agent: main
+Task: Add MobileTrustBanner (Phase 20) + MobileEngagementPopup (Phase 21) to mobile homepage.
+
+Work Log:
+- Phase 20: Created components/mobile/MobileTrustBanner.tsx — editorial "About LN KICKS"
+  brand-story card with the exact user-provided copy:
+  "LNKICKS is India's premium destination for authentic sneakers, luxury fashion,
+   and modern streetwear. Every product undergoes a rigorous multi-step authentication
+   process before it reaches you. Since 2021, we've been committed to delivering genuine
+   products, fast nationwide shipping, and a shopping experience built on trust."
+  Off-white card with 1px border, "Built on trust." 20px headline, 3 trust pillars
+  (100% Authentic · Nationwide Shipping · Since 2021).
+- Mounted MobileTrustBanner in MobileHome.tsx as the last content section, between
+  MobileNewsletter and MobileBottomNav. Lazy-loaded via React.lazy + Suspense.
+- Phase 21: Created components/mobile/MobileEngagementPopup.tsx — premium bottom-sheet
+  lead-capture popup. Triggers after 60s dwell time. Mobile-only (gates on
+  window.innerWidth < 768). Skips if user signed in (checks localStorage lnk_user.isLoggedIn).
+  Shows once per session (sessionStorage lnk_engagement_shown flag).
+  Features:
+   • Dark gradient top banner with Air Jordan 1 Low "Powder Blue" hero image (existing
+     CDN URL reused — no random external image)
+   • "Looking for your perfect pair?" / "Discover premium sneakers handpicked for your style."
+   • 4 floating sparkle SVGs animated via CSS keyframes
+   • White bottom card: "Unlock Exclusive Offers" heading + body copy
+   • Phone input with +91 country code prefix, off-white background, focus ring
+   • Premium gradient Continue button (135deg #1F1F1F → #0A0A0A), full width, 52px tall,
+     18px radius, scale(0.97) press animation
+   • "By continuing you agree to our Terms & Privacy Policy." with /terms-conditions
+     and /privacy-policy links
+   • Top-left circular close button (34px, semi-transparent white)
+   • Slide-up animation: 420ms cubic-bezier(0.16, 1, 0.3, 1) — Apple standard ease-out
+   • Backdrop: rgba(10,10,10,0.55) + 6px blur
+   • Dismissal: backdrop tap, close button, ESC key, swipe-down gesture (40px threshold,
+     0.5x rubber-band resistance)
+   • Focus trap (Tab/Shift+Tab cycles within dialog), focus moves to close on open,
+     restored to trigger on close
+   • Body scroll lock while open
+   • Success state: checkmark icon + "You're on the list!" message, auto-closes 1.8s
+   • sessionStorage lnk_engagement_submitted flag prevents re-show after submission
+- Mounted MobileEngagementPopup in MobileHome.tsx alongside MobileBottomNav. Lazy-loaded
+  via React.lazy + Suspense. Zero impact on initial bundle size.
+- Updated MobileHome section-order doc comment to reflect Phase 20 + 21 additions.
+- TypeScript: clean (EXIT=0).
+- Desktop homepage: confirmed untouched — grep for EngagementPopup in components/home/desktop/
+  returns no matches.
+
+Stage Summary:
+- Mobile homepage now has 11 sections (Header → Search → BrandShortcuts → AdidasBanner →
+  HeroBanner → PopularShoes → NewArrivals → Recommended → Newsletter → TrustBanner →
+  BottomNav → EngagementPopup).
+- New files: components/mobile/MobileTrustBanner.tsx, components/mobile/MobileEngagementPopup.tsx
+- Modified: components/home/mobile/MobileHome.tsx (added 2 lazy imports + 2 Suspense mounts
+  + doc comment update).
+- No theme tokens introduced — popup uses existing palette (black #0A0A0A, white #FFFFFF,
+  offWhite #FAFAFA, textPrimary #111111, textSecondary #6B7280, border #E5E7EB) and existing
+  motion tokens (easing.out, shadows.xxl, zIndex.modal).
+- Auth detection: reuses the same localStorage lnk_user key written by app/profile/page.tsx
+  and cleared by the logout handler — no separate auth mechanism needed.
+- Not yet pushed to GitHub — pending user confirmation.
