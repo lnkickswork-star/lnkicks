@@ -15,8 +15,8 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  *   - 24px internal padding, generous whitespace (Apple/Nike/GOAT feel).
  *   - Large centered product image (~45–50% of card height, contain mode).
  *   - Small BLUE category label above title (e.g. "Best Seller").
- *   - Bold 22px black product name (max 2 lines, left-aligned).
- *   - Bold 22px black price near bottom-left.
+ *   - Bold 20px black product name (max 2 lines, left-aligned, -0.02em tracking).
+ *   - Bold 16px black price near bottom-left (line-height 1.25).
  *   - Signature BLACK QUARTER-CIRCLE "+" Add to Cart button integrated into
  *     the bottom-right corner — NOT floating, attached to the corner,
  *     clipped by the card's overflow:hidden so it follows the card curve.
@@ -322,29 +322,32 @@ function ProductCardImpl({
             {categoryLabel}
           </span>
 
-          {/* Title — 22px / 700 / max 2 lines / left-aligned */}
+          {/* Title — 20px / 700 / line-height 1.2 / -0.02em / max 2 lines / left-aligned
+              Phase 13 typography refinement: 22px → 20px for premium mobile
+              ecommerce feel (Apple Store / Nike / GOAT / Adidas parity). */}
           <h3
             style={{
               margin: 0,
               fontFamily: theme.fontFamily.body,
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: theme.fontWeight.bold,
               lineHeight: 1.2,
               color: theme.colors.black,
-              letterSpacing: theme.letterSpacing.tight,
+              letterSpacing: theme.letterSpacing.tight, // -0.02em
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              minHeight: 52, // 2 lines × 26px
+              minHeight: 48, // 2 lines × 24px (20px × 1.2 line-height)
               fontFeatureSettings: theme.fontFeatures,
             }}
           >
             {name}
           </h3>
 
-          {/* Price — 22px / 700, optional comparePrice strikethrough */}
+          {/* Price — 16px / 700 / line-height 1.25, optional comparePrice strikethrough
+              Phase 13 typography refinement: 22px → 16px (premium mobile parity). */}
           <div
             style={{
               marginTop: theme.spacing.sm, // 8px
@@ -356,8 +359,9 @@ function ProductCardImpl({
             <span
               style={{
                 fontFamily: theme.fontFamily.body,
-                fontSize: 22,
+                fontSize: 16,
                 fontWeight: theme.fontWeight.bold,
+                lineHeight: 1.25,
                 color: theme.colors.black,
                 letterSpacing: theme.letterSpacing.normal,
                 fontFeatureSettings: theme.fontFeatures,
