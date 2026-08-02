@@ -5,6 +5,7 @@ import MobileHeader from '@/components/mobile/MobileHeader';
 import MobileMenuDrawer from '@/components/mobile/MobileMenuDrawer';
 import MobileSearch from '@/components/mobile/MobileSearch';
 import MobileBrandShortcuts from '@/components/mobile/MobileBrandShortcuts';
+import MobileAdidasBanner from '@/components/mobile/MobileAdidasBanner';
 import MobileHeroBanner from '@/components/mobile/MobileHeroBanner';
 import MobilePopularShoes from '@/components/mobile/MobilePopularShoes';
 import MobileNewArrivals from '@/components/mobile/MobileNewArrivals';
@@ -214,6 +215,9 @@ export default function MobileHome() {
 
           {/* 2b. Quick Brand Shortcuts */}
           <MobileBrandShortcuts />
+
+          {/* 2b.1 Adidas promotional banner — below brand chips, rounded corners */}
+          <MobileAdidasBanner />
 
           {/* 2c. Hero Banner Slider — dramatic editorial carousel */}
           <MobileHeroBanner />
