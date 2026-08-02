@@ -28,6 +28,7 @@ import { safeArea } from '@/lib/mobile/utils/safeArea';
 //     Categories are still reachable via /categories route + bottom nav.
 const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
+const MobileTrustBanner = lazy(() => import('@/components/mobile/MobileTrustBanner'));
 const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav'));
 const MobileServiceWorkerRegister = lazy(
   () => import('@/components/mobile/MobileServiceWorkerRegister'),
@@ -52,7 +53,8 @@ const MobileServiceWorkerRegister = lazy(
  *   6. MobileNewArrivals     — premium 280px SNKRS-style banner, bigger type
  *   7. MobileRecommended     — 2-col premium grid with grey tiles (lazy)
  *   8. MobileNewsletter      — 'Sign up and save 10%' CTA banner (lazy, bottom)
- *   9. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
+ *   9. MobileTrustBanner     — 'About LN KICKS' brand-story / trust card (lazy)
+ *  10. MobileBottomNav       — floating nav with center FAB (lazy, sole nav)
  *
  * REMOVED sections (per UX spec):
  *   - MobileFooter (informational footer) — BottomNav is the only navigation
@@ -252,6 +254,19 @@ export default function MobileHome() {
               The floating MobileBottomNav below is the sole navigation chrome. */}
           <Suspense fallback={<SectionSkeleton height={280} />}>
             <MobileNewsletter />
+          </Suspense>
+
+          {/* Phase 20: MobileTrustBanner — 'About LN KICKS' editorial
+              brand-story card with the exact user-provided copy:
+              "LNKICKS is India's premium destination for authentic sneakers,
+               luxury fashion, and modern streetwear..."
+              Mounted as the LAST content section, after MobileNewsletter
+              and before the floating MobileBottomNav. Off-white card with
+              a 1px border — intentionally light to contrast with the black
+              MobileNewsletter card directly above it. Mobile-only — desktop
+              homepage is untouched. */}
+          <Suspense fallback={<SectionSkeleton height={260} />}>
+            <MobileTrustBanner />
           </Suspense>
         </main>
 
