@@ -17,28 +17,40 @@ export const spacing = {
   sm: 8,
   /** 12px */
   md: 12,
-  /** 14px — content gutter horizontal */
+  /** 14px — content gutter horizontal (legacy) */
   gutter: 14,
-  /** 16px */
+  /** 16px — Card Gap / Grid Gap / Internal Card Padding (Phase 6 spec) */
+  cardGap: 16,
+  /** 16px — legacy `lg` token (alias of cardGap) */
   lg: 16,
-  /** 18px — section horizontal padding */
+  /** 18px — legacy section horizontal padding (kept for backwards compat) */
   pad: 18,
   /** 20px */
   xl: 20,
-  /** 24px */
+  /** 24px — Section Padding (Phase 6 spec) */
+  sectionPadding: 24,
+  /** 24px — legacy `xxl` token (alias of sectionPadding) */
   xxl: 24,
   /** 28px */
   xxxl: 28,
-  /** 32px */
+  /** 32px — Section Gap (Phase 6 spec) */
+  sectionGap: 32,
+  /** 32px — legacy `huge` token (alias of sectionGap) */
   huge: 32,
-  /** 36px — section vertical padding */
+  /** 36px — legacy section vertical padding (alias, prefer sectionPadding) */
   section: 36,
-  /** 48px */
+  /** 48px — Button Height (Phase 6 spec) */
+  buttonHeight: 48,
+  /** 48px — legacy `giant` token (alias of buttonHeight) */
   giant: 48,
   /** 56px */
   vast: 56,
-  /** 64px */
+  /** 64px — Header Height (Phase 6 spec) */
+  headerHeight: 64,
+  /** 64px — legacy `mega` token (alias of headerHeight) */
   mega: 64,
+  /** 80px — Bottom Navigation Height (Phase 6 spec) */
+  bottomNavHeight: 80,
 } as const;
 
 export type SpacingToken = keyof typeof spacing;

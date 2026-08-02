@@ -46,7 +46,7 @@ function MobileBrandShortcutsImpl() {
   const [activeId, setActiveId] = useState<string>('nike');
 
   return (
-    <section aria-label="Brand shortcuts" style={{ paddingTop: theme.spacing.lg }}>
+    <section aria-label="Brand shortcuts" style={{ paddingTop: theme.spacing.cardGap }}>
       <div
         className="mbs-scroller"
         role="list"
@@ -56,7 +56,7 @@ function MobileBrandShortcutsImpl() {
           overflowX: 'auto',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: `0 ${theme.spacing.pad}px`,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
         }}
       >
         {BRANDS.map((b) => {
@@ -78,18 +78,20 @@ function MobileBrandShortcutsImpl() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: `${theme.spacing.sm + 2}px ${theme.spacing.lg + 2}px`,
+                padding: `${theme.spacing.sm + 2}px ${theme.spacing.cardGap + 2}px`,
                 borderRadius: theme.radius.pill,
-                background: isActive ? theme.colors.black : theme.colors.offWhite,
-                color: isActive ? theme.colors.white : theme.colors.textPrimary,
+                background: isActive ? theme.colors.primaryButton : theme.colors.offWhite,
+                color: isActive ? theme.colors.buttonText : theme.colors.textPrimary,
                 textDecoration: 'none',
+                fontFamily: theme.fontFamily.body,
                 fontSize: theme.fontSize.md,
                 fontWeight: theme.fontWeight.semibold,
-                letterSpacing: theme.letterSpacing.tight,
+                letterSpacing: theme.letterSpacing.normal,
                 whiteSpace: 'nowrap',
-                transition: `background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}, color ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
+                transition: `background-color ${theme.duration.standard} ${theme.easing.easeOut}, color ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}`,
                 border: '1px solid transparent',
                 boxShadow: isActive ? 'none' : theme.shadows.hairline,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {b.label}
@@ -107,7 +109,7 @@ function MobileBrandShortcutsImpl() {
           -webkit-tap-highlight-color: transparent;
         }
         .mbs-chip:active {
-          transform: scale(0.96);
+          transform: scale(${theme.scale.buttonPress});
         }
         .mbs-chip:focus-visible {
           outline: 2px solid ${theme.colors.black};

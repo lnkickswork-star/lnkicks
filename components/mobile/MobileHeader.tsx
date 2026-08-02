@@ -62,11 +62,12 @@ function MobileHeaderImpl({
         style={{
           maxWidth: 440,
           margin: '0 auto',
-          padding: `${theme.spacing.md}px ${theme.spacing.pad}px`,
+          // Header height = 64px per Phase 6 spec (was md+xl padding ≈ 60px)
+          height: theme.spacing.headerHeight,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
           // 3-column grid: Menu | centered wordmark | Profile
-          // (Cart icon removed per Phase 5 spec — cart reachable via bottom nav)
           display: 'grid',
-          gridTemplateColumns: '36px 1fr 36px',
+          gridTemplateColumns: '40px 1fr 40px',
           alignItems: 'center',
           gap: theme.spacing.hairline,
         }}
@@ -81,8 +82,8 @@ function MobileHeaderImpl({
           aria-label="Open menu"
           className="pressable mh-icon-btn"
           style={{
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -93,27 +94,29 @@ function MobileHeaderImpl({
             cursor: 'pointer',
           }}
         >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          {/* Nav icon = 24px per Phase 6 spec */}
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
             <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
             <line x1="3" y1="12" x2="15" y2="12" strokeLinecap="round" />
             <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
           </svg>
         </button>
 
-        {/* Center: wordmark */}
+        {/* Center: wordmark — Inter 700, 17px, slight tracking */}
         <Link
           href="/"
           aria-label="LNKICKS home"
           className="pressable mh-wordmark"
           style={{
-            fontFamily: theme.fontFamily.display,
+            fontFamily: theme.fontFamily.body,
             fontSize: theme.fontSize.xl,
-            fontWeight: theme.fontWeight.extrabold,
-            letterSpacing: theme.letterSpacing.widest,
+            fontWeight: theme.fontWeight.bold,
+            letterSpacing: theme.letterSpacing.wide,
             color: theme.colors.textPrimary,
             textDecoration: 'none',
             textAlign: 'center',
             justifySelf: 'center',
+            fontFeatureSettings: theme.fontFeatures,
           }}
         >
           LNKICKS
@@ -121,7 +124,7 @@ function MobileHeaderImpl({
 
         {/* Right: Profile (Cart icon removed per Phase 5 spec) */}
         <HeaderIconButton href="/profile" label="Profile" badge={0}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
@@ -162,8 +165,8 @@ function HeaderIconButtonImpl({
       aria-label={badge > 0 ? `${label}, ${badge} ${badge === 1 ? 'item' : 'items'}` : label}
       className="pressable mh-icon-link"
       style={{
-        width: 36,
-        height: 36,
+        width: 40,
+        height: 40,
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',

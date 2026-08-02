@@ -42,40 +42,44 @@ function MobileRecommendedImpl() {
   );
 
   return (
-    <section style={{ paddingTop: theme.spacing.section }}>
+    <section style={{ paddingTop: theme.spacing.sectionPadding }}>
       <div
         style={{
-          padding: `0 ${theme.spacing.pad}px`,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          marginBottom: theme.spacing.xxl,
+          marginBottom: theme.spacing.sectionPadding,
           gap: theme.spacing.md,
         }}
       >
         <div>
+          {/* Eyebrow — 12px / 500 / uppercase / 0.5px tracking */}
           <p
             style={{
-              fontSize: theme.fontSize.xs,
-              fontWeight: theme.fontWeight.bold,
-              color: theme.colors.textTertiary,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.caption,
+              fontWeight: theme.fontWeight.medium,
+              color: theme.colors.textSecondary,
               textTransform: 'uppercase',
-              letterSpacing: theme.letterSpacing.extreme,
+              letterSpacing: theme.letterSpacing.brandName,
               margin: `0 0 ${theme.spacing.sm}px 0`,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             Picked For You
           </p>
+          {/* Section Heading — 24px / 700 / 30px line height */}
           <h2
             style={{
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.h2,
-              fontWeight: theme.fontWeight.extrabold,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.section,
+              fontWeight: theme.fontWeight.bold,
               color: theme.colors.textPrimary,
               letterSpacing: theme.letterSpacing.tight,
-              lineHeight: 1,
+              lineHeight: theme.lineHeight.section,
               margin: 0,
-              textTransform: 'uppercase',
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             Recommended
@@ -86,15 +90,16 @@ function MobileRecommendedImpl() {
           aria-label="See all recommended products"
           onPointerDown={() => haptic.light()}
           style={{
-            fontSize: theme.fontSize.sm,
-            fontWeight: theme.fontWeight.bold,
+            fontFamily: theme.fontFamily.body,
+            fontSize: theme.fontSize.lg,
+            fontWeight: theme.fontWeight.semibold,
             color: theme.colors.textPrimary,
-            textTransform: 'uppercase',
-            letterSpacing: theme.letterSpacing.wider,
+            letterSpacing: theme.letterSpacing.normal,
             textDecoration: 'none',
             whiteSpace: 'nowrap',
             paddingBottom: 2,
             borderBottom: `1.5px solid ${theme.colors.black}`,
+            fontFeatureSettings: theme.fontFeatures,
           }}
         >
           See All
@@ -103,10 +108,10 @@ function MobileRecommendedImpl() {
 
       <div
         style={{
-          padding: `0 ${theme.spacing.pad}px`,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: theme.spacing.lg,
+          gap: theme.spacing.cardGap,
         }}
       >
         {MOBILE_RECOMMENDED.map((p) => (
@@ -121,7 +126,7 @@ function MobileRecommendedImpl() {
               border: `1px solid ${theme.colors.grey100}`,
               boxShadow: theme.shadows.premium,
               overflow: 'hidden',
-              transition: `transform ${theme.motion.duration.normal} ${theme.motion.easing.out}, box-shadow ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
+              transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
             }}
           >
             {/* Image area — soft grey tile, full-bleed within card */}
@@ -153,28 +158,31 @@ function MobileRecommendedImpl() {
                   maxHeight: '88%',
                   objectFit: 'contain',
                   filter: dropShadows.md,
-                  transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}, filter ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
+                  transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}, filter ${theme.duration.slow} ${theme.easing.easeOut}`,
                 }}
               />
             </Link>
 
             <div
               style={{
-                padding: `${theme.spacing.md}px ${theme.spacing.md}px ${theme.spacing.lg}px`,
+                padding: `${theme.spacing.md}px ${theme.spacing.cardGap}px ${theme.spacing.cardGap}px`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
                 gap: theme.spacing.xs,
               }}
             >
+              {/* Brand — 12px / 500 / uppercase / 0.5px tracking */}
               <p
                 style={{
-                  fontSize: theme.fontSize.xs,
-                  color: theme.colors.textTertiary,
-                  fontWeight: theme.fontWeight.bold,
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: theme.fontSize.caption,
+                  color: theme.colors.textSecondary,
+                  fontWeight: theme.fontWeight.medium,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.16em',
+                  letterSpacing: theme.letterSpacing.brandName,
                   margin: 0,
+                  fontFeatureSettings: theme.fontFeatures,
                 }}
               >
                 {p.brand}
@@ -184,25 +192,29 @@ function MobileRecommendedImpl() {
                 style={{ textDecoration: 'none', color: 'inherit' }}
                 onPointerDown={() => haptic.selection()}
               >
+                {/* Product Name — 16px / 600 / 22px line height */}
                 <h3
                   style={{
-                    fontSize: theme.fontSize.body,
+                    fontFamily: theme.fontFamily.body,
+                    fontSize: theme.fontSize.productName,
                     fontWeight: theme.fontWeight.semibold,
                     color: theme.colors.textPrimary,
-                    lineHeight: theme.lineHeight.normal,
+                    lineHeight: theme.lineHeight.product,
+                    letterSpacing: theme.letterSpacing.normal,
                     margin: 0,
-                    minHeight: 36,
+                    minHeight: 44,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
+                    fontFeatureSettings: theme.fontFeatures,
                   }}
                 >
                   {p.name}
                 </h3>
               </Link>
 
-              {/* Rating row */}
+              {/* Rating row — Caption 12px / 400 */}
               <div
                 style={{
                   display: 'flex',
@@ -214,16 +226,19 @@ function MobileRecommendedImpl() {
                 <Stars rating={p.rating || 5} />
                 <span
                   style={{
-                    fontSize: theme.fontSize.xs,
-                    color: theme.colors.textTertiary,
-                    fontWeight: theme.fontWeight.semibold,
+                    fontFamily: theme.fontFamily.body,
+                    fontSize: theme.fontSize.caption,
+                    color: theme.colors.textSecondary,
+                    fontWeight: theme.fontWeight.regular,
                     marginLeft: 2,
+                    fontFeatureSettings: theme.fontFeatures,
                   }}
                 >
                   {p.rating?.toFixed(1) || '5.0'}
                 </span>
               </div>
 
+              {/* Price — 18px / 700 (per Phase 6 spec); Original 14px / 500 / strikethrough / 60% opacity */}
               <div
                 style={{
                   display: 'flex',
@@ -235,9 +250,12 @@ function MobileRecommendedImpl() {
               >
                 <span
                   style={{
-                    color: theme.colors.price,
+                    fontFamily: theme.fontFamily.body,
+                    color: theme.colors.textPrimary,
                     fontWeight: theme.fontWeight.bold,
-                    fontSize: theme.fontSize.body,
+                    fontSize: theme.fontSize.price,
+                    letterSpacing: theme.letterSpacing.normal,
+                    fontFeatureSettings: theme.fontFeatures,
                   }}
                 >
                   {p.price}
@@ -245,46 +263,53 @@ function MobileRecommendedImpl() {
                 {p.comparePrice && (
                   <span
                     style={{
+                      fontFamily: theme.fontFamily.body,
                       color: theme.colors.textTertiary,
-                      fontSize: theme.fontSize.sm,
+                      fontSize: theme.fontSize.md,
                       textDecoration: 'line-through',
-                      fontWeight: theme.fontWeight.regular,
+                      fontWeight: theme.fontWeight.medium,
+                      opacity: 0.6,
+                      fontFeatureSettings: theme.fontFeatures,
                     }}
                   >
                     {p.comparePrice}
                   </span>
                 )}
               </div>
+              {/* Add to Cart — Primary button: 48px height, 14px radius, #111111 bg, white text, 15px / 600 */}
               <button
                 type="button"
                 onClick={() => handleAddToCart(p)}
                 className="pressable mrec-cta"
                 style={{
                   width: '100%',
-                  background: theme.colors.black,
-                  color: theme.colors.white,
+                  background: theme.colors.primaryButton,
+                  color: theme.colors.buttonText,
                   border: 'none',
-                  borderRadius: theme.radius.pill,
-                  padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
-                  fontSize: 10.5,
-                  fontWeight: theme.fontWeight.bold,
-                  textTransform: 'uppercase',
-                  letterSpacing: theme.letterSpacing.wider,
+                  borderRadius: theme.radius.button,
+                  height: theme.spacing.buttonHeight,
+                  padding: `0 ${theme.spacing.md}px`,
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: theme.fontSize.lg,
+                  fontWeight: theme.fontWeight.semibold,
+                  letterSpacing: theme.letterSpacing.normal,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: theme.spacing.xs + 2,
                   transition: transitions.surface,
+                  fontFeatureSettings: theme.fontFeatures,
                 }}
                 aria-label={`Add ${p.name} to cart`}
               >
                 Add to Cart
-                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                {/* Card icon = 20px per Phase 6 spec */}
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2.6}
+                    strokeWidth={2.4}
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
@@ -297,7 +322,7 @@ function MobileRecommendedImpl() {
       <style jsx>{`
         @media (hover: hover) {
           .mrec-tile:hover {
-            transform: translateY(-2px);
+            transform: scale(${theme.scale.cardHover});
             box-shadow: ${theme.shadows.premiumLg};
           }
           .mrec-tile:hover .mrec-img {
@@ -308,6 +333,9 @@ function MobileRecommendedImpl() {
             background-color: ${theme.colors.grey800} !important;
             transform: translateY(-1px);
           }
+        }
+        .mrec-cta:active {
+          transform: scale(${theme.scale.buttonPress});
         }
       `}</style>
       <style jsx>{pressableStyle}</style>

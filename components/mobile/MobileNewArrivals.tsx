@@ -82,25 +82,28 @@ function MobileNewArrivalsImpl({
     <section
       aria-label="New Arrivals"
       style={{
-        paddingTop: theme.spacing.section,
+        paddingTop: theme.spacing.sectionPadding,
         paddingBottom: theme.spacing.sm,
       }}
     >
       {/* Editorial section header */}
       <div
         style={{
-          padding: `0 ${theme.spacing.pad}px`,
-          marginBottom: theme.spacing.xxl,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
+          marginBottom: theme.spacing.sectionPadding,
         }}
       >
+        {/* Eyebrow — 12px / 500 / uppercase / 0.5px tracking */}
         <p
           style={{
-            fontSize: theme.fontSize.xs,
-            fontWeight: theme.fontWeight.bold,
-            color: theme.colors.textTertiary,
+            fontFamily: theme.fontFamily.body,
+            fontSize: theme.fontSize.caption,
+            fontWeight: theme.fontWeight.medium,
+            color: theme.colors.textSecondary,
             textTransform: 'uppercase',
-            letterSpacing: theme.letterSpacing.extreme,
+            letterSpacing: theme.letterSpacing.brandName,
             margin: `0 0 ${theme.spacing.sm}px 0`,
+            fontFeatureSettings: theme.fontFeatures,
           }}
         >
           Just Landed
@@ -113,16 +116,17 @@ function MobileNewArrivalsImpl({
             gap: theme.spacing.md,
           }}
         >
+          {/* Section Heading — 24px / 700 / 30px line height */}
           <h2
             style={{
               margin: 0,
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.h2,
-              fontWeight: theme.fontWeight.extrabold,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.section,
+              fontWeight: theme.fontWeight.bold,
               letterSpacing: theme.letterSpacing.tight,
               color: theme.colors.textPrimary,
-              lineHeight: 1,
-              textTransform: 'uppercase',
+              lineHeight: theme.lineHeight.section,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             New Arrivals
@@ -131,15 +135,16 @@ function MobileNewArrivalsImpl({
             href="/products?filter=new"
             className="pressable"
             style={{
-              fontSize: theme.fontSize.sm,
-              fontWeight: theme.fontWeight.bold,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.semibold,
               color: theme.colors.textPrimary,
               textDecoration: 'none',
-              letterSpacing: theme.letterSpacing.wider,
-              textTransform: 'uppercase',
+              letterSpacing: theme.letterSpacing.normal,
               whiteSpace: 'nowrap',
               paddingBottom: 2,
               borderBottom: `1.5px solid ${theme.colors.black}`,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             See all
@@ -148,16 +153,15 @@ function MobileNewArrivalsImpl({
       </div>
 
       {/* Featured promotional banner */}
-      <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
+      <div style={{ padding: `0 ${theme.spacing.sectionPadding}px` }}>
         <article
           className="mna-card pressable"
           style={{
             position: 'relative',
             background: theme.colors.black,
-            borderRadius: theme.radius.hero,
+            borderRadius: theme.radius.largeCard,
             overflow: 'hidden',
             display: 'grid',
-            // Left ~58% text / Right ~42% image — premium editorial split
             gridTemplateColumns: '58fr 42fr',
             minHeight: 280,
             boxShadow: theme.shadows.lg,
@@ -194,70 +198,75 @@ function MobileNewArrivalsImpl({
               flexDirection: 'column',
               justifyContent: 'center',
               gap: theme.spacing.sm,
-              padding: `${theme.spacing.huge}px ${theme.spacing.xxl}px ${theme.spacing.huge}px ${theme.spacing.xxl}px`,
+              padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
             }}
           >
-            {/* NEW eyebrow chip */}
+            {/* NEW eyebrow chip — Button style 15px / 600 */}
             <span
               style={{
                 alignSelf: 'flex-start',
                 background: theme.colors.white,
                 color: theme.colors.black,
-                fontSize: theme.fontSize.xs,
-                fontWeight: theme.fontWeight.bold,
-                letterSpacing: theme.letterSpacing.wider,
-                textTransform: 'uppercase',
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.lg,
+                fontWeight: theme.fontWeight.semibold,
+                letterSpacing: theme.letterSpacing.normal,
                 padding: `${theme.spacing.xs + 1}px ${theme.spacing.md}px`,
-                borderRadius: theme.radius.pill,
+                borderRadius: theme.radius.button,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {collection}
             </span>
 
-            {/* Brand label */}
+            {/* Brand label — 12px / 500 / uppercase / 0.5px tracking */}
             <span
               style={{
-                fontSize: theme.fontSize.xs,
-                fontWeight: theme.fontWeight.bold,
-                letterSpacing: theme.letterSpacing.wider,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.caption,
+                fontWeight: theme.fontWeight.medium,
+                letterSpacing: theme.letterSpacing.brandName,
                 textTransform: 'uppercase',
                 color: 'rgba(255,255,255,0.6)',
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {product.brand}
             </span>
 
-            {/* Display headline — product name, large */}
+            {/* Display headline — Hero 32px / 700 / 38px line height */}
             <h3
               style={{
                 margin: 0,
-                fontFamily: theme.fontFamily.display,
-                fontSize: theme.fontSize.h1,
-                fontWeight: theme.fontWeight.extrabold,
-                lineHeight: theme.lineHeight.tight,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.hero,
+                fontWeight: theme.fontWeight.bold,
+                lineHeight: theme.lineHeight.hero,
                 letterSpacing: theme.letterSpacing.tight,
                 color: theme.colors.white,
-                textTransform: 'uppercase',
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {product.name}
             </h3>
 
-            {/* Description */}
+            {/* Description — Body 14px / 400 / 20px line height */}
             <p
               style={{
                 margin: 0,
-                fontSize: theme.fontSize.sm,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.md,
                 fontWeight: theme.fontWeight.regular,
                 color: 'rgba(255,255,255,0.7)',
-                lineHeight: theme.lineHeight.snug,
+                lineHeight: theme.lineHeight.body,
                 maxWidth: 220,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {desc}
             </p>
 
-            {/* Price row */}
+            {/* Price row — 18px / 700 (per Phase 6 spec) */}
             <div
               style={{
                 display: 'flex',
@@ -268,10 +277,12 @@ function MobileNewArrivalsImpl({
             >
               <span
                 style={{
-                  fontSize: theme.fontSize.xxl,
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: theme.fontSize.price,
                   fontWeight: theme.fontWeight.bold,
                   color: theme.colors.white,
-                  letterSpacing: theme.letterSpacing.tight,
+                  letterSpacing: theme.letterSpacing.normal,
+                  fontFeatureSettings: theme.fontFeatures,
                 }}
               >
                 {product.price}
@@ -279,10 +290,13 @@ function MobileNewArrivalsImpl({
               {product.comparePrice && (
                 <span
                   style={{
+                    fontFamily: theme.fontFamily.body,
                     fontSize: theme.fontSize.md,
                     color: 'rgba(255,255,255,0.45)',
                     textDecoration: 'line-through',
-                    fontWeight: theme.fontWeight.regular,
+                    fontWeight: theme.fontWeight.medium,
+                    opacity: 0.6,
+                    fontFeatureSettings: theme.fontFeatures,
                   }}
                 >
                   {product.comparePrice}
@@ -309,18 +323,21 @@ function MobileNewArrivalsImpl({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: theme.spacing.xs,
-                  background: theme.colors.white,
-                  color: theme.colors.black,
-                  padding: `${theme.spacing.sm + 2}px ${theme.spacing.lg}px`,
-                  borderRadius: theme.radius.pill,
-                  fontSize: theme.fontSize.xs,
-                  fontWeight: theme.fontWeight.bold,
-                  letterSpacing: theme.letterSpacing.wider,
-                  textTransform: 'uppercase',
+                  // Primary button: #111111 bg, white text, 48px height, 14px radius
+                  background: theme.colors.primaryButton,
+                  color: theme.colors.buttonText,
+                  height: theme.spacing.buttonHeight,
+                  padding: `0 ${theme.spacing.sectionPadding}px`,
+                  borderRadius: theme.radius.button,
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: theme.fontSize.lg,
+                  fontWeight: theme.fontWeight.semibold,
+                  letterSpacing: theme.letterSpacing.normal,
                   textDecoration: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: `transform ${theme.motion.duration.instant} ${theme.motion.easing.out}, background-color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
+                  transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}, background-color ${theme.duration.standard} ${theme.easing.easeOut}`,
+                  fontFeatureSettings: theme.fontFeatures,
                 }}
               >
                 Shop Now
@@ -337,8 +354,8 @@ function MobileNewArrivalsImpl({
                 aria-label={`Add ${product.name} to cart`}
                 className="pressable mna-add"
                 style={{
-                  width: 42,
-                  height: 42,
+                  width: theme.spacing.buttonHeight,
+                  height: theme.spacing.buttonHeight,
                   borderRadius: '50%',
                   background: 'transparent',
                   color: theme.colors.white,
@@ -347,10 +364,11 @@ function MobileNewArrivalsImpl({
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  transition: `transform ${theme.motion.duration.instant} ${theme.motion.easing.out}, border-color ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
+                  transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}, border-color ${theme.duration.standard} ${theme.easing.easeOut}`,
                 }}
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+                {/* Action icon = 22px per Phase 6 spec */}
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
                   <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
                   <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
                 </svg>
@@ -398,7 +416,7 @@ function MobileNewArrivalsImpl({
                   objectFit: 'contain',
                   filter: theme.dropShadows.lg,
                   transform: 'rotate(-14deg)',
-                  transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
+                  transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}`,
                 }}
               />
             </Link>
@@ -407,14 +425,19 @@ function MobileNewArrivalsImpl({
           <style jsx>{pressableStyle}</style>
           <style jsx>{`
             .mna-card:active {
-              transform: scale(0.99);
+              transform: scale(${theme.scale.buttonPress});
             }
             .mna-cta:active {
-              transform: scale(0.94);
+              transform: scale(${theme.scale.buttonPress});
             }
             .mna-add:active {
-              transform: scale(0.88);
+              transform: scale(${theme.scale.buttonPress});
               border-color: ${theme.colors.white};
+            }
+            @media (hover: hover) {
+              .mna-card:hover {
+                transform: scale(${theme.scale.cardHover});
+              }
             }
             .mna-card:focus-within {
               outline: 2px solid ${theme.colors.white};

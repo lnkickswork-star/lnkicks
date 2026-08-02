@@ -36,14 +36,14 @@ function MobileNewsletterImpl() {
   return (
     <section
       style={{
-        padding: `${theme.spacing.section}px ${theme.spacing.pad}px ${theme.spacing.xxxl}px`,
+        padding: `${theme.spacing.sectionPadding}px ${theme.spacing.sectionPadding}px ${theme.spacing.xxxl}px`,
       }}
     >
       <div
         style={{
           background: theme.colors.black,
-          borderRadius: theme.radius.hero,
-          padding: `${theme.spacing.huge}px ${theme.spacing.xxl}px`,
+          borderRadius: theme.radius.largeCard,
+          padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
           color: theme.colors.white,
           position: 'relative',
           overflow: 'hidden',
@@ -71,37 +71,44 @@ function MobileNewsletterImpl() {
         </div>
 
         <div style={{ position: 'relative', zIndex: theme.zIndex.base + 2 }}>
+          {/* Eyebrow — 12px / 500 / uppercase / 0.5px tracking */}
           <p
             style={{
-              fontSize: theme.fontSize.xs,
-              fontWeight: theme.fontWeight.bold,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.caption,
+              fontWeight: theme.fontWeight.medium,
               color: 'rgba(255,255,255,0.55)',
               textTransform: 'uppercase',
-              letterSpacing: theme.letterSpacing.extreme,
+              letterSpacing: theme.letterSpacing.brandName,
               margin: `0 0 ${theme.spacing.md}px 0`,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             Members Only
           </p>
+          {/* Hero Heading — 32px / 700 / 38px line height */}
           <h2
             style={{
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.title + 2,
-              fontWeight: theme.fontWeight.extrabold,
-              lineHeight: 1.1,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.hero,
+              fontWeight: theme.fontWeight.bold,
+              lineHeight: theme.lineHeight.hero,
               margin: `0 0 ${theme.spacing.sm + 2}px 0`,
               letterSpacing: theme.letterSpacing.tight,
-              textTransform: 'uppercase',
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             Sign up<br />and save 10%
           </h2>
+          {/* Body — 14px / 400 / 20px line height */}
           <p
             style={{
+              fontFamily: theme.fontFamily.body,
               fontSize: theme.fontSize.md,
               color: 'rgba(255,255,255,0.7)',
-              margin: `0 0 ${theme.spacing.xxl}px 0`,
-              lineHeight: theme.lineHeight.relaxed,
+              margin: `0 0 ${theme.spacing.sectionPadding}px 0`,
+              lineHeight: theme.lineHeight.body,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             Be first to access new drops, private sales, and member-only sneakers.
@@ -114,11 +121,12 @@ function MobileNewsletterImpl() {
               alignItems: 'center',
               gap: theme.spacing.sm,
               background: 'rgba(255,255,255,0.08)',
-              borderRadius: theme.radius.pill,
-              padding: `${theme.spacing.xs + 2}px ${theme.spacing.xs + 2}px ${theme.spacing.xs + 2}px ${theme.spacing.pad}px`,
+              borderRadius: theme.radius.button,
+              padding: `${theme.spacing.xs + 2}px ${theme.spacing.xs + 2}px ${theme.spacing.xs + 2}px ${theme.spacing.sectionPadding}px`,
               border: '1px solid rgba(255,255,255,0.12)',
             }}
           >
+            {/* Search Placeholder style — 15px / 400 */}
             <input
               type="email"
               required
@@ -132,10 +140,11 @@ function MobileNewsletterImpl() {
                 border: 'none',
                 outline: 'none',
                 color: theme.colors.white,
-                fontSize: theme.fontSize.md,
-                fontWeight: theme.fontWeight.medium,
-                fontFamily: 'inherit',
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.lg,
+                fontWeight: theme.fontWeight.regular,
                 minWidth: 0,
+                fontFeatureSettings: theme.fontFeatures,
               }}
               className="mnews-input"
             />
@@ -155,7 +164,7 @@ function MobileNewsletterImpl() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                transition: `transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
+                transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}`,
               }}
             >
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24" aria-hidden>
@@ -169,14 +178,16 @@ function MobileNewsletterImpl() {
               role="status"
               aria-live="polite"
               style={{
-                fontSize: theme.fontSize.base,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.caption,
                 color: theme.colors.white,
                 fontWeight: theme.fontWeight.semibold,
                 margin: `${theme.spacing.md + 2}px 0 0 0`,
                 padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
                 background: 'rgba(255,255,255,0.1)',
-                borderRadius: theme.radius.md,
+                borderRadius: theme.radius.button,
                 textAlign: 'center',
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               Thanks! Check your inbox to confirm.
@@ -185,10 +196,12 @@ function MobileNewsletterImpl() {
 
           <p
             style={{
-              fontSize: 10.5,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.caption,
               color: 'rgba(255,255,255,0.45)',
               margin: `${theme.spacing.md + 2}px 0 0 0`,
-              lineHeight: theme.lineHeight.relaxed,
+              lineHeight: theme.lineHeight.body,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             By subscribing you agree to our{' '}
@@ -213,7 +226,10 @@ function MobileNewsletterImpl() {
           border-radius: ${theme.radius.sm};
         }
         .mnews-submit:hover {
-          transform: scale(1.05);
+          transform: scale(${theme.scale.cardHover});
+        }
+        .mnews-submit:active {
+          transform: scale(${theme.scale.buttonPress});
         }
       `}</style>
       <style jsx>{pressableStyle}</style>

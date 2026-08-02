@@ -35,20 +35,21 @@ function MobileSearchImpl() {
         display: 'flex',
         alignItems: 'center',
         gap: theme.spacing.sm + 2,
-        height: 56,
-        padding: `0 ${theme.spacing.lg}px`,
+        height: theme.spacing.buttonHeight,
+        padding: `0 ${theme.spacing.cardGap}px`,
         background: theme.colors.offWhite,
-        borderRadius: theme.radius.pill,
+        borderRadius: theme.radius.button,
         boxShadow: theme.shadows.premium,
         textDecoration: 'none',
         color: theme.colors.textTertiary,
-        transition: `box-shadow ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
+        transition: `box-shadow ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}`,
       }}
     >
+      {/* Action icon = 22px per Phase 6 spec */}
       <svg
         viewBox="0 0 24 24"
-        width="20"
-        height="20"
+        width="22"
+        height="22"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.2"
@@ -59,10 +60,12 @@ function MobileSearchImpl() {
       </svg>
       <span
         style={{
-          fontSize: theme.fontSize.md,
-          fontWeight: theme.fontWeight.medium,
+          fontFamily: theme.fontFamily.body,
+          fontSize: theme.fontSize.lg,
+          fontWeight: theme.fontWeight.regular,
           color: theme.colors.textTertiary,
           letterSpacing: theme.letterSpacing.normal,
+          fontFeatureSettings: theme.fontFeatures,
         }}
       >
         Search sneakers, brands, collections...

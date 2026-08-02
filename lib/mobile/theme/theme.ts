@@ -25,8 +25,9 @@ import typography, {
   fontWeight,
   lineHeight,
   letterSpacing,
+  fontFeatures,
 } from './typography';
-import motion, { easing, duration, transitions } from './motion';
+import motion, { easing, duration, transitions, scale } from './motion';
 import zIndex from './zIndex';
 
 export const theme = {
@@ -42,10 +43,12 @@ export const theme = {
   fontWeight,
   lineHeight,
   letterSpacing,
+  fontFeatures,
   motion,
   easing,
   duration,
   transitions,
+  scale,
   zIndex,
 } as const;
 
@@ -63,8 +66,9 @@ export {
   fontWeight,
   lineHeight,
   letterSpacing,
+  fontFeatures,
 } from './typography';
-export { default as motion, easing, duration, transitions } from './motion';
+export { default as motion, easing, duration, transitions, scale } from './motion';
 export { default as zIndex } from './zIndex';
 
 export default theme;

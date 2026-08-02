@@ -198,7 +198,7 @@ export default function MobileHome() {
         <main
           id="main-content"
           style={{
-            paddingTop: theme.spacing.lg,
+            paddingTop: theme.spacing.cardGap,
             // Bottom nav clearance includes safe-area-inset-bottom
             paddingBottom: safeArea.bottomNavClearance,
             display: 'flex',
@@ -206,8 +206,8 @@ export default function MobileHome() {
             gap: 0,
           }}
         >
-          {/* 2a. Search */}
-          <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
+          {/* 2a. Search — 24px horizontal padding per Phase 6 spec */}
+          <div style={{ padding: `0 ${theme.spacing.sectionPadding}px` }}>
             <MobileSearch />
           </div>
 

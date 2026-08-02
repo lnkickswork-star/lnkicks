@@ -21,8 +21,8 @@ function MobileBrandsImpl() {
     <section
       aria-label="Featured brands"
       style={{
-        paddingTop: theme.spacing.section,
-        paddingBottom: theme.spacing.section,
+        paddingTop: theme.spacing.sectionPadding,
+        paddingBottom: theme.spacing.sectionPadding,
         background: theme.colors.offWhite,
         borderTop: `1px solid ${theme.colors.grey100}`,
         borderBottom: `1px solid ${theme.colors.grey100}`,
@@ -31,33 +31,37 @@ function MobileBrandsImpl() {
     >
       <div
         style={{
-          padding: `0 ${theme.spacing.pad}px`,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
           textAlign: 'center',
-          marginBottom: theme.spacing.xxl,
+          marginBottom: theme.spacing.sectionPadding,
         }}
       >
+        {/* Eyebrow — 12px / 500 / uppercase / 0.5px tracking */}
         <p
           style={{
-            fontSize: theme.fontSize.xs,
-            fontWeight: theme.fontWeight.bold,
-            color: theme.colors.textTertiary,
+            fontFamily: theme.fontFamily.body,
+            fontSize: theme.fontSize.caption,
+            fontWeight: theme.fontWeight.medium,
+            color: theme.colors.textSecondary,
             textTransform: 'uppercase',
-            letterSpacing: '0.3em',
+            letterSpacing: theme.letterSpacing.brandName,
             margin: `0 0 ${theme.spacing.sm}px 0`,
+            fontFeatureSettings: theme.fontFeatures,
           }}
         >
           Authenticated · Stocked · Trusted
         </p>
+        {/* Section Heading — 24px / 700 / 30px line height */}
         <h2
           style={{
-            fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.h1,
-            fontWeight: theme.fontWeight.extrabold,
+            fontFamily: theme.fontFamily.body,
+            fontSize: theme.fontSize.section,
+            fontWeight: theme.fontWeight.bold,
             margin: 0,
-            textTransform: 'uppercase',
-            letterSpacing: theme.letterSpacing.tightest,
+            letterSpacing: theme.letterSpacing.tight,
             color: theme.colors.textPrimary,
-            lineHeight: 1,
+            lineHeight: theme.lineHeight.section,
+            fontFeatureSettings: theme.fontFeatures,
           }}
         >
           Brands at{' '}
@@ -80,7 +84,8 @@ function MobileBrandsImpl() {
                 flexShrink: 0,
                 color: theme.colors.textPrimary,
                 opacity: 0.85,
-                transition: `opacity ${theme.motion.duration.slow} ${theme.motion.easing.inOut}`,
+                transition: `opacity ${theme.duration.slow} ${theme.easing.inOut}`,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {b.name}
@@ -95,7 +100,7 @@ function MobileBrandsImpl() {
           overflow: hidden;
           position: relative;
           filter: grayscale(1);
-          transition: filter ${theme.motion.duration.long} ${theme.motion.easing.inOut};
+          transition: filter ${theme.duration.long} ${theme.easing.inOut};
         }
         .mb-marquee-wrap:hover {
           filter: grayscale(0);
@@ -125,17 +130,18 @@ function MobileBrandsImpl() {
           }
         }
 
-        .mb-nike { font-size: 30px; font-weight: 900; letter-spacing: -0.02em; font-style: italic; }
-        .mb-jordan { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
-        .mb-adidas { font-size: 28px; font-weight: 700; letter-spacing: 0.08em; }
-        .mb-puma { font-size: 30px; font-weight: 900; font-style: italic; letter-spacing: -0.02em; }
-        .mb-reebok { font-size: 26px; font-weight: 700; letter-spacing: 0.04em; }
-        .mb-converse { font-size: 26px; font-weight: 700; letter-spacing: 0.14em; }
-        .mb-vans { font-size: 32px; font-weight: 900; letter-spacing: 0.02em; }
-        .mb-hoka { font-size: 32px; font-weight: 800; letter-spacing: 0.06em; }
-        .mb-newbalance { font-size: 22px; font-weight: 700; letter-spacing: 0.06em; }
-        .mb-asics { font-size: 26px; font-weight: 700; letter-spacing: 0.16em; }
-        .mb-yeezy { font-size: 32px; font-weight: 300; letter-spacing: 0.04em; font-style: italic; }
+        /* Brand wordmarks — Inter only, weights 300-700 per Phase 6 spec */
+        .mb-nike { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; font-style: italic; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-jordan { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-adidas { font-size: 26px; font-weight: 700; letter-spacing: 0.08em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-puma { font-size: 28px; font-weight: 700; font-style: italic; letter-spacing: -0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-reebok { font-size: 24px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-converse { font-size: 24px; font-weight: 700; letter-spacing: 0.14em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-vans { font-size: 30px; font-weight: 700; letter-spacing: 0.02em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-hoka { font-size: 30px; font-weight: 700; letter-spacing: 0.06em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-newbalance { font-size: 22px; font-weight: 700; letter-spacing: 0.06em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-asics { font-size: 24px; font-weight: 700; letter-spacing: 0.16em; font-family: var(--font-inter), system-ui, sans-serif; }
+        .mb-yeezy { font-size: 30px; font-weight: 300; letter-spacing: 0.04em; font-style: italic; font-family: var(--font-inter), system-ui, sans-serif; }
       `}</style>
     </section>
   );

@@ -53,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Home',
     href: '/',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -63,7 +63,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Wishlist',
     href: '/wishlist',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
       </svg>
     ),
@@ -73,7 +73,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Profile',
     href: '/profile',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
@@ -83,7 +83,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Categories',
     href: '/categories',
     icon: (color: string) => (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={color} strokeWidth="2" aria-hidden>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <rect x="3" y="3" width="7" height="7" rx="1.5" strokeLinecap="round" />
         <rect x="14" y="3" width="7" height="7" rx="1.5" strokeLinecap="round" />
         <rect x="3" y="14" width="7" height="7" rx="1.5" strokeLinecap="round" />
@@ -122,7 +122,7 @@ function MobileBottomNavImpl({
         zIndex: theme.zIndex.nav,
       }}
     >
-      {/* Nav bar with notch for FAB */}
+      {/* Nav bar with notch for FAB — 80px height per Phase 6 spec */}
       <div
         style={{
           position: 'relative',
@@ -133,7 +133,8 @@ function MobileBottomNavImpl({
           display: 'grid',
           gridTemplateColumns: '1fr 1fr 64px 1fr 1fr',
           alignItems: 'center',
-          padding: `${theme.spacing.sm + 2}px ${theme.spacing.sm}px`,
+          height: theme.spacing.bottomNavHeight,
+          padding: `0 ${theme.spacing.sm}px`,
           boxSizing: 'border-box',
         }}
       >
@@ -165,8 +166,8 @@ function MobileBottomNavImpl({
             width: 60,
             height: 60,
             borderRadius: '50%',
-            background: theme.colors.black,
-            color: theme.colors.white,
+            background: theme.colors.primaryButton,
+            color: theme.colors.buttonText,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -176,6 +177,7 @@ function MobileBottomNavImpl({
             zIndex: theme.zIndex.fab,
           }}
         >
+          {/* Action icon = 22px per Phase 6 spec */}
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
@@ -189,7 +191,7 @@ function MobileBottomNavImpl({
                 background: theme.colors.white,
                 color: theme.colors.black,
                 fontSize: 9.5,
-                fontWeight: theme.fontWeight.extrabold,
+                fontWeight: theme.fontWeight.bold,
                 minWidth: 18,
                 height: 18,
                 borderRadius: theme.radius.pill,
@@ -210,7 +212,7 @@ function MobileBottomNavImpl({
       <style jsx>{pressableStyle}</style>
       <style jsx>{`
         .mbn-fab:active {
-          transform: translateX(-50%) scale(0.9);
+          transform: translateX(-50%) scale(${theme.scale.buttonPress});
         }
       `}</style>
     </nav>
@@ -232,21 +234,23 @@ function NavButtonImpl({ item, active }: { item: NavItem; active: boolean }) {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 3,
-        padding: `${theme.spacing.xs + 1}px ${theme.spacing.xs}px`,
+        padding: `${theme.spacing.xs}px`,
         borderRadius: theme.radius.pill,
         textDecoration: 'none',
         background: 'transparent',
-        color: active ? theme.colors.black : theme.colors.textTertiary,
-        transition: `color ${theme.motion.duration.normal} ${theme.motion.easing.out}, transform ${theme.motion.duration.instant} ${theme.motion.easing.out}`,
+        color: active ? theme.colors.textPrimary : theme.colors.textTertiary,
+        transition: `color ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}`,
       }}
     >
-      {item.icon(active ? theme.colors.black : theme.colors.textTertiary)}
+      {item.icon(active ? theme.colors.textPrimary : theme.colors.textTertiary)}
+      {/* Bottom Navigation label — 11px / 500 (per Phase 6 spec) */}
       <span
         style={{
-          fontSize: theme.fontSize.micro,
-          fontWeight: theme.fontWeight.bold,
-          letterSpacing: theme.letterSpacing.wide,
-          textTransform: 'uppercase',
+          fontFamily: theme.fontFamily.body,
+          fontSize: theme.fontSize.navLabel,
+          fontWeight: theme.fontWeight.medium,
+          letterSpacing: theme.letterSpacing.normal,
+          fontFeatureSettings: theme.fontFeatures,
         }}
       >
         {item.label}

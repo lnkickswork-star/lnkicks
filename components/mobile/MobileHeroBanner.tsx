@@ -106,8 +106,8 @@ function MobileHeroBannerImpl() {
     <section
       aria-label="Featured promotions"
       style={{
-        paddingTop: theme.spacing.lg,
-        paddingBottom: theme.spacing.lg,
+        paddingTop: theme.spacing.sectionPadding,
+        paddingBottom: theme.spacing.sectionPadding,
       }}
     >
       <div
@@ -118,7 +118,7 @@ function MobileHeroBannerImpl() {
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: `0 ${theme.spacing.pad}px`,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
           gap: 0,
         }}
       >
@@ -165,29 +165,30 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
         alignItems: 'center',
         justifyContent: 'center',
         background: bg,
-        borderRadius: theme.radius.hero,
+        borderRadius: theme.radius.largeCard,
         overflow: 'hidden',
         border: 'none',
         boxShadow: isDark ? theme.shadows.lg : theme.shadows.premium,
         color: fg,
         textDecoration: 'none',
-        // Tall enough for image + text block, short enough to fit mobile
-        // screen above the fold. Fits 360–440px viewports cleanly.
         height: 340,
         boxSizing: 'border-box',
         margin: `0 ${theme.spacing.xs}px`,
-        padding: `${theme.spacing.xxl}px ${theme.spacing.xxl}px`,
+        padding: `${theme.spacing.sectionPadding}px`,
+        transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}`,
       }}
     >
-      {/* ── Eyebrow ─────────────────────────────────────────────── */}
+      {/* ── Eyebrow — 12px / 500 / uppercase / 0.5px tracking (Brand Name preset) ── */}
       <span
         style={{
           color: eyebrowFg,
-          fontSize: theme.fontSize.xs,
-          fontWeight: theme.fontWeight.bold,
-          letterSpacing: theme.letterSpacing.wider,
+          fontFamily: theme.fontFamily.body,
+          fontSize: theme.fontSize.caption,
+          fontWeight: theme.fontWeight.medium,
+          letterSpacing: theme.letterSpacing.brandName,
           textTransform: 'uppercase',
           marginBottom: theme.spacing.md,
+          fontFeatureSettings: theme.fontFeatures,
         }}
       >
         {banner.eyebrow}
@@ -210,27 +211,27 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
         }}
       />
 
-      {/* ── Headline ────────────────────────────────────────────── */}
+      {/* ── Headline — Hero 32px / 700 / 38px line height (Phase 6 spec) ── */}
       <h2
         style={{
           margin: 0,
-          fontFamily: theme.fontFamily.display,
-          lineHeight: theme.lineHeight.tight,
-          letterSpacing: theme.letterSpacing.tightest,
+          fontFamily: theme.fontFamily.body,
+          lineHeight: theme.lineHeight.hero,
+          letterSpacing: theme.letterSpacing.tight,
           color: fg,
-          textTransform: 'uppercase',
           textAlign: 'center',
+          fontFeatureSettings: theme.fontFeatures,
         }}
       >
         <span
           style={{
             display: 'block',
             fontSize: theme.fontSize.lg,
-            fontWeight: theme.fontWeight.medium,
+            fontWeight: theme.fontWeight.regular,
             letterSpacing: theme.letterSpacing.normal,
-            lineHeight: 1.1,
-            marginBottom: 2,
-            opacity: 0.75,
+            lineHeight: theme.lineHeight.snug,
+            marginBottom: theme.spacing.xs,
+            opacity: 0.7,
           }}
         >
           {banner.lead}
@@ -239,44 +240,48 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
           style={{
             display: 'block',
             fontSize: theme.fontSize.hero,
-            fontWeight: theme.fontWeight.black,
-            lineHeight: 0.92,
+            fontWeight: theme.fontWeight.bold,
+            lineHeight: theme.lineHeight.hero,
+            letterSpacing: theme.letterSpacing.tight,
           }}
         >
           {banner.display}
         </span>
       </h2>
 
-      {/* ── Subtitle ────────────────────────────────────────────── */}
+      {/* ── Subtitle — Body 14px / 400 / 20px line height ─────── */}
       <p
         style={{
           margin: 0,
-          fontSize: theme.fontSize.sm,
+          fontFamily: theme.fontFamily.body,
+          fontSize: theme.fontSize.md,
           fontWeight: theme.fontWeight.regular,
           color: subtitleFg,
-          lineHeight: theme.lineHeight.snug,
+          lineHeight: theme.lineHeight.body,
           maxWidth: 240,
           textAlign: 'center',
           marginTop: theme.spacing.xs,
+          fontFeatureSettings: theme.fontFeatures,
         }}
       >
         {banner.subtitle}
       </p>
 
-      {/* ── Underline text CTA — editorial style ────────────────── */}
+      {/* ── Underline CTA — Button style 15px / 600 ────────────── */}
       <span
         style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: theme.spacing.xs,
           marginTop: theme.spacing.md,
-          fontSize: theme.fontSize.xs,
-          fontWeight: theme.fontWeight.bold,
-          letterSpacing: theme.letterSpacing.wider,
-          textTransform: 'uppercase',
+          fontFamily: theme.fontFamily.body,
+          fontSize: theme.fontSize.lg,
+          fontWeight: theme.fontWeight.semibold,
+          letterSpacing: theme.letterSpacing.normal,
           color: fg,
           borderBottom: `1.5px solid ${underlineColor}`,
           paddingBottom: 3,
+          fontFeatureSettings: theme.fontFeatures,
         }}
         className="mhb-cta"
       >
@@ -289,7 +294,12 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
 
       <style jsx>{`
         .mhb-card:active {
-          transform: scale(0.99);
+          transform: scale(${theme.scale.buttonPress});
+        }
+        @media (hover: hover) {
+          .mhb-card:hover {
+            transform: scale(${theme.scale.cardHover});
+          }
         }
         .mhb-card:focus-visible {
           outline: 2px solid ${theme.colors.black};

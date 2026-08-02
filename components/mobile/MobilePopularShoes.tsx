@@ -131,14 +131,12 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        // Premium soft shadow + hairline border for definition on white bg
         boxShadow: theme.shadows.premium,
         border: `1px solid ${theme.colors.grey100}`,
-        // Slightly wider card for more breathing room
         width: 175,
         flex: '0 0 auto',
         scrollSnapAlign: 'start',
-        transition: `transform ${theme.motion.duration.normal} ${theme.motion.easing.out}, box-shadow ${theme.motion.duration.normal} ${theme.motion.easing.out}`,
+        transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
       }}
     >
       <Link
@@ -146,8 +144,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
         aria-label={`${product.brand} ${product.name}, ${product.price}`}
         style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}
       >
-        {/* Image area — soft grey background with floating shoe.
-            Full-bleed within the card; internal padding for the shoe. */}
+        {/* Image area — soft grey background with floating shoe */}
         <div
           style={{
             background: theme.colors.grey100,
@@ -155,10 +152,9 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: theme.spacing.lg,
+            padding: theme.spacing.cardGap,
             position: 'relative',
             overflow: 'hidden',
-            // Top corners rounded to match card; bottom flush
             borderRadius: `${theme.radius.card}px ${theme.radius.card}px 0 0`,
           }}
         >
@@ -174,54 +170,58 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
               maxHeight: '92%',
               objectFit: 'contain',
               filter: theme.dropShadows.md,
-              transition: `transform ${theme.motion.duration.slow} ${theme.motion.easing.out}`,
+              transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}`,
             }}
           />
         </div>
 
-        {/* Body — more whitespace, cleaner hierarchy */}
+        {/* Body — 16px card padding per Phase 6 spec */}
         <div
           style={{
-            padding: `${theme.spacing.md}px ${theme.spacing.md}px ${theme.spacing.lg}px`,
+            padding: `${theme.spacing.md}px ${theme.spacing.cardGap}px ${theme.spacing.cardGap}px`,
             display: 'flex',
             flexDirection: 'column',
             gap: theme.spacing.xs,
           }}
         >
-          {/* Brand */}
+          {/* Brand — 12px / 500 / uppercase / 0.5px tracking (Brand Name preset) */}
           <span
             style={{
-              fontSize: theme.fontSize.xs,
-              fontWeight: theme.fontWeight.bold,
-              letterSpacing: theme.letterSpacing.wider,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.caption,
+              fontWeight: theme.fontWeight.medium,
+              letterSpacing: theme.letterSpacing.brandName,
               textTransform: 'uppercase',
-              color: theme.colors.textTertiary,
+              color: theme.colors.textSecondary,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             {product.brand}
           </span>
 
-          {/* Name */}
+          {/* Name — Product Name 16px / 600 / 22px line height */}
           <h3
             style={{
               margin: 0,
               fontFamily: theme.fontFamily.body,
-              fontSize: theme.fontSize.md,
+              fontSize: theme.fontSize.productName,
               fontWeight: theme.fontWeight.semibold,
-              lineHeight: theme.lineHeight.snug,
+              lineHeight: theme.lineHeight.product,
               color: theme.colors.textPrimary,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              minHeight: 38,
+              minHeight: 44,
+              letterSpacing: theme.letterSpacing.normal,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             {product.name}
           </h3>
 
-          {/* Rating */}
+          {/* Rating — Caption 12px / 400 */}
           {typeof product.rating === 'number' && (
             <div
               style={{
@@ -229,8 +229,10 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
                 alignItems: 'center',
                 gap: theme.spacing.xs,
                 color: theme.colors.textSecondary,
-                fontSize: theme.fontSize.sm,
-                fontWeight: theme.fontWeight.medium,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.caption,
+                fontWeight: theme.fontWeight.regular,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               <Stars rating={product.rating} />
@@ -238,7 +240,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             </div>
           )}
 
-          {/* Price */}
+          {/* Price — 18px / 700 (per Phase 6 spec); Original 14px / 500 / strikethrough / 60% opacity */}
           <div
             style={{
               display: 'flex',
@@ -249,10 +251,12 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           >
             <span
               style={{
-                fontSize: theme.fontSize.lg,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.price,
                 fontWeight: theme.fontWeight.bold,
                 color: theme.colors.textPrimary,
-                letterSpacing: theme.letterSpacing.tight,
+                letterSpacing: theme.letterSpacing.normal,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {product.price}
@@ -260,10 +264,13 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
             {product.comparePrice && (
               <span
                 style={{
-                  fontSize: theme.fontSize.sm,
-                  fontWeight: theme.fontWeight.regular,
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: theme.fontSize.md,
+                  fontWeight: theme.fontWeight.medium,
                   color: theme.colors.textTertiary,
                   textDecoration: 'line-through',
+                  opacity: 0.6,
+                  fontFeatureSettings: theme.fontFeatures,
                 }}
               >
                 {product.comparePrice}
@@ -281,13 +288,13 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
         className="mps-add pressable"
         style={{
           position: 'absolute',
-          bottom: theme.spacing.md,
-          right: theme.spacing.md,
+          bottom: theme.spacing.cardGap,
+          right: theme.spacing.cardGap,
           width: 38,
           height: 38,
           borderRadius: '50%',
-          background: theme.colors.black,
-          color: theme.colors.white,
+          background: theme.colors.primaryButton,
+          color: theme.colors.buttonText,
           border: 'none',
           display: 'flex',
           alignItems: 'center',
@@ -297,7 +304,8 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
           zIndex: 2,
         }}
       >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+        {/* Card icon = 20px per Phase 6 spec */}
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
           <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
           <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
         </svg>
@@ -306,10 +314,10 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
       <style jsx>{pressableStyle}</style>
       <style jsx>{`
         .mps-card:active {
-          transform: scale(0.98);
+          transform: scale(${theme.scale.buttonPress});
         }
         .mps-add:active {
-          transform: scale(0.88);
+          transform: scale(${theme.scale.buttonPress});
         }
         .mps-card:focus-within {
           outline: 2px solid ${theme.colors.black};
@@ -317,7 +325,7 @@ function PopularShoeCardImpl({ product }: PopularShoeCardProps) {
         }
         @media (hover: hover) {
           .mps-card:hover {
-            transform: translateY(-2px);
+            transform: scale(${theme.scale.cardHover});
             box-shadow: ${theme.shadows.premiumLg};
           }
           .mps-card:hover .mps-img {
@@ -347,15 +355,15 @@ function MobilePopularShoesImpl({
     <section
       aria-label={title}
       style={{
-        paddingTop: theme.spacing.section,
+        paddingTop: theme.spacing.sectionPadding,
         paddingBottom: theme.spacing.sm,
       }}
     >
-      {/* Editorial section header — eyebrow + display title + See all */}
+      {/* Section header — Section Heading 24px / 700 / 30px line height */}
       <div
         style={{
-          padding: `0 ${theme.spacing.pad}px`,
-          marginBottom: theme.spacing.xxl,
+          padding: `0 ${theme.spacing.sectionPadding}px`,
+          marginBottom: theme.spacing.sectionPadding,
         }}
       >
         <div
@@ -367,28 +375,32 @@ function MobilePopularShoesImpl({
           }}
         >
           <div>
+            {/* Eyebrow — 12px / 500 / uppercase / 0.5px tracking */}
             <p
               style={{
-                fontSize: theme.fontSize.xs,
-                fontWeight: theme.fontWeight.bold,
-                color: theme.colors.textTertiary,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.caption,
+                fontWeight: theme.fontWeight.medium,
+                color: theme.colors.textSecondary,
                 textTransform: 'uppercase',
-                letterSpacing: theme.letterSpacing.extreme,
+                letterSpacing: theme.letterSpacing.brandName,
                 margin: `0 0 ${theme.spacing.sm}px 0`,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               Most Wanted
             </p>
+            {/* Section Heading — 24px / 700 / 30px line height */}
             <h2
               style={{
                 margin: 0,
-                fontFamily: theme.fontFamily.display,
-                fontSize: theme.fontSize.h2,
-                fontWeight: theme.fontWeight.extrabold,
+                fontFamily: theme.fontFamily.body,
+                fontSize: theme.fontSize.section,
+                fontWeight: theme.fontWeight.bold,
                 letterSpacing: theme.letterSpacing.tight,
                 color: theme.colors.textPrimary,
-                lineHeight: 1,
-                textTransform: 'uppercase',
+                lineHeight: theme.lineHeight.section,
+                fontFeatureSettings: theme.fontFeatures,
               }}
             >
               {title}
@@ -398,15 +410,16 @@ function MobilePopularShoesImpl({
             href={seeAllHref}
             className="pressable"
             style={{
-              fontSize: theme.fontSize.sm,
-              fontWeight: theme.fontWeight.bold,
+              fontFamily: theme.fontFamily.body,
+              fontSize: theme.fontSize.lg,
+              fontWeight: theme.fontWeight.semibold,
               color: theme.colors.textPrimary,
               textDecoration: 'none',
-              letterSpacing: theme.letterSpacing.wider,
-              textTransform: 'uppercase',
+              letterSpacing: theme.letterSpacing.normal,
               whiteSpace: 'nowrap',
               paddingBottom: 2,
               borderBottom: `1.5px solid ${theme.colors.black}`,
+              fontFeatureSettings: theme.fontFeatures,
             }}
           >
             See all
@@ -420,15 +433,13 @@ function MobilePopularShoesImpl({
         className="mps-scroller"
         style={{
           display: 'flex',
-          gap: theme.spacing.md,
+          gap: theme.spacing.cardGap,
           overflowX: 'auto',
           overflowY: 'hidden',
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          // Page gutter on both edges so first/last cards breathe
-          padding: `${theme.spacing.xs}px ${theme.spacing.pad}px ${theme.spacing.md}px`,
-          // Prevent vertical scroll capture
+          padding: `${theme.spacing.xs}px ${theme.spacing.sectionPadding}px ${theme.spacing.md}px`,
           msOverflowStyle: 'none',
         }}
       >

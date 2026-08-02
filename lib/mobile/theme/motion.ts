@@ -21,6 +21,8 @@ export const easing = {
   spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
   /** Linear — for progress / loading */
   linear: 'linear',
+  /** Plain ease-out — per Phase 6 spec (250ms ease-out) */
+  easeOut: 'ease-out',
 } as const;
 
 export const duration = {
@@ -30,12 +32,30 @@ export const duration = {
   fast: '180ms',
   /** 240ms — standard UI transitions */
   normal: '240ms',
+  /** 250ms — Phase 6 spec standard transition (alias of normal) */
+  standard: '250ms',
   /** 320ms — section transitions, drawer */
   slow: '320ms',
   /** 420ms — page transitions, splash */
   page: '420ms',
   /** 600ms — long entrance animations */
   long: '600ms',
+} as const;
+
+/**
+ * Scale transforms per Phase 6 spec:
+ *   Card Hover  — scale(1.02)
+ *   Button Press — scale(0.97)
+ */
+export const scale = {
+  /** Card hover — subtle lift (Phase 6 spec) */
+  cardHover: 1.02,
+  /** Button press — subtle depress (Phase 6 spec) */
+  buttonPress: 0.97,
+  /** Generic press — alias of buttonPress */
+  press: 0.97,
+  /** No transform */
+  none: 1,
 } as const;
 
 // ── Preset transition strings (one-liners) ──────────────────────────
@@ -64,8 +84,10 @@ export const motion = {
   easing,
   duration,
   transitions,
+  scale,
 } as const;
 
 export type EasingToken = keyof typeof easing;
 export type DurationToken = keyof typeof duration;
+export type ScaleToken = keyof typeof scale;
 export default motion;

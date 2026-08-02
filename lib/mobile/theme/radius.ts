@@ -14,16 +14,20 @@ export const radius = {
   sm: 6,
   /** 10px — small cards */
   md: 10,
-  /** 14px — medium cards */
+  /** 14px — Buttons (Phase 6 spec) */
+  button: 14,
+  /** 14px — legacy `lg` token (alias of button) */
   lg: 14,
-  /** 18px — featured cards */
-  xl: 18,
-  /** 22px — large hero cards */
-  xxl: 22,
-  /** 24px — premium product cards (Apple/GOAT style) */
-  card: 24,
-  /** 28px — hero banners, big editorial cards */
-  hero: 28,
+  /** 16px — Cards (Phase 6 spec) */
+  card: 16,
+  /** 16px — legacy `xl` token (alias of card) */
+  xl: 16,
+  /** 20px — Large Cards (Phase 6 spec) */
+  largeCard: 20,
+  /** 20px — legacy `xxl` token (alias of largeCard) */
+  xxl: 20,
+  /** 24px — legacy premium product cards (alias of largeCard) */
+  hero: 20,
   /** 999px — fully rounded (pills, circles, bottom nav) */
   pill: 999,
 } as const;
