@@ -21,8 +21,9 @@ function MobileBrandsImpl() {
     <section
       aria-label="Featured brands"
       style={{
-        paddingTop: theme.spacing.sectionPadding,
-        paddingBottom: theme.spacing.sectionPadding,
+        // Phase 7: 48px section spacing (was 24px)
+        paddingTop: theme.spacing.sectionSpacing,
+        paddingBottom: theme.spacing.sectionSpacing,
         background: theme.colors.offWhite,
         borderTop: `1px solid ${theme.colors.grey100}`,
         borderBottom: `1px solid ${theme.colors.grey100}`,

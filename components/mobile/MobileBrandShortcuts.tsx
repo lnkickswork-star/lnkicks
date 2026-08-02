@@ -6,27 +6,19 @@ import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 
 /**
- * MobileBrandShortcuts — horizontal scrolling capsule pills.
+ * MobileBrandShortcuts — premium horizontal scrolling capsule pills.
  *
- * Pure-minimal layout matching the reference:
- *   - 10 brands: Nike, Jordan, Adidas, Puma, New Balance, ASICS,
- *     Converse, Vans, Reebok, HOKA
- *   - Active pill: matte black bg + white text
- *   - Inactive pill: soft grey bg + black text
- *   - Fully rounded capsule shape (radius.pill)
- *   - Horizontal scroll, hidden scrollbar, momentum scroll on iOS
+ * PHASE 7 PREMIUM REDESIGN
+ *   - Premium pill buttons with softer shadow (shadows.sm)
+ *   - Better padding (10px × 18px) for more breathing room
+ *   - Active state: matte black bg + white text + subtle elevation
+ *   - Inactive state: white bg + black text + soft border
+ *   - Apple-style spring transition (cubic-bezier(0.34, 1.56, 0.64, 1))
+ *   - Press scale 0.95 for tactile feedback
+ *   - Larger touch target (40px min height)
  *
  * Selection state is purely visual (first item defaults to active).
- * Tapping a chip navigates to /products?brand=<slug> — the actual
- * filter happens on the products page (no duplicate logic).
- *
- * Phase 3 polish:
- *  - Design tokens (no hardcoded values)
- *  - Haptic selection tick on tap
- *  - Pressed state (scale 0.96)
- *  - Focus-visible ring for keyboard navigation
- *  - ARIA: role="list" + aria-label per item
- *  - Memoized — never re-renders unless active index changes
+ * Tapping a chip navigates to /products?brand=<slug>.
  */
 
 const BRANDS = [
@@ -46,7 +38,10 @@ function MobileBrandShortcutsImpl() {
   const [activeId, setActiveId] = useState<string>('nike');
 
   return (
-    <section aria-label="Brand shortcuts" style={{ paddingTop: theme.spacing.cardGap }}>
+    <section
+      aria-label="Brand shortcuts"
+      style={{ paddingTop: theme.spacing.cardGap }}
+    >
       <div
         className="mbs-scroller"
         role="list"
@@ -56,7 +51,7 @@ function MobileBrandShortcutsImpl() {
           overflowX: 'auto',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: `0 ${theme.spacing.sectionPadding}px`,
+          padding: `${theme.spacing.xs}px ${theme.spacing.sectionPadding}px ${theme.spacing.sm}px`,
         }}
       >
         {BRANDS.map((b) => {
@@ -78,19 +73,30 @@ function MobileBrandShortcutsImpl() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: `${theme.spacing.sm + 2}px ${theme.spacing.cardGap + 2}px`,
+                // Phase 7: better padding (10px × 18px) for premium feel
+                padding: `${theme.spacing.sm + 2}px ${theme.spacing.xl + 2}px`,
                 borderRadius: theme.radius.pill,
-                background: isActive ? theme.colors.primaryButton : theme.colors.offWhite,
-                color: isActive ? theme.colors.buttonText : theme.colors.textPrimary,
+                // Phase 7: white bg for inactive (was offWhite — too grey)
+                background: isActive
+                  ? theme.colors.primaryButton
+                  : theme.colors.white,
+                color: isActive
+                  ? theme.colors.buttonText
+                  : theme.colors.textPrimary,
                 textDecoration: 'none',
                 fontFamily: theme.fontFamily.body,
                 fontSize: theme.fontSize.md,
                 fontWeight: theme.fontWeight.semibold,
                 letterSpacing: theme.letterSpacing.normal,
                 whiteSpace: 'nowrap',
-                transition: `background-color ${theme.duration.standard} ${theme.easing.easeOut}, color ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}`,
+                minHeight: 40,
+                // Phase 7: softer shadow on active, hairline border on inactive
+                boxShadow: isActive
+                  ? theme.shadows.sm
+                  : theme.shadows.hairline,
                 border: '1px solid transparent',
-                boxShadow: isActive ? 'none' : theme.shadows.hairline,
+                // Phase 7: spring-like transition for Apple-quality feedback
+                transition: `background-color ${theme.duration.standard} ${theme.easing.spring}, color ${theme.duration.standard} ${theme.easing.spring}, transform ${theme.duration.instant} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
                 fontFeatureSettings: theme.fontFeatures,
               }}
             >
@@ -109,7 +115,7 @@ function MobileBrandShortcutsImpl() {
           -webkit-tap-highlight-color: transparent;
         }
         .mbs-chip:active {
-          transform: scale(${theme.scale.buttonPress});
+          transform: scale(0.95);
         }
         .mbs-chip:focus-visible {
           outline: 2px solid ${theme.colors.black};

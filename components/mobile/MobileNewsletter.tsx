@@ -36,18 +36,22 @@ function MobileNewsletterImpl() {
   return (
     <section
       style={{
-        padding: `${theme.spacing.sectionPadding}px ${theme.spacing.sectionPadding}px ${theme.spacing.xxxl}px`,
+        // Phase 7: 48px top spacing, 32px bottom (was 24/28)
+        padding: `${theme.spacing.sectionSpacing}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px`,
       }}
     >
       <div
         style={{
           background: theme.colors.black,
-          borderRadius: theme.radius.largeCard,
+          // Phase 7: 32px radius — luxury magazine cover
+          borderRadius: theme.radius.heroCard,
+          // Phase 7: 32px internal padding
           padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
           color: theme.colors.white,
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: theme.shadows.xl,
+          // Phase 7: editorial shadow tier
+          boxShadow: theme.shadows.editorial,
         }}
       >
         {/* Background watermark */}

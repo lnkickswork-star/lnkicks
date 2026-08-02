@@ -198,7 +198,8 @@ export default function MobileHome() {
         <main
           id="main-content"
           style={{
-            paddingTop: theme.spacing.cardGap,
+            // Phase 7: 24px top padding (was 16px) — breathing room below header
+            paddingTop: theme.spacing.sectionPadding,
             // Bottom nav clearance includes safe-area-inset-bottom
             paddingBottom: safeArea.bottomNavClearance,
             display: 'flex',

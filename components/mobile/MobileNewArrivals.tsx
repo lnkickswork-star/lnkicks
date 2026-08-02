@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
@@ -9,42 +9,21 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import type { MobileProduct } from '@/components/mobile/mobileProducts';
 
 /**
- * MobileNewArrivals — premium promotional banner (SNKRS / Apple style).
+ * MobileNewArrivals — premium SNKRS / Apple-style feature banner.
  *
- * DESIGN INTENT (LN KICKS premium refresh):
- *   Taller, more editorial. Bigger display type. More breathing room.
- *   Same matte black canvas + white type + floating product, but pushed
- *   to a more dramatic, Apple-store-quality composition.
- *
- * Design contract:
- *   - Full-width matte black card with radius.hero (28px)
- *   - Asymmetric split: LEFT (eyebrow / brand / display headline /
- *     description / price / CTA) | RIGHT (large premium sneaker image)
- *   - Taller 280px min-height (up from 240) for editorial scale
- *   - "NEW" eyebrow chip (matte black on white pill, top-left)
- *   - Large display headline in Oswald — product name, bigger now
- *   - One-sentence description (Inter, soft grey)
- *   - Price row (white bold + strike-through)
- *   - "Shop Now" CTA button (white pill on black, arrow icon)
- *   - Floating sneaker on the right with drop-shadow, slight rotation
+ * PHASE 7 PREMIUM REDESIGN
+ *   - 32px radius (radius.heroCard) — luxury magazine cover feel
+ *   - Cleaner asymmetric split with better proportions
+ *   - Larger product image (no rotation — kept clean per spec)
+ *   - Premium editorial shadow tier (shadows.editorial)
+ *   - Floating Add-to-Cart button with ripple effect
+ *   - Larger typography: hero 32px, price 22px
+ *   - More breathing room — 32px internal padding
  *
  * LN KICKS theme: matte black background, white text, white product PNG,
- * pure luxury. No blue, no gradients. Inspired by Nike SNKRS app feature
- * cards + Apple Store product cards.
- *
- * Phase 4 polish:
- *  - All design tokens (no hardcoded values)
- *  - Taller 280px canvas for editorial scale
- *  - Bigger display headline (fontSize.h2 → fontSize.h1)
- *  - More padding inside for breathing room
- *  - Haptic medium tick on Add-to-Cart, selection tick on CTA
- *  - Pressed state on card (scale 0.99) and CTA (scale 0.94)
- *  - Focus-visible ring on the card link and the + button
- *  - ARIA: article + aria-label, button has descriptive aria-label
- *  - Memoized
- *  - Image uses loading="lazy" + decoding="async" for scroll perf
- *  - Hover: image lifts + rotates further; CTA lifts
+ * pure luxury. No blue, no gradients.
  */
+
 type MobileNewArrivalsProps = {
   product: MobileProduct;
   /** Optional collection label shown above product name (e.g. "Summer Drop") */
@@ -53,17 +32,40 @@ type MobileNewArrivalsProps = {
   description?: string;
 };
 
+/* ── Ripple effect for the Add button ─────────────────────────── */
+type Ripple = { id: number; x: number; y: number };
+
+function useRipple() {
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const idRef = useRef(0);
+
+  const trigger = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = ++idRef.current;
+    setRipples((prev) => [...prev, { id, x, y }]);
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 600);
+  }, []);
+
+  return { ripples, trigger };
+}
+
 function MobileNewArrivalsImpl({
   product,
   collection = 'New Arrival',
   description,
 }: MobileNewArrivalsProps) {
   const { addToCart } = useApp();
+  const { ripples, trigger } = useRipple();
 
-  const handleAdd = (e: React.MouseEvent) => {
+  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     haptic.medium();
+    trigger(e);
     addToCart({
       id: product.id,
       name: product.name,
@@ -82,7 +84,8 @@ function MobileNewArrivalsImpl({
     <section
       aria-label="New Arrivals"
       style={{
-        paddingTop: theme.spacing.sectionPadding,
+        // Phase 7: 48px section spacing
+        paddingTop: theme.spacing.sectionSpacing,
         paddingBottom: theme.spacing.sm,
       }}
     >
@@ -159,12 +162,14 @@ function MobileNewArrivalsImpl({
           style={{
             position: 'relative',
             background: theme.colors.black,
-            borderRadius: theme.radius.largeCard,
+            // Phase 7: 32px radius — luxury magazine cover
+            borderRadius: theme.radius.heroCard,
             overflow: 'hidden',
             display: 'grid',
             gridTemplateColumns: '58fr 42fr',
-            minHeight: 280,
-            boxShadow: theme.shadows.lg,
+            minHeight: 320,
+            // Phase 7: editorial shadow tier
+            boxShadow: theme.shadows.editorial,
             border: 'none',
           }}
         >
@@ -176,7 +181,7 @@ function MobileNewArrivalsImpl({
               bottom: -40,
               right: -12,
               fontFamily: theme.fontFamily.display,
-              fontSize: 180,
+              fontSize: 200,
               fontWeight: theme.fontWeight.black,
               color: 'rgba(255,255,255,0.045)',
               letterSpacing: '-0.06em',
@@ -198,7 +203,8 @@ function MobileNewArrivalsImpl({
               flexDirection: 'column',
               justifyContent: 'center',
               gap: theme.spacing.sm,
-              padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
+              // Phase 7: 32px internal padding for breathing room
+              padding: `${theme.spacing.sectionGap}px ${theme.spacing.sectionPadding}px`,
             }}
           >
             {/* NEW eyebrow chip — Button style 15px / 600 */}
@@ -266,7 +272,7 @@ function MobileNewArrivalsImpl({
               {desc}
             </p>
 
-            {/* Price row — 18px / 700 (per Phase 6 spec) */}
+            {/* Price row — Phase 7: 22px / 700 */}
             <div
               style={{
                 display: 'flex',
@@ -278,7 +284,7 @@ function MobileNewArrivalsImpl({
               <span
                 style={{
                   fontFamily: theme.fontFamily.body,
-                  fontSize: theme.fontSize.price,
+                  fontSize: theme.fontSize.priceLg,
                   fontWeight: theme.fontWeight.bold,
                   color: theme.colors.white,
                   letterSpacing: theme.letterSpacing.normal,
@@ -323,7 +329,6 @@ function MobileNewArrivalsImpl({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: theme.spacing.xs,
-                  // Primary button: #111111 bg, white text, 48px height, 14px radius
                   background: theme.colors.primaryButton,
                   color: theme.colors.buttonText,
                   height: theme.spacing.buttonHeight,
@@ -341,13 +346,25 @@ function MobileNewArrivalsImpl({
                 }}
               >
                 Shop Now
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.6"
+                  aria-hidden
+                >
                   <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
-                  <polyline points="12 5 19 12 12 19" strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline
+                    points="12 5 19 12 12 19"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </Link>
 
-              {/* Add-to-cart icon button — outline style on dark bg */}
+              {/* Add-to-cart icon button — outline style on dark bg, with ripple */}
               <button
                 type="button"
                 onClick={handleAdd}
@@ -364,19 +381,49 @@ function MobileNewArrivalsImpl({
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
                   transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}, border-color ${theme.duration.standard} ${theme.easing.easeOut}`,
                 }}
               >
-                {/* Action icon = 22px per Phase 6 spec */}
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+                {/* Action icon = 22px */}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  aria-hidden
+                  style={{ pointerEvents: 'none', zIndex: 1 }}
+                >
                   <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
                   <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
                 </svg>
+                {ripples.map((r) => (
+                  <span
+                    key={r.id}
+                    aria-hidden
+                    className="mna-ripple"
+                    style={{
+                      position: 'absolute',
+                      left: r.x,
+                      top: r.y,
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.4)',
+                      transform: 'translate(-50%, -50%)',
+                      pointerEvents: 'none',
+                      zIndex: 0,
+                    }}
+                  />
+                ))}
               </button>
             </div>
           </div>
 
-          {/* ── Right: large sneaker image ─────────────────────────── */}
+          {/* ── Right: large sneaker image — clean, no rotation ──── */}
           <div
             style={{
               position: 'relative',
@@ -384,7 +431,7 @@ function MobileNewArrivalsImpl({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: theme.spacing.md,
+              padding: theme.spacing.sectionPadding,
               overflow: 'hidden',
             }}
           >
@@ -409,13 +456,13 @@ function MobileNewArrivalsImpl({
                 draggable={false}
                 className="mna-img"
                 style={{
-                  maxWidth: '135%',
-                  maxHeight: '135%',
+                  // Phase 7: larger image, no rotation (clean editorial)
+                  maxWidth: '145%',
+                  maxHeight: '145%',
                   width: 'auto',
                   height: 'auto',
                   objectFit: 'contain',
                   filter: theme.dropShadows.lg,
-                  transform: 'rotate(-14deg)',
                   transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}`,
                 }}
               />
@@ -437,6 +484,10 @@ function MobileNewArrivalsImpl({
             @media (hover: hover) {
               .mna-card:hover {
                 transform: scale(${theme.scale.cardHover});
+                box-shadow: ${theme.shadows.editorialLg};
+              }
+              .mna-card:hover .mna-img {
+                transform: translateY(-4px) scale(1.04);
               }
             }
             .mna-card:focus-within {
@@ -451,13 +502,19 @@ function MobileNewArrivalsImpl({
               outline: 2px solid ${theme.colors.white};
               outline-offset: 3px;
             }
-            @media (hover: hover) {
-              .mna-card:hover .mna-img {
-                transform: rotate(-18deg) translateY(-6px) scale(1.05);
+            .mna-ripple {
+              animation: mna-ripple-anim 600ms ${theme.easing.easeOut} forwards;
+            }
+            @keyframes mna-ripple-anim {
+              0% {
+                width: 8px;
+                height: 8px;
+                opacity: 0.5;
               }
-              .mna-cta:hover {
-                background: ${theme.colors.grey200};
-                transform: translateY(-1px);
+              100% {
+                width: 140px;
+                height: 140px;
+                opacity: 0;
               }
             }
           `}</style>

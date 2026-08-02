@@ -41,8 +41,19 @@ export const fontFamily = {
 } as const;
 
 /**
- * Type scale — per Apple/Samsung/Google Store spec.
- * Sizes verified against the user's typography system brief.
+ * Type scale — Phase 7 editorial premium refresh.
+ *
+ * HIERARCHY (per new spec):
+ *   Brand         12px / 500 / gray
+ *   Product Name  20–22px / 600
+ *   Price         22–24px / 700
+ *   Old Price     14px / 500 / strikethrough / 60% opacity
+ *   Rating        12px / 400 / light gray
+ *   Section       24px / 700
+ *   Hero          32px / 700
+ *   Body          14px / 400
+ *   Caption       12px / 400
+ *   Bottom Nav    11px / 500
  */
 export const fontSize = {
   /** 9.5px — legacy micro (kept for backwards compat, prefer `navLabel`) */
@@ -63,18 +74,26 @@ export const fontSize = {
   md: 14,
   /** 15px — Search Placeholder / Buttons / featured body */
   lg: 15,
-  /** 16px — Product Name */
+  /** 16px — legacy Product Name (kept for backwards compat) */
   productName: 16,
   /** 17px — header wordmark, prominent labels (legacy) */
   xl: 17,
-  /** 18px — Price */
+  /** 18px — legacy Price (kept for backwards compat) */
   price: 18,
   /** 20px — small headlines (legacy) */
   xxl: 20,
+  /** 20px — preferred Product Name (Phase 7 spec) */
+  productNameLg: 20,
   /** 22px — legacy title (alias of sectionSubtitle) */
   title: 22,
+  /** 22px — preferred Product Name large (Phase 7 spec) */
+  productNameXl: 22,
+  /** 22px — preferred Price (Phase 7 spec) */
+  priceLg: 22,
   /** 24px — Section Heading */
   section: 24,
+  /** 24px — preferred Price large (Phase 7 spec) */
+  priceXl: 24,
   /** 26px — legacy h2 (alias) */
   h2: 26,
   /** 30px — legacy h1 (alias) */
@@ -199,10 +218,19 @@ export const typography = {
       letterSpacing: letterSpacing.tight,
       fontFeatureSettings: fontFeatures,
     },
-    /** Product Name — 16px / 600 / 22px line height */
+    /** Product Name — 16px / 600 / 22px line height (legacy) */
     cardTitle: {
       fontFamily: fontFamily.body,
       fontSize: fontSize.productName,
+      fontWeight: fontWeight.semibold,
+      lineHeight: lineHeight.product,
+      letterSpacing: letterSpacing.normal,
+      fontFeatureSettings: fontFeatures,
+    },
+    /** Product Name — 20px / 600 (Phase 7 spec, preferred) */
+    productName: {
+      fontFamily: fontFamily.body,
+      fontSize: fontSize.productNameLg,
       fontWeight: fontWeight.semibold,
       lineHeight: lineHeight.product,
       letterSpacing: letterSpacing.normal,
@@ -216,10 +244,18 @@ export const typography = {
       lineHeight: lineHeight.body,
       fontFeatureSettings: fontFeatures,
     },
-    /** Price — 18px / 700 */
+    /** Price — 18px / 700 (legacy) */
     price: {
       fontFamily: fontFamily.body,
       fontSize: fontSize.price,
+      fontWeight: fontWeight.bold,
+      letterSpacing: letterSpacing.normal,
+      fontFeatureSettings: fontFeatures,
+    },
+    /** Price — 22px / 700 (Phase 7 spec, preferred) */
+    priceLg: {
+      fontFamily: fontFamily.body,
+      fontSize: fontSize.priceLg,
       fontWeight: fontWeight.bold,
       letterSpacing: letterSpacing.normal,
       fontFeatureSettings: fontFeatures,

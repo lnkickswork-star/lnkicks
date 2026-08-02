@@ -49,11 +49,12 @@ function MobileHeaderImpl({
         position: 'sticky',
         top: 0,
         zIndex: theme.zIndex.header,
+        // Phase 7: stronger Apple-style blur (was 20px) + softer border
         background: theme.colors.glass,
-        backdropFilter: 'saturate(180%) blur(20px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+        backdropFilter: 'saturate(180%) blur(24px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(24px)',
         borderBottom: scrolled
-          ? `1px solid ${theme.colors.border}`
+          ? `1px solid ${theme.colors.grey200}`
           : '1px solid transparent',
         transition: transitions.border,
       }}

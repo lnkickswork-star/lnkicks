@@ -12,32 +12,21 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * MobileBottomNav — floating bottom navigation with center FAB.
  *
+ * PHASE 7 PREMIUM REDESIGN
+ *   - Softer, wider-spread shadow (shadows.lg — premium tier)
+ *   - Apple-style backdrop blur (saturate 180% + blur 24px)
+ *   - Center FAB with deeper elevation (shadows.fab) — perfectly centered
+ *   - Smooth icon scale animation on active state (scale 1.05)
+ *   - Better active state: filled icon + black label
+ *   - Inactive: grey icon + grey label (lighter for contrast)
+ *   - Spring-like transitions for tactile feedback
+ *
  * Layout (matches reference):
  *   ┌──────────────────────────────────────────────┐
  *   │  Home     Wishlist    ◉    Profile  Categories│
  *   └──────────────────────────────────────────────┘
  *                       ▲
  *              Center FAB (matte black, cart icon)
- *              Sits ABOVE the bar, slightly elevated.
- *
- *  - 4 nav items flanking the center: Home, Wishlist, Profile, Categories
- *  - Center FAB: matte black circle with shopping bag icon, links to /cart
- *  - Active nav item: black icon + black label
- *  - Inactive nav item: grey icon + grey label
- *  - White floating bar, soft shadow, full pill radius
- *  - FAB casts a deeper shadow (lg) for elevation
- *  - Cart badge count overlaid on the FAB
- *
- * LN KICKS theme: matte black accents, no blue.
- *
- * Phase 3 polish:
- *  - Design tokens (no hardcoded values)
- *  - Safe-area-aware: floats above iOS Home Indicator
- *  - Haptic selection tick on nav tap; medium tick on FAB tap
- *  - Pressed state (scale 0.92) on items, scale 0.88 on FAB
- *  - Focus-visible ring
- *  - ARIA: role="navigation", aria-label, aria-current
- *  - Memoized — only re-renders when pathname or cart count changes
  */
 
 type IconRenderer = (color: string) => React.ReactNode;
@@ -122,13 +111,17 @@ function MobileBottomNavImpl({
         zIndex: theme.zIndex.nav,
       }}
     >
-      {/* Nav bar with notch for FAB — 80px height per Phase 6 spec */}
+      {/* Nav bar with notch for FAB — 80px height */}
       <div
         style={{
           position: 'relative',
-          background: theme.colors.white,
+          // Phase 7: glass background with stronger blur
+          background: theme.colors.glass,
+          backdropFilter: 'saturate(180%) blur(24px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(24px)',
           borderRadius: theme.radius.pill,
-          border: `1px solid ${theme.colors.grey100}`,
+          border: `1px solid ${theme.colors.grey200}`,
+          // Phase 7: softer, wider-spread premium shadow
           boxShadow: theme.shadows.lg,
           display: 'grid',
           gridTemplateColumns: '1fr 1fr 64px 1fr 1fr',
@@ -171,13 +164,16 @@ function MobileBottomNavImpl({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: theme.shadows.lg,
+            // Phase 7: deeper FAB elevation (shadows.fab)
+            boxShadow: theme.shadows.fab,
             border: `3px solid ${theme.colors.white}`,
             textDecoration: 'none',
             zIndex: theme.zIndex.fab,
+            // Phase 7: spring-like transition for tactile feedback
+            transition: `transform ${theme.duration.instant} ${theme.easing.spring}`,
           }}
         >
-          {/* Action icon = 22px per Phase 6 spec */}
+          {/* Action icon = 22px */}
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
@@ -239,16 +235,29 @@ function NavButtonImpl({ item, active }: { item: NavItem; active: boolean }) {
         textDecoration: 'none',
         background: 'transparent',
         color: active ? theme.colors.textPrimary : theme.colors.textTertiary,
-        transition: `color ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}`,
+        // Phase 7: spring transition for icon + color change
+        transition: `color ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.spring}`,
       }}
     >
-      {item.icon(active ? theme.colors.textPrimary : theme.colors.textTertiary)}
-      {/* Bottom Navigation label — 11px / 500 (per Phase 6 spec) */}
+      <span
+        className="mbn-icon"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          // Phase 7: scale active icon up slightly (1.05) for tactile feedback
+          transform: active ? 'scale(1.05)' : 'scale(1)',
+          transition: `transform ${theme.duration.standard} ${theme.easing.spring}`,
+        }}
+      >
+        {item.icon(active ? theme.colors.textPrimary : theme.colors.textTertiary)}
+      </span>
+      {/* Bottom Navigation label — 11px / 500 */}
       <span
         style={{
           fontFamily: theme.fontFamily.body,
           fontSize: theme.fontSize.navLabel,
-          fontWeight: theme.fontWeight.medium,
+          fontWeight: active ? theme.fontWeight.semibold : theme.fontWeight.medium,
           letterSpacing: theme.letterSpacing.normal,
           fontFeatureSettings: theme.fontFeatures,
         }}

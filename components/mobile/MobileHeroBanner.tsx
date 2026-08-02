@@ -1,53 +1,41 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
- * MobileHeroBanner — simple full-width swipeable banner slider.
+ * MobileHeroBanner — editorial luxury magazine-cover hero slider.
  *
- * DESIGN INTENT (per user request, Phase 5 simplification):
- *   - Simple, clean banner — NO 3D rotated shoe, NO asymmetric split,
- *     NO drop-shadow depth, NO toggle dots / numeric indicators.
- *   - Each slide is full-width, fits the mobile screen, swipeable with
- *     snap.
- *   - Premium B&W aesthetic preserved: alternating light (off-white) /
- *     dark (matte black) variants for visual rhythm.
- *   - Centered editorial composition: eyebrow → centered shoe image →
- *     display headline → subtitle → CTA underline.
+ * PHASE 7 PREMIUM REDESIGN
+ *   Each card feels like a luxury magazine cover:
+ *     - Tall 460px canvas with generous internal whitespace
+ *     - 32px radius (radius.heroCard) — soft, premium corners
+ *     - Bigger sneaker imagery (up to 70% of card width)
+ *     - Editorial typography hierarchy: eyebrow → lead → display → subtitle
+ *     - Smooth horizontal snap scrolling with peek preview of next card
+ *     - Premium editorial shadows (shadows.editorial)
+ *     - Soft fade-in on first paint + scroll-reveal
+ *     - Alternating light (off-white) / dark (matte black) variants
  *
  * Visual contract:
- *   - 3 promotional banners, swipeable horizontally with snap
- *   - No auto-advance, no dots, no numeric indicators (per spec)
- *   - Full-bleed feel: banner extends edge-to-edge with theme.pad inner
- *     padding
- *   - Height 320px — tall enough for image + text, short enough to keep
- *     Popular Shoes near the fold
+ *   ┌─────────────────────────────────────────────┐
+ *   │                                             │
+ *   │              EYEBROW                        │
+ *   │                                             │
+ *   │      [centered sneaker — large, no rotation]│
+ *   │                                             │
+ *   │           lead line (regular)               │
+ *   │           DISPLAY HEADLINE (bold)           │
+ *   │           subtitle line                     │
+ *   │           ─── Shop Now →                    │
+ *   │                                             │
+ *   └─────────────────────────────────────────────┘
  *
- * Banner anatomy (per slide):
- *   ┌────────────────────────────────────────────────────┐
- *   │                                                    │
- *   │                  EYEBROW                           │
- *   │                                                    │
- *   │              [centered shoe PNG,                   │
- *   │               no rotation, no shadow]              │
- *   │                                                    │
- *   │                HEADLINE                            │
- *   │              Subtitle line.                        │
- *   │              ─── SHOP NOW →                        │
- *   │                                                    │
- *   └────────────────────────────────────────────────────┘
- *              ▲
- *      Light variant: off-white canvas (#FAFAFA)
- *      Dark variant: matte black (#0A0A0A)
- *
- * Each banner tappable → product / category / collection route.
- *
- * LN KICKS theme: pure B&W. Light slide = off-white canvas + black type.
- * Dark slide = matte black canvas + white type. Alternates for visual rhythm.
+ * Each card tappable → product detail route. No dots, no numeric
+ * indicators, no auto-advance (per Phase 5 spec — preserved).
  */
 
 type Banner = {
@@ -102,15 +90,35 @@ const BANNERS: Banner[] = [
 ];
 
 function MobileHeroBannerImpl() {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Track which card is centered for fade-in animation
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const onScroll = () => {
+      const cardWidth = el.clientWidth;
+      const idx = Math.round(el.scrollLeft / cardWidth);
+      setActiveIndex(Math.max(0, Math.min(BANNERS.length - 1, idx)));
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <section
       aria-label="Featured promotions"
       style={{
-        paddingTop: theme.spacing.sectionPadding,
+        // Phase 7: 48px section spacing for editorial breathing room
+        paddingTop: theme.spacing.sectionSpacing,
         paddingBottom: theme.spacing.sectionPadding,
       }}
     >
       <div
+        ref={scrollerRef}
         className="mhb-scroller"
         style={{
           display: 'flex',
@@ -118,12 +126,17 @@ function MobileHeroBannerImpl() {
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
+          // 24px side padding gives peek preview of next card
           padding: `0 ${theme.spacing.sectionPadding}px`,
-          gap: 0,
+          gap: theme.spacing.cardGap,
         }}
       >
-        {BANNERS.map((banner) => (
-          <BannerCard key={banner.id} banner={banner} />
+        {BANNERS.map((banner, idx) => (
+          <BannerCard
+            key={banner.id}
+            banner={banner}
+            isActive={idx === activeIndex}
+          />
         ))}
       </div>
 
@@ -134,7 +147,13 @@ function MobileHeroBannerImpl() {
         }
         .mhb-scroller > * {
           scroll-snap-align: center;
-          flex: 0 0 100%;
+          // Each card takes ~88% of viewport width, leaving peek preview
+          flex: '0 0 88%';
+        }
+        @media (max-width: 380px) {
+          .mhb-scroller > * {
+            flex: '0 0 92%';
+          }
         }
       `}</style>
     </section>
@@ -142,21 +161,31 @@ function MobileHeroBannerImpl() {
 }
 
 /* ── Single banner card ───────────────────────────────────────── */
-function BannerCardImpl({ banner }: { banner: Banner }) {
+function BannerCardImpl({
+  banner,
+  isActive,
+}: {
+  banner: Banner;
+  isActive: boolean;
+}) {
   const isDark = banner.variant === 'dark';
   // Light variant: off-white canvas (#FAFAFA) — Apple Store warmth.
   // Dark variant: matte black (#0A0A0A).
   const bg = isDark ? theme.colors.black : theme.colors.offWhite;
   const fg = isDark ? theme.colors.white : theme.colors.black;
-  const eyebrowFg = isDark ? 'rgba(255,255,255,0.65)' : theme.colors.textSecondary;
-  const subtitleFg = isDark ? 'rgba(255,255,255,0.72)' : theme.colors.textSecondary;
+  const eyebrowFg = isDark
+    ? 'rgba(255,255,255,0.65)'
+    : theme.colors.textSecondary;
+  const subtitleFg = isDark
+    ? 'rgba(255,255,255,0.72)'
+    : theme.colors.textSecondary;
   const underlineColor = isDark ? theme.colors.white : theme.colors.black;
 
   return (
     <Link
       href={banner.href}
       aria-label={`${banner.lead} ${banner.display}: ${banner.subtitle}`}
-      className="mhb-card pressable"
+      className={`mhb-card pressable ${isActive ? 'mhb-card--active' : ''}`}
       onPointerDown={() => haptic.light()}
       style={{
         position: 'relative',
@@ -165,20 +194,29 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
         alignItems: 'center',
         justifyContent: 'center',
         background: bg,
-        borderRadius: theme.radius.largeCard,
+        // Phase 7: 32px radius — luxury magazine cover
+        borderRadius: theme.radius.heroCard,
         overflow: 'hidden',
         border: 'none',
-        boxShadow: isDark ? theme.shadows.lg : theme.shadows.premium,
+        // Phase 7: editorial shadow tier — softer, wider spread
+        boxShadow: isDark
+          ? theme.shadows.editorial
+          : theme.shadows.editorial,
         color: fg,
         textDecoration: 'none',
-        height: 340,
+        // Phase 7: taller card for editorial scale (was 340px)
+        height: 460,
         boxSizing: 'border-box',
-        margin: `0 ${theme.spacing.xs}px`,
-        padding: `${theme.spacing.sectionPadding}px`,
-        transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}`,
+        // Phase 7: 28px internal padding for breathing room
+        padding: `${theme.spacing.sectionSpacing}px ${theme.spacing.sectionPadding}px`,
+        transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
+        // Each card width: 88% of viewport (peek preview of next card)
+        width: '88%',
+        flex: '0 0 88%',
+        maxWidth: 420,
       }}
     >
-      {/* ── Eyebrow — 12px / 500 / uppercase / 0.5px tracking (Brand Name preset) ── */}
+      {/* ── Eyebrow — 12px / 500 / uppercase / 0.5px tracking ── */}
       <span
         style={{
           color: eyebrowFg,
@@ -194,24 +232,30 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
         {banner.eyebrow}
       </span>
 
-      {/* ── Centered shoe image — NO rotation, NO drop shadow ────── */}
+      {/* ── Centered shoe image — larger (was 65% / 160px max) ──── */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={banner.image}
         alt=""
         aria-hidden
         draggable={false}
+        className="mhb-img"
         style={{
-          maxWidth: '65%',
-          maxHeight: 160,
+          // Phase 7: bigger image — up to 75% width, taller max
+          maxWidth: '75%',
+          maxHeight: 220,
           width: 'auto',
           height: 'auto',
           objectFit: 'contain',
-          marginBottom: theme.spacing.lg,
+          marginBottom: theme.spacing.xl,
+          // Subtle drop shadow for depth on light variant only
+          filter: isDark ? 'none' : theme.dropShadows.md,
+          opacity: isActive ? 1 : 0.85,
+          transition: `transform ${theme.duration.slow} ${theme.easing.easeOut}, opacity ${theme.duration.slow} ${theme.easing.easeOut}`,
         }}
       />
 
-      {/* ── Headline — Hero 32px / 700 / 38px line height (Phase 6 spec) ── */}
+      {/* ── Headline — Hero 32px / 700 / 38px line height ── */}
       <h2
         style={{
           margin: 0,
@@ -258,9 +302,9 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
           fontWeight: theme.fontWeight.regular,
           color: subtitleFg,
           lineHeight: theme.lineHeight.body,
-          maxWidth: 240,
+          maxWidth: 280,
           textAlign: 'center',
-          marginTop: theme.spacing.xs,
+          marginTop: theme.spacing.sm,
           fontFeatureSettings: theme.fontFeatures,
         }}
       >
@@ -273,7 +317,7 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
           display: 'inline-flex',
           alignItems: 'center',
           gap: theme.spacing.xs,
-          marginTop: theme.spacing.md,
+          marginTop: theme.spacing.xl,
           fontFamily: theme.fontFamily.body,
           fontSize: theme.fontSize.lg,
           fontWeight: theme.fontWeight.semibold,
@@ -286,9 +330,21 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
         className="mhb-cta"
       >
         Shop Now
-        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden>
+        <svg
+          viewBox="0 0 24 24"
+          width="12"
+          height="12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.6"
+          aria-hidden
+        >
           <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
-          <polyline points="12 5 19 12 12 19" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline
+            points="12 5 19 12 12 19"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </span>
 
@@ -299,11 +355,28 @@ function BannerCardImpl({ banner }: { banner: Banner }) {
         @media (hover: hover) {
           .mhb-card:hover {
             transform: scale(${theme.scale.cardHover});
+            box-shadow: ${theme.shadows.editorialLg};
+          }
+          .mhb-card:hover .mhb-img {
+            transform: translateY(-4px) scale(1.03);
           }
         }
         .mhb-card:focus-visible {
           outline: 2px solid ${theme.colors.black};
           outline-offset: 3px;
+        }
+        .mhb-card--active .mhb-img {
+          animation: mhb-fade-up 600ms ${theme.easing.out} both;
+        }
+        @keyframes mhb-fade-up {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
     </Link>

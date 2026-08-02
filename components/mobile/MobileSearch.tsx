@@ -9,20 +9,15 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * MobileSearch — premium pill search bar.
  *
- * Pure white pill, soft shadow, no border. Magnifying glass + placeholder.
- * Tappable → /search route. No filter button — keeps the bar minimal and
- * luxury, matching the Apple / Nike / GOAT mobile reference.
+ * PHASE 7 PREMIUM REDESIGN
+ *   - Taller 52px (was 48px) for better touch target + visual weight
+ *   - Premium soft shadow (shadows.search — diffuse, premium)
+ *   - Softer border (1px grey200, was none)
+ *   - Better icon alignment (22px icon, 12px gap)
+ *   - More horizontal padding (20px, was 16px)
+ *   - Apple-style press scale (0.97) + haptic feedback
  *
  * LN KICKS theme: white pill, black icon, soft grey placeholder text.
- * Soft elevation shadow gives the bar a subtle "floating" feel without
- * being heavy. 56px touch-target height (Apple HIG minimum 44px).
- *
- * Phase 3 polish:
- *  - Design tokens (no hardcoded values)
- *  - Haptic light tick on tap
- *  - Pressed state (scale 0.97)
- *  - Focus-visible ring
- *  - Memoized — stateless, never re-renders
  */
 function MobileSearchImpl() {
   return (
@@ -34,15 +29,19 @@ function MobileSearchImpl() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: theme.spacing.sm + 2,
-        height: theme.spacing.buttonHeight,
-        padding: `0 ${theme.spacing.cardGap}px`,
-        background: theme.colors.offWhite,
+        gap: theme.spacing.md,
+        // Phase 7: 52px height (was 48px) for better touch target
+        height: 52,
+        // Phase 7: 20px horizontal padding (was 16px)
+        padding: `0 ${theme.spacing.xl}px`,
+        background: theme.colors.white,
         borderRadius: theme.radius.button,
-        boxShadow: theme.shadows.premium,
+        // Phase 7: premium diffuse shadow + softer border
+        boxShadow: theme.shadows.search,
+        border: `1px solid ${theme.colors.grey200}`,
         textDecoration: 'none',
         color: theme.colors.textTertiary,
-        transition: `box-shadow ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}`,
+        transition: `box-shadow ${theme.duration.standard} ${theme.easing.easeOut}, transform ${theme.duration.instant} ${theme.easing.easeOut}, border-color ${theme.duration.standard} ${theme.easing.easeOut}`,
       }}
     >
       {/* Action icon = 22px per Phase 6 spec */}
@@ -54,6 +53,7 @@ function MobileSearchImpl() {
         stroke="currentColor"
         strokeWidth="2.2"
         aria-hidden
+        style={{ flexShrink: 0 }}
       >
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.35-4.35" strokeLinecap="round" />
@@ -71,6 +71,17 @@ function MobileSearchImpl() {
         Search sneakers, brands, collections...
       </span>
       <style jsx>{pressableStyle}</style>
+      <style jsx>{`
+        .ms-search:active {
+          transform: scale(${theme.scale.buttonPress});
+        }
+        @media (hover: hover) {
+          .ms-search:hover {
+            border-color: ${theme.colors.grey300};
+            box-shadow: ${theme.shadows.md};
+          }
+        }
+      `}</style>
     </Link>
   );
 }
