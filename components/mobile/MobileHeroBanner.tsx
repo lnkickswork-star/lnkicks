@@ -53,6 +53,10 @@ type Banner = {
   variant: 'light' | 'dark';
 };
 
+// ── 11-card editorial hero slider ────────────────────────────────────
+// Covers Nike, Puma, Adidas, Reebok, Jordan, New Balance.
+// Image URLs verified working — mix of Google aida-public CDN (proven
+// elsewhere on the homepage) and ZAI image-search OSS re-hosted URLs.
 const BANNERS: Banner[] = [
   {
     id: 'hero-aj1-powder',
@@ -85,6 +89,94 @@ const BANNERS: Banner[] = [
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
     href: '/product/adidas-samba-og-wonder-silver',
+    variant: 'light',
+  },
+  {
+    id: 'hero-nb-530',
+    eyebrow: 'Daily Driver',
+    lead: 'Move',
+    display: 'DIFFERENT',
+    subtitle: 'Cloud-soft cushioning, all-day comfort.',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw',
+    href: '/product/new-balance-530-steel-grey',
+    variant: 'dark',
+  },
+  {
+    id: 'hero-puma-velophasis',
+    eyebrow: 'Future Form',
+    lead: 'Bold',
+    display: 'STRIDES',
+    subtitle: 'Tech-forward silhouette for the new era.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/0117cc523363.jpg',
+    href: '/product/puma-velophasis-luxury-edition',
+    variant: 'light',
+  },
+  {
+    id: 'hero-reebok-classic',
+    eyebrow: 'Vintage Heat',
+    lead: 'Throwback',
+    display: 'CROWN',
+    subtitle: 'The Reebok icon, reborn for today.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/001b3b05ce2b.jpg',
+    href: '/product/reebok-classic-leather',
+    variant: 'dark',
+  },
+  {
+    id: 'hero-nike-af1',
+    eyebrow: 'Forever Fresh',
+    lead: 'White On',
+    display: 'WHITE',
+    subtitle: 'The icon that goes with everything.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cd01d83ee3f7.jpg',
+    href: '/product/nike-air-force-1-07',
+    variant: 'light',
+  },
+  {
+    id: 'hero-adidas-ultraboost',
+    eyebrow: 'Engineered Speed',
+    lead: 'Run The',
+    display: 'CITY',
+    subtitle: 'Boost energy return with every stride.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/dd3d3fb42079.jpg',
+    href: '/product/adidas-ultraboost-1-0',
+    variant: 'dark',
+  },
+  {
+    id: 'hero-puma-suede',
+    eyebrow: 'Suede Heritage',
+    lead: 'Classic',
+    display: 'REBORN',
+    subtitle: 'The original street icon since ’68.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1887117978da.jpg',
+    href: '/product/puma-suede-classic',
+    variant: 'light',
+  },
+  {
+    id: 'hero-jordan-1-high',
+    eyebrow: 'High Heat',
+    lead: 'Defy',
+    display: 'GRAVITY',
+    subtitle: 'The high-top that started it all.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4a756d57e1c1.jpg',
+    href: '/product/air-jordan-1-high-chicago',
+    variant: 'dark',
+  },
+  {
+    id: 'hero-reebok-club-c',
+    eyebrow: 'Court Classic',
+    lead: 'Clean',
+    display: 'LINES',
+    subtitle: 'Minimalist tennis heritage, everyday ready.',
+    image:
+      'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/148340200fe4.jpg',
+    href: '/product/reebok-club-c-85',
     variant: 'light',
   },
 ];
@@ -147,12 +239,12 @@ function MobileHeroBannerImpl() {
         }
         .mhb-scroller > * {
           scroll-snap-align: center;
-          // Each card takes ~88% of viewport width, leaving peek preview
-          flex: '0 0 88%';
+          // Phase 9: narrower cards (72% width) — more peek preview of next
+          flex: 0 0 72%;
         }
         @media (max-width: 380px) {
           .mhb-scroller > * {
-            flex: '0 0 92%';
+            flex: 0 0 78%;
           }
         }
       `}</style>
@@ -202,16 +294,16 @@ function BannerCardImpl({
         boxShadow: theme.shadows.premium,
         color: fg,
         textDecoration: 'none',
-        // Phase 8: 340px tall (was 460px) — standard mobile hero
-        height: 340,
+        // Phase 9: 320px tall (was 340) — narrower cards need slightly less height
+        height: 320,
         boxSizing: 'border-box',
         // Phase 8: 20px internal padding
         padding: `${theme.spacing.xl}px ${theme.spacing.cardPadding}px`,
         transition: `transform ${theme.duration.standard} ${theme.easing.easeOut}, box-shadow ${theme.duration.standard} ${theme.easing.easeOut}`,
-        // Each card width: 88% of viewport (peek preview of next card)
-        width: '88%',
-        flex: '0 0 88%',
-        maxWidth: 380,
+        // Phase 9: narrower card width (72%) for tighter slider feel
+        width: '72%',
+        flex: '0 0 72%',
+        maxWidth: 300,
       }}
     >
       {/* ── Eyebrow — 11px / 500 / uppercase / 0.5px tracking ── */}
@@ -239,9 +331,9 @@ function BannerCardImpl({
         draggable={false}
         className="mhb-img"
         style={{
-          // Phase 8: smaller image — up to 60% width, 160px max height
-          maxWidth: '60%',
-          maxHeight: 160,
+          // Phase 9: smaller image to fit narrower card — 65% width, 140px max height
+          maxWidth: '65%',
+          maxHeight: 140,
           width: 'auto',
           height: 'auto',
           objectFit: 'contain',
