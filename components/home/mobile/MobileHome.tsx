@@ -211,18 +211,16 @@ export default function MobileHome() {
         <main
           id="main-content"
           style={{
-            // Phase 7: 24px top padding (was 16px) — breathing room below header
-            paddingTop: theme.spacing.sectionPadding,
+            // Phase 23: 8px top padding (was 16px) — tighter header→search gap
+            paddingTop: theme.spacing.sm,
             // Bottom nav clearance includes safe-area-inset-bottom
             paddingBottom: safeArea.bottomNavClearance,
             display: 'flex',
             flexDirection: 'column',
-            // Phase 11: uniform 32px section gap (Apple/Nike/Samsung rhythm).
-            // Each child section no longer carries its own paddingTop/paddingBottom —
-            // the parent flex gap is the sole source of vertical spacing so all
-            // sections share the same breathing room. MobilePopularShoes adds a
-            // +8px marginTop to land a 40px gap from the promotional slider above.
-            gap: theme.spacing.vast,
+            // Phase 23: 16px section gap (was 32px) — tighter overall rhythm
+            // per user request to reduce space between header↔search,
+            // search↔categories, slider↔categories.
+            gap: theme.spacing.xl,
           }}
         >
           {/* 2a. Search — 24px horizontal padding per Phase 6 spec */}

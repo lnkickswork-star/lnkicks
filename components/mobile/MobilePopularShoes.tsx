@@ -36,18 +36,16 @@ function MobilePopularShoesImpl({
     <section
       aria-label={title}
       style={{
-        // Phase 11: parent <main> provides a 32px flex gap above this section;
-        // add +8px marginTop so the Promotional Slider → Most Wanted transition
-        // equals 40px (per spec). No paddingTop/paddingBottom here — vertical
-        // rhythm is owned by the parent flex `gap`.
-        marginTop: theme.spacing.sm,
+        // Phase 23: removed the +8px marginTop — the parent <main> flex gap
+        // (now 16px) is the sole source of vertical rhythm.
       }}
     >
       {/* Section header — 24px / 700 / 30px line height */}
       <div
         style={{
           padding: `0 ${theme.spacing.sectionPadding}px`,
-          marginBottom: theme.spacing.sectionPadding,
+          // Phase 23: tighter header→cards gap (8px, was 16px)
+          marginBottom: theme.spacing.sm,
         }}
       >
         <div
@@ -124,8 +122,10 @@ function MobilePopularShoesImpl({
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          // 16px bottom padding so card shadows aren't clipped
-          padding: `${theme.spacing.xs}px ${theme.spacing.sectionPadding}px ${theme.spacing.sectionPadding}px`,
+          // Phase 23: 12px TOP padding so card shadows aren't clipped and
+          // cards don't touch the section border on top (was 4px which
+          // caused the "0 top space" issue). 12px bottom for symmetry.
+          padding: `${theme.spacing.md}px ${theme.spacing.sectionPadding}px ${theme.spacing.md}px`,
           msOverflowStyle: 'none',
         }}
       >

@@ -381,9 +381,11 @@ export const MOBILE_CATEGORIES: {
 ];
 
 /* ──────────────────────────────────────────────────────────────────────
- *  RECOMMENDED FOR YOU — personal-style 2-col grid (4 products)
+ *  RECOMMENDED FOR YOU — personal-style 2-col grid (10 products)
  *
- *  Mix of premium lifestyle + retro + runner silhouettes. Each product
+ *  Phase 23: extended from 4 → 10 products so the mobile Recommended
+ *  grid matches the desktop homepage density (which shows ~10). Mix of
+ *  premium lifestyle + retro + runner + luxury silhouettes. Each product
  *  includes a rating (0-5) so the Stars component can render. Uses only
  *  verified-working Google CDN URLs.
  * ────────────────────────────────────────────────────────────────────── */
@@ -435,5 +437,76 @@ export const MOBILE_RECOMMENDED: MobileProduct[] = [
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw',
     href: '/product/new-balance-530-steel-grey',
+  },
+  // ── Phase 23: 6 additional products to reach 10 total ──────────────
+  {
+    id: 'mrec-aj1-panda',
+    brand: 'Air Jordan',
+    name: "Air Jordan 1 Low 'Panda'",
+    price: 'Rs. 9,399',
+    priceValue: 9399,
+    comparePrice: 'Rs. 21,999',
+    rating: 4.7,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw',
+    href: '/product/air-jordan-1-low-panda',
+  },
+  {
+    id: 'mrec-foam-runner',
+    brand: 'Yeezy',
+    name: "Yeezy Foam Runner 'MX Cinder'",
+    price: 'Rs. 9,299',
+    priceValue: 9299,
+    comparePrice: 'Rs. 14,499',
+    rating: 4.5,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
+    href: '/product/yeezy-foam-runner-mx-cinder',
+  },
+  {
+    id: 'mrec-dunk-purple',
+    brand: 'Nike',
+    name: "Nike Dunk Low 'Court Purple'",
+    price: 'Rs. 6,499',
+    priceValue: 6499,
+    comparePrice: 'Rs. 14,999',
+    rating: 4.6,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg',
+    href: '/product/nike-dunk-low-court-purple',
+  },
+  {
+    id: 'mrec-yeezy-slide',
+    brand: 'Adidas Yeezy',
+    name: "Adidas Yeezy Slide 'Onyx'",
+    price: 'Rs. 10,499',
+    priceValue: 10499,
+    comparePrice: 'Rs. 15,999',
+    rating: 4.4,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
+    href: '/product/adidas-yeezy-slide-onyx',
+  },
+  {
+    id: 'mrec-lv-trainer',
+    brand: 'Louis Vuitton',
+    name: 'LV Trainer Sneaker',
+    price: 'Rs. 1,49,000',
+    priceValue: 149000,
+    rating: 4.9,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw',
+    href: '/product/lv-trainer-sneaker',
+  },
+  {
+    id: 'mrec-dior-b23',
+    brand: 'Dior',
+    name: 'Dior B23 High-Top Sneaker',
+    price: 'Rs. 1,28,000',
+    priceValue: 128000,
+    rating: 4.8,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBoeDHgD4sdEolj1Q6YY0dFBFam5YpICGBA2dZIy1CsoaOAyvFhphvbL7FSkNTAYouunPHoG9hNcKTvSWYd8ErjQY04V5XGIz8bL0hISKMtP5b4D4Qd5BnVZyOH32cafz8bJ5ecFNv5utNkkIW5w6gGyQftyHuDaBBRAkh9yHhMJ0E1VeGuDflsHiijdR0pef1sF8riPx9Jszb6CVCfz413_6TGPUGpuRbUCa5_hkXTubgyzvTrBsJ7mg',
+    href: '/product/dior-b23-high-top-sneaker',
   },
 ];

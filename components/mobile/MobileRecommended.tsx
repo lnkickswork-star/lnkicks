@@ -49,7 +49,8 @@ function MobileRecommendedImpl() {
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          marginBottom: theme.spacing.sectionPadding,
+          // Phase 23: tighter header→grid gap (8px, was 16px)
+          marginBottom: theme.spacing.sm,
           gap: theme.spacing.md,
         }}
       >

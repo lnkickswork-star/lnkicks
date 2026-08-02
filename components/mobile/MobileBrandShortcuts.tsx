@@ -50,7 +50,9 @@ function MobileBrandShortcutsImpl() {
           overflowX: 'auto',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          padding: `${theme.spacing.xs}px ${theme.spacing.sectionPadding}px ${theme.spacing.sm}px`,
+          // Phase 23: tighter vertical padding (2px top / 2px bottom)
+          // — was 4px / 8px. Reduces the categories strip's vertical footprint.
+          padding: `2px ${theme.spacing.sectionPadding}px 2px`,
         }}
       >
         {BRANDS.map((b) => {
