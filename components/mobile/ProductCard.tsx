@@ -297,17 +297,18 @@ function ProductCardImpl({
           )}
         </div>
 
-        {/* ── Body — 24px padding per spec, extra bottom for FAB clearance
-            Phase 15: reduced bottom padding 64 → 44 to eliminate the
-            excessive empty space below the price. The quarter-circle FAB
-            (60×60, positioned at bottom:0/right:0) overlaps the lower
-            portion of the body container, so the visible gap below the
-            price row is now tight and intentional. */}
+        {/* ── Body — 24px padding per spec, tight bottom for compact card
+            Phase 16: reduced bottom padding 44 → 24 to eliminate the
+            remaining whitespace below the price. The quarter-circle FAB
+            (60×60, absolutely positioned at bottom:0/right:0) overlaps
+            the body's lower-right region without needing body padding to
+            reserve space for it — only the + icon (24px tall, offset 14px
+            from bottom-right) needs clearance, and 24px is exactly enough. */}
         <div
           style={{
             padding: theme.spacing.section, // 24px
             paddingTop: theme.spacing.md,   // 12px — slightly tighter above title
-            paddingBottom: 44,              // FAB clearance (was 64 — too much whitespace)
+            paddingBottom: 24,              // tight — was 44, still too much whitespace
             display: 'flex',
             flexDirection: 'column',
             gap: theme.spacing.xs,          // 4px
