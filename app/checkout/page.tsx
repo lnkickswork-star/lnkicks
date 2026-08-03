@@ -58,10 +58,25 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState<string>('');
   const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
 
+  // ── Payment-mode-aware pricing ───────────────────────────────────
+  // UPI → instant 5% off subtotal (encourages digital, low-MDR payment).
+  // COD → ₹199 refundable advance via UPI, deducted from grand total,
+  //        balance payable at delivery.
+  const UPI_MODE = 'UPI (Google Pay / PhonePe / Paytm)';
+  const COD_MODE = 'Cash on Delivery (COD)';
+  const COD_ADVANCE_AMOUNT = 199;
+
+  const isUPI = paymentMode === UPI_MODE;
+  const isCOD = paymentMode === COD_MODE;
+
   const subtotal =
     cart.reduce((sum, item) => sum + item.price * item.qty, 0) || 17798;
   const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + tax - appliedDiscount;
+  const upiDiscount = isUPI ? Math.round(subtotal * 0.05) : 0;
+  const codAdvance = isCOD ? COD_ADVANCE_AMOUNT : 0;
+  const total =
+    subtotal + tax - appliedDiscount - upiDiscount - codAdvance;
+  const codRemaining = isCOD ? Math.max(total, 0) : 0;
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +115,12 @@ export default function CheckoutPage() {
         month: 'short',
         year: 'numeric',
       }),
+      subtotal,
+      tax,
+      couponDiscount: appliedDiscount,
+      upiDiscount,
+      codAdvance,
+      codRemaining,
       total,
       paymentMode,
       shipping,
@@ -404,21 +425,37 @@ export default function CheckoutPage() {
                 }}
               >
                 {[
-                  'UPI (Google Pay / PhonePe / Paytm)',
-                  'Credit / Debit Card',
-                  'Net Banking',
-                  'Cash on Delivery (COD)',
+                  {
+                    id: 'UPI (Google Pay / PhonePe / Paytm)',
+                    subtitle: 'Google Pay · PhonePe · Paytm · BHIM',
+                    badge: 'INSTANT 5% OFF',
+                  },
+                  {
+                    id: 'Credit / Debit Card',
+                    subtitle: 'Visa · Mastercard · RuPay · Amex',
+                  },
+                  {
+                    id: 'Net Banking',
+                    subtitle: 'All major Indian banks supported',
+                  },
+                  {
+                    id: 'Cash on Delivery (COD)',
+                    subtitle: 'Pay in cash at your doorstep',
+                    badge: '₹199 ADVANCE',
+                  },
                 ].map((mode) => {
-                  const active = paymentMode === mode;
+                  const active = paymentMode === mode.id;
+                  const showUPIOffer = active && mode.id === UPI_MODE;
+                  const showCODInfo = active && mode.id === COD_MODE;
                   return (
-                    <label
-                      key={mode}
-                      onClick={() => handlePaymentSelect(mode)}
+                    <div
+                      key={mode.id}
+                      onClick={() => handlePaymentSelect(mode.id)}
                       className="pressable co-payment"
                       style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: theme.spacing.md,
+                        flexDirection: 'column',
+                        gap: theme.spacing.sm,
                         padding: `${theme.spacing.md + 2}px ${theme.spacing.xl}px`,
                         borderRadius: theme.radius.xl,
                         border: active
@@ -435,15 +472,213 @@ export default function CheckoutPage() {
                         transition: theme.transitions.surface,
                       }}
                     >
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={active}
-                        onChange={() => handlePaymentSelect(mode)}
-                        style={{ accentColor: theme.colors.black }}
-                      />
-                      <span>{mode}</span>
-                    </label>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: theme.spacing.md,
+                          width: '100%',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="payment"
+                          checked={active}
+                          onChange={() => handlePaymentSelect(mode.id)}
+                          style={{ accentColor: theme.colors.black }}
+                        />
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                            flex: 1,
+                            minWidth: 0,
+                          }}
+                        >
+                          <span>{mode.id}</span>
+                          <span
+                            style={{
+                              fontSize: theme.fontSize.xs,
+                              fontWeight: theme.fontWeight.regular,
+                              color: theme.colors.textSecondary,
+                              letterSpacing: 0,
+                              textTransform: 'none',
+                            }}
+                          >
+                            {mode.subtitle}
+                          </span>
+                        </div>
+                        {mode.badge && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: theme.fontWeight.bold,
+                              letterSpacing: theme.letterSpacing.wider,
+                              textTransform: 'uppercase',
+                              padding: `4px 8px`,
+                              borderRadius: theme.radius.pill,
+                              background:
+                                mode.id === UPI_MODE
+                                  ? 'rgba(127, 29, 29, 0.08)'
+                                  : 'rgba(120, 53, 15, 0.10)',
+                              color:
+                                mode.id === UPI_MODE
+                                  ? theme.colors.error
+                                  : theme.colors.warning,
+                              border: `1px solid ${
+                                mode.id === UPI_MODE
+                                  ? 'rgba(127, 29, 29, 0.20)'
+                                  : 'rgba(120, 53, 15, 0.22)'
+                              }`,
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {mode.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* UPI OFFER MESSAGE — premium, red accent, non-intrusive */}
+                      {showUPIOffer && (
+                        <div
+                          className="co-offer-reveal"
+                          style={{
+                            marginTop: theme.spacing.xs,
+                            padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
+                            background:
+                              'linear-gradient(135deg, rgba(127, 29, 29, 0.06) 0%, rgba(127, 29, 29, 0.02) 100%)',
+                            borderRadius: theme.radius.lg,
+                            border: `1px solid rgba(127, 29, 29, 0.18)`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: theme.spacing.md,
+                          }}
+                        >
+                          <span
+                            aria-hidden
+                            style={{
+                              fontSize: 16,
+                              lineHeight: 1,
+                              flexShrink: 0,
+                            }}
+                          >
+                            🎉
+                          </span>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 2,
+                              minWidth: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: theme.fontSize.sm,
+                                fontWeight: theme.fontWeight.bold,
+                                color: theme.colors.error,
+                                letterSpacing: 0,
+                                lineHeight: 1.3,
+                              }}
+                            >
+                              Get an Extra 5% OFF with UPI Payment
+                            </span>
+                            <span
+                              style={{
+                                fontSize: theme.fontSize.xs,
+                                fontWeight: theme.fontWeight.regular,
+                                color: theme.colors.textSecondary,
+                                letterSpacing: 0,
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              You save ₹{upiDiscount.toLocaleString('en-IN')} on
+                              this order — applied instantly.
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* COD ADVANCE INFO — premium, orange/warning badge */}
+                      {showCODInfo && (
+                        <div
+                          className="co-offer-reveal"
+                          style={{
+                            marginTop: theme.spacing.xs,
+                            padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
+                            background:
+                              'linear-gradient(135deg, rgba(120, 53, 15, 0.07) 0%, rgba(120, 53, 15, 0.02) 100%)',
+                            borderRadius: theme.radius.lg,
+                            border: `1px solid rgba(120, 53, 15, 0.22)`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: theme.spacing.xs,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: theme.spacing.sm,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: theme.fontWeight.bold,
+                                letterSpacing: theme.letterSpacing.wider,
+                                textTransform: 'uppercase',
+                                padding: '3px 8px',
+                                borderRadius: theme.radius.pill,
+                                background: theme.colors.warning,
+                                color: theme.colors.white,
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0,
+                              }}
+                            >
+                              Advance Required
+                            </span>
+                            <span
+                              style={{
+                                fontSize: theme.fontSize.sm,
+                                fontWeight: theme.fontWeight.extrabold,
+                                color: theme.colors.warning,
+                                letterSpacing: 0,
+                              }}
+                            >
+                              ₹199 Advance Payment
+                            </span>
+                          </div>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: theme.fontSize.xs,
+                              fontWeight: theme.fontWeight.regular,
+                              color: theme.colors.textSecondary,
+                              lineHeight: 1.5,
+                              letterSpacing: 0,
+                            }}
+                          >
+                            To confirm your Cash on Delivery order, a refundable
+                            advance payment of{' '}
+                            <strong
+                              style={{ color: theme.colors.textPrimary }}
+                            >
+                              ₹199
+                            </strong>{' '}
+                            is required via UPI. This amount will be{' '}
+                            <strong
+                              style={{ color: theme.colors.textPrimary }}
+                            >
+                              adjusted against your final order amount
+                            </strong>{' '}
+                            at the time of delivery.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -554,6 +789,55 @@ export default function CheckoutPage() {
                   <span>-₹{appliedDiscount.toLocaleString('en-IN')}</span>
                 </div>
               )}
+              {upiDiscount > 0 && (
+                <div
+                  className="co-line-reveal"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    color: theme.colors.error,
+                    fontWeight: theme.fontWeight.bold,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: theme.spacing.xs,
+                    }}
+                  >
+                    UPI Discount (5%)
+                    <span
+                      style={{
+                        fontSize: 9,
+                        fontWeight: theme.fontWeight.bold,
+                        letterSpacing: theme.letterSpacing.wider,
+                        padding: '2px 6px',
+                        borderRadius: theme.radius.pill,
+                        background: 'rgba(127, 29, 29, 0.10)',
+                        border: '1px solid rgba(127, 29, 29, 0.22)',
+                      }}
+                    >
+                      UPI
+                    </span>
+                  </span>
+                  <span>-₹{upiDiscount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              {codAdvance > 0 && (
+                <div
+                  className="co-line-reveal"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    color: theme.colors.warning,
+                    fontWeight: theme.fontWeight.bold,
+                  }}
+                >
+                  <span>Advance Paid (UPI)</span>
+                  <span>-₹{codAdvance.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Express Delivery</span>
                 <span
@@ -576,13 +860,71 @@ export default function CheckoutPage() {
                 fontSize: theme.fontSize.xxl,
                 fontWeight: theme.fontWeight.extrabold,
                 color: theme.colors.textPrimary,
-                marginBottom: theme.spacing.xxl,
+                marginBottom: isCOD ? theme.spacing.md : theme.spacing.xxl,
                 letterSpacing: theme.letterSpacing.tight,
               }}
             >
               <span>Grand Total</span>
               <span>₹{total.toLocaleString('en-IN')}</span>
             </div>
+
+            {isCOD && (
+              <div
+                className="co-line-reveal"
+                style={{
+                  marginBottom: theme.spacing.xxl,
+                  padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
+                  background: theme.colors.grey100,
+                  borderRadius: theme.radius.lg,
+                  border: `1px solid ${theme.colors.grey300}`,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: theme.spacing.md,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: theme.fontSize.xs,
+                      fontWeight: theme.fontWeight.bold,
+                      color: theme.colors.textSecondary,
+                      letterSpacing: theme.letterSpacing.wider,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Payable on Delivery
+                  </span>
+                  <span
+                    style={{
+                      fontSize: theme.fontSize.sm,
+                      fontWeight: theme.fontWeight.regular,
+                      color: theme.colors.textSecondary,
+                      letterSpacing: 0,
+                    }}
+                  >
+                    ₹{codAdvance.toLocaleString('en-IN')} already paid via UPI
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: theme.fontSize.xl,
+                    fontWeight: theme.fontWeight.extrabold,
+                    color: theme.colors.warning,
+                    letterSpacing: theme.letterSpacing.tight,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ₹{codRemaining.toLocaleString('en-IN')}
+                </span>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -622,6 +964,25 @@ export default function CheckoutPage() {
         }
         .co-cta:active {
           transform: scale(0.98);
+        }
+        /* Smooth reveal for UPI offer / COD info / dynamic summary lines */
+        .co-offer-reveal,
+        .co-line-reveal {
+          animation: coReveal 240ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes coReveal {
+          from {
+            opacity: 0;
+            transform: translateY(-4px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        /* Subtle count-up pulse when grand total changes */
+        .co-cta {
+          transition: transform 160ms ease;
         }
       `}</style>
     </MobileLayout>
