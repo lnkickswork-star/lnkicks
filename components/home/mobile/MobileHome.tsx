@@ -28,6 +28,7 @@ import { safeArea } from '@/lib/mobile/utils/safeArea';
 //   - MobileCategories ("Browse by Category") has been REMOVED.
 //     Categories are still reachable via /categories route + bottom nav.
 const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
+const MobileRewardsBanner = lazy(() => import('@/components/mobile/MobileRewardsBanner'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
 const MobileTrustBanner = lazy(() => import('@/components/mobile/MobileTrustBanner'));
 const MobileEngagementPopup = lazy(() => import('@/components/mobile/MobileEngagementPopup'));
@@ -255,9 +256,19 @@ export default function MobileHome() {
             <MobileRecommended />
           </Suspense>
 
+          {/* Phase 26: MobileRewardsBanner — premium 3-step rewards timeline
+              (Sign Up ₹50 → First Referral ₹50 → First Order ₹100). Placed
+              ABOVE MobileNewsletter per user spec. Auth-aware: shows
+              "Create Account" CTA when logged out, "Invite Friends" when
+              logged in. Step 1 auto-marks completed on login. Mobile-only
+              — desktop homepage untouched. */}
+          <Suspense fallback={<SectionSkeleton height={460} />}>
+            <MobileRewardsBanner />
+          </Suspense>
+
           {/* Phase 19: MobileNewsletter — 'Sign up and save 10%' CTA banner
               (redesigned with button-based CTA per user reference image).
-              Mounted at the BOTTOM of the homepage, after Recommended.
+              Mounted at the BOTTOM of the homepage, after RewardsBanner.
               MobileBrands ("Authenticated · Stocked · Trusted / Brands at
               LN KICKS" + marquee) remains REMOVED per Phase 18 user request.
               The floating MobileBottomNav below is the sole navigation chrome. */}
