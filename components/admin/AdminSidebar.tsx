@@ -65,6 +65,9 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Marketing',
     items: [
+      { href: '/admin/marketing', label: 'Marketing Home', icon: 'megaphone', permission: 'banner.manage' },
+      { href: '/admin/marketing/email', label: 'Email Marketing', icon: 'mail', permission: 'banner.manage' },
+      { href: '/admin/marketing/whatsapp', label: 'WhatsApp Marketing', icon: 'message', permission: 'banner.manage' },
       { href: '/admin/banners', label: 'Banners', icon: 'image', permission: 'banner.manage' },
       { href: '/admin/coupons', label: 'Coupons', icon: 'ticket', permission: 'coupon.create' },
       { href: '/admin/seo', label: 'SEO Center', icon: 'search', permission: 'seo.manage', shortcut: 'G S' },
@@ -106,6 +109,9 @@ const ICON_PATHS: Record<string, string> = {
   wallet: 'M3 7h15v12H3zM3 7l3-4h12l3 4M16 13h.01',
   settings: 'M12 8a4 4 0 100 8 4 4 0 000-8zM19 12a7 7 0 00-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 00-1.7-1l-.4-2.5h-4l-.4 2.5a7 7 0 00-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 000 2l-2 1.5 2 3.5 2.4-1a7 7 0 001.7 1l.4 2.5h4l.4-2.5a7 7 0 001.7-1l2.4 1 2-3.5-2-1.5a7 7 0 00.1-1z',
   shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+  megaphone: 'M3 11l14-7v16L3 13v-2zM3 11H1v2h2M17 6h4v12h-4M21 9v6',
+  mail: 'M3 7h18v12H3zM3 7l9 7 9-7',
+  message: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
 };
 
 function Icon({ name, color, size = 18 }: { name: string; color: string; size?: number }) {

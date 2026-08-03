@@ -224,6 +224,38 @@ export default function MarketingHomePage() {
         ))}
       </div>
 
+      {/* Marketing Channels — Email + WhatsApp hero cards */}
+      <div className="mkt-stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16, marginBottom: 20 }}>
+        <MarketingChannelCard
+          tokens={tokens}
+          href="/admin/marketing/email"
+          icon="✉️"
+          tone="#8B5CF6"
+          title="Email Marketing"
+          tagline="Klaviyo-class email campaigns"
+          description="Build rich emails with drag-and-drop blocks, target segmented audiences, schedule sends, and track opens, clicks, and revenue."
+          stats={[
+            { label: 'Subscribers', value: '24,820' },
+            { label: 'Open Rate', value: '41.8%' },
+            { label: 'Revenue', value: '₹4.1L' },
+          ]}
+        />
+        <MarketingChannelCard
+          tokens={tokens}
+          href="/admin/marketing/whatsapp"
+          icon="💬"
+          tone="#10B981"
+          title="WhatsApp Marketing"
+          tagline="Meta Business Platform integration"
+          description="Send approved template messages to opted-in customers with safe queue-based delivery, real-time monitoring, and full conversation history."
+          stats={[
+            { label: 'Opted-in', value: '16,420' },
+            { label: 'Read Rate', value: '78.2%' },
+            { label: 'Revenue', value: '₹6.8L' },
+          ]}
+        />
+      </div>
+
       {/* Main grid: 2 cols (campaigns left, calendar + activity right) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)', gap: 16, marginBottom: 20 }}>
         {/* Campaign Performance Table */}
@@ -567,4 +599,64 @@ function buildCalendarEvents(): CalendarEvent[] {
     { date: '2026-09-05', title: 'Tablet Hero ends', type: 'Banner', tone: 'warning' },
     { date: '2026-09-15', title: 'JORDAN15 expires', type: 'Coupon', tone: 'warning' },
   ];
+}
+
+/* ----------------------------- Marketing Channel Card ----------------------------- */
+
+function MarketingChannelCard({
+  tokens, href, icon, tone, title, tagline, description, stats,
+}: {
+  tokens: AdminThemeTokens;
+  href: string; icon: string; tone: string;
+  title: string; tagline: string; description: string;
+  stats: { label: string; value: string }[];
+}) {
+  return (
+    <Link href={href} style={{ textDecoration: 'none' }}>
+      <div style={{
+        padding: 20, borderRadius: 16, background: tokens.bg.surface,
+        border: `1px solid ${tokens.border.subtle}`, boxShadow: tokens.shadow.sm,
+        transition: 'all 240ms cubic-bezier(0.16,1,0.3,1)', cursor: 'pointer',
+        height: '100%', position: 'relative', overflow: 'hidden',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = tokens.shadow.md; e.currentTarget.style.borderColor = tone + '80'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = tokens.shadow.sm; e.currentTarget.style.borderColor = tokens.border.subtle; }}
+      >
+        {/* Accent stripe */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: tone, opacity: 0.8 }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: `${tone}1A`, color: tone,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+          }}>{icon}</div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: tokens.text.primary, fontFamily: 'Inter, sans-serif', letterSpacing: '-0.015em' }}>{title}</div>
+            <div style={{ fontSize: 11, color: tokens.text.tertiary, fontFamily: 'Inter, sans-serif', marginTop: 2 }}>{tagline}</div>
+          </div>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary}
+            strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+            style={{ flexShrink: 0 }}>
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </div>
+
+        <div style={{ fontSize: 12, color: tokens.text.secondary, fontFamily: 'Inter, sans-serif', lineHeight: 1.5, marginBottom: 14 }}>
+          {description}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {stats.map(s => (
+            <div key={s.label} style={{
+              padding: '8px 10px', borderRadius: 8, background: tokens.bg.surfaceAlt,
+            }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Inter, sans-serif' }}>{s.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: tokens.text.primary, fontFamily: 'Inter, sans-serif', marginTop: 2 }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Link>
+  );
 }
