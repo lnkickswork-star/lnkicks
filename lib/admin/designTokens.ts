@@ -476,6 +476,59 @@ export const componentSize = {
 } as const;
 
 /* =========================================================== */
+/* OPACITY — semantic transparency scale                        */
+/* =========================================================== */
+/**
+ * Six-step opacity scale. Use these for overlays, disabled states,
+ * hover halos, and decorative tints — never hardcode alphas.
+ */
+export const opacity = {
+  0: 0,        // fully hidden
+  subtle: 0.04,// hairline tint
+  light: 0.08, // subtle bg tint
+  medium: 0.16,// hover halo, focus ring outer
+  strong: 0.32,// disabled surface
+  heavy: 0.64, // overlay backdrop starting point
+  full: 1,     // fully opaque
+} as const;
+
+export type OpacityScale = typeof opacity;
+
+/* =========================================================== */
+/* ANIMATION KEYFRAMES — shared, declarative                   */
+/* =========================================================== */
+/**
+ * Single source of truth for every keyframe used across the suite.
+ * Components reference these via `animation:` style and the matching
+ * keyframe name. Definitions are rendered once via the global CSS
+ * link in AdminLayout (or once per component using <style jsx global>).
+ */
+export const keyframes = {
+  fadeIn: 'admin-fade-in',
+  fadeOut: 'admin-fade-out',
+  popIn: 'admin-pop-in',
+  popOut: 'admin-pop-out',
+  slideInRight: 'admin-slide-right',
+  slideInLeft: 'admin-slide-left',
+  slideInUp: 'admin-slide-up',
+  slideInDown: 'admin-slide-down',
+  toastIn: 'admin-toast-in',
+  tooltipIn: 'admin-tooltip-in',
+  successPop: 'admin-success-pop',
+  bulkIn: 'admin-bulk-in',
+  spin: 'admin-spin',
+  skel: 'admin-skel',
+  shimmer: 'admin-shimmer',
+  pulse: 'admin-pulse',
+  ripple: 'admin-ripple',
+  shake: 'admin-shake',
+  barGrow: 'admin-bar-grow',
+  ringFill: 'admin-ring-fill',
+} as const;
+
+export type KeyframeName = typeof keyframes[keyof typeof keyframes];
+
+/* =========================================================== */
 /* FOCUS RING — consistent visible focus                        */
 /* =========================================================== */
 /**
@@ -504,6 +557,8 @@ export const dt = {
   layout,
   colorPalette,
   componentSize,
+  opacity,
+  keyframes,
   focusRing,
 } as const;
 
