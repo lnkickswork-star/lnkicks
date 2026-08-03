@@ -7,6 +7,7 @@ import MobileSearch from '@/components/mobile/MobileSearch';
 import MobileBrandShortcuts from '@/components/mobile/MobileBrandShortcuts';
 import MobileAdidasBanner from '@/components/mobile/MobileAdidasBanner';
 import MobileHeroBanner from '@/components/mobile/MobileHeroBanner';
+import MobileFlashSale from '@/components/mobile/MobileFlashSale';
 import MobilePopularShoes from '@/components/mobile/MobilePopularShoes';
 import MobileNewArrivals from '@/components/mobile/MobileNewArrivals';
 import {
@@ -236,6 +237,12 @@ export default function MobileHome() {
 
           {/* 2c. Hero Banner Slider — dramatic editorial carousel */}
           <MobileHeroBanner />
+
+          {/* 2c.1 Phase 25: MobileFlashSale — premium countdown flash sale
+              section placed ABOVE Popular Shoes per user spec. Auto-hides
+              when timer reaches 0 or when disabled via admin settings at
+              /flash-sale-settings. Mobile-only — desktop untouched. */}
+          <MobileFlashSale />
 
           {/* 2d. Popular Shoes — premium 24px-radius cards */}
           <MobilePopularShoes products={popularShoes} />
