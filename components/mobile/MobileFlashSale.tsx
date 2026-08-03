@@ -9,14 +9,22 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * MobileFlashSale — Premium Countdown Flash Sale section.
  *
- * PHASE 25 — Apple / Nike / GOAT-inspired luxury flash sale.
+ * PHASE 25 (rev 2) — Apple / Nike / GOAT-inspired luxury flash sale.
+ *
+ * Rev 2 fixes per user feedback:
+ *   - Header layout stacked & centered — no more left-heavy / right-clipped timer
+ *   - Timer moved BELOW the headline, centered, with full HH:MM:SS visible
+ *   - Subtle dark red accent (#7F1D1D theme.colors.error) on the eyebrow
+ *     chip, discount badge, and CTA hover — keeps luxury feel
+ *   - Cleaner vertical rhythm, more breathing room
+ *   - Gallery thumbnails restyled with cleaner active state
  *
  * Design language:
  *   - Matte black (#0A0A0A) card with 28px radius — matches LN KICKS hero cards
  *   - Glass-style countdown timer blocks (soft white-alpha bg, no neon)
  *   - Single featured product with 3-4 thumbnail gallery (tap to switch,
  *     smooth opacity fade)
- *   - Strikethrough original price → bold sale price → subtle discount pill
+ *   - Strikethrough original price → bold sale price → dark-red discount pill
  *   - Full-width "Buy Now" button (52px, 16px radius) with subtle press scale
  *   - Auto-hide when timer hits 0 (smooth height collapse)
  *   - No bright red, no gradients, no flashing — pure luxury minimal
@@ -46,8 +54,6 @@ export interface FlashSaleConfig {
 }
 
 // ── Default seed config — activates on first load ──────────────────────
-// Uses the Air Jordan 1 Low Powder Blue (matches site's featured product).
-// 3-day window from first render so the section is visible by default.
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
 const DEFAULT_CONFIG: FlashSaleConfig = {
@@ -76,12 +82,10 @@ function loadConfig(): FlashSaleConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // Seed default config on first visit so the section is visible.
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
       return DEFAULT_CONFIG;
     }
     const parsed = JSON.parse(raw) as Partial<FlashSaleConfig>;
-    // Merge with defaults so missing fields don't crash.
     return { ...DEFAULT_CONFIG, ...parsed };
   } catch {
     return DEFAULT_CONFIG;
@@ -109,7 +113,7 @@ function getTimeRemaining(endAt: string): TimeRemaining {
   return { hours, minutes, seconds, totalMs };
 }
 
-// ── Countdown timer block ──────────────────────────────────────────────
+// ── Countdown timer block (centered, glass-style) ──────────────────────
 function TimerBlock({ value, label }: { value: number; label: string }) {
   const padded = String(value).padStart(2, '0');
   return (
@@ -123,13 +127,11 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
     >
       <div
         style={{
-          // Glass-style block — soft white-alpha bg with hairline border.
-          // Reads as "frosted glass on black" rather than a colored chip.
           background: 'rgba(255,255,255,0.08)',
           border: '1px solid rgba(255,255,255,0.10)',
-          borderRadius: 14,
-          minWidth: 56,
-          padding: '10px 8px',
+          borderRadius: 12,
+          minWidth: 60,
+          padding: '10px 6px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -156,7 +158,7 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
       <span
         style={{
           fontFamily: theme.fontFamily.body,
-          fontSize: 9,
+          fontSize: 10,
           fontWeight: theme.fontWeight.medium,
           color: 'rgba(255,255,255,0.55)',
           textTransform: 'uppercase',
@@ -216,7 +218,6 @@ function MobileFlashSaleImpl() {
       const remaining = getTimeRemaining(config.endAt);
       setTimeRemaining(remaining);
       if (remaining.totalMs <= 0) {
-        // Sale expired — trigger smooth collapse.
         setCollapsed(true);
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
@@ -225,7 +226,7 @@ function MobileFlashSaleImpl() {
       }
     };
 
-    tick(); // initial call so we don't flash 00:00:00
+    tick();
     intervalRef.current = setInterval(tick, 1000);
 
     return () => {
@@ -244,10 +245,7 @@ function MobileFlashSaleImpl() {
   }, [config, isSaleActive]);
 
   // ── Render guards ────────────────────────────────────────────────────
-  // Don't render anything until mounted (avoids hydration mismatch).
   if (!mounted || !config) return null;
-
-  // Hide if disabled, not yet started, or already collapsed after expiry.
   if (!config.enabled) return null;
   if (Date.now() < new Date(config.startAt).getTime()) return null;
   if (collapsed) return null;
@@ -255,13 +253,15 @@ function MobileFlashSaleImpl() {
 
   const gallery = config.gallery.length > 0 ? config.gallery : [config.mainImage];
 
+  // Dark red accent — subtle, luxury, matches theme.colors.error (#7F1D1D).
+  // Used on: eyebrow chip border/text, discount badge bg, CTA hover.
+  const ACCENT_DARK_RED = '#7F1D1D';
+  const ACCENT_DARK_RED_SOFT = 'rgba(127, 29, 29, 0.18)';
+
   return (
     <section
       aria-label="Flash Sale"
       style={{
-        // Phase 25: top 24px, bottom 32px per spec.
-        // Parent <main> already provides 16px gap, so we add the extra
-        // 8px top + 16px bottom here to hit the spec exactly.
         paddingTop: 8,
         paddingBottom: 16,
       }}
@@ -272,122 +272,130 @@ function MobileFlashSaleImpl() {
           style={{
             position: 'relative',
             background: theme.colors.black,
-            borderRadius: theme.radius.largeCard, // 28px per spec
+            borderRadius: theme.radius.largeCard,
             overflow: 'hidden',
             boxShadow: theme.shadows.editorial,
-            // Subtle inner hairline for the "glass card" feel.
             border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          {/* ── Header row: label + countdown ─────────────────────────── */}
+          {/* ── Header: stacked, centered ────────────────────────────── */}
+          {/* Rev 2: previously the timer was on the right and got clipped.
+              Now everything is stacked vertically and centered, so the
+              full HH:MM:SS is always visible on any 360px viewport. */}
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              gap: theme.spacing.md,
-              alignItems: 'flex-start',
-              padding: `${theme.spacing.xxl}px ${theme.spacing.xxl}px ${theme.spacing.md}px`,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: 8,
+              padding: `${theme.spacing.xxl + 4}px ${theme.spacing.xxl}px ${theme.spacing.md}px`,
             }}
           >
-            {/* Left: label + headline + subtext */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {/* ⚡ Limited Time Offer eyebrow */}
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontFamily: theme.fontFamily.body,
-                  fontSize: 12,
-                  fontWeight: theme.fontWeight.semibold,
-                  color: 'rgba(255,255,255,0.7)',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  fontFeatureSettings: theme.fontFeatures,
-                }}
-              >
-                <span aria-hidden style={{ fontSize: 12, lineHeight: 1 }}>⚡</span>
-                Limited Time Offer
-              </span>
+            {/* ⚡ Limited Time Offer eyebrow — dark red accent chip */}
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontFamily: theme.fontFamily.body,
+                fontSize: 11,
+                fontWeight: theme.fontWeight.semibold,
+                color: '#FCA5A5', // soft red-300 — readable on black
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: ACCENT_DARK_RED_SOFT,
+                border: `1px solid rgba(127, 29, 29, 0.45)`,
+                padding: '5px 12px',
+                borderRadius: 999,
+                fontFeatureSettings: theme.fontFeatures,
+              }}
+            >
+              <span aria-hidden style={{ fontSize: 11, lineHeight: 1 }}>⚡</span>
+              Limited Time Offer
+            </span>
 
-              {/* Flash Sale headline */}
-              <h3
-                style={{
-                  margin: 0,
-                  fontFamily: theme.fontFamily.body,
-                  fontSize: 28,
-                  fontWeight: theme.fontWeight.bold,
-                  color: theme.colors.white,
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.1,
-                  fontFeatureSettings: theme.fontFeatures,
-                }}
-              >
-                Flash Sale
-              </h3>
+            {/* Flash Sale headline */}
+            <h3
+              style={{
+                margin: 0,
+                fontFamily: theme.fontFamily.body,
+                fontSize: 26,
+                fontWeight: theme.fontWeight.bold,
+                color: theme.colors.white,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.15,
+                fontFeatureSettings: theme.fontFeatures,
+              }}
+            >
+              Flash Sale
+            </h3>
 
-              {/* Subtext */}
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: theme.fontFamily.body,
-                  fontSize: 13,
-                  fontWeight: theme.fontWeight.medium,
-                  color: 'rgba(255,255,255,0.55)',
-                  lineHeight: 1.45,
-                  fontFeatureSettings: theme.fontFeatures,
-                }}
-              >
-                Exclusive premium sneakers at special pricing.
-                <br />
-                Offer expires when countdown ends.
-              </p>
-            </div>
-
-            {/* Right: countdown timer (3 blocks) */}
-            {timeRemaining && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 8,
-                  paddingTop: 2,
-                }}
-              >
-                <TimerBlock value={timeRemaining.hours} label="Hours" />
-                <span
-                  aria-hidden
-                  style={{
-                    fontFamily: theme.fontFamily.body,
-                    fontSize: 22,
-                    fontWeight: theme.fontWeight.bold,
-                    color: 'rgba(255,255,255,0.35)',
-                    alignSelf: 'flex-start',
-                    marginTop: 18,
-                    fontFeatureSettings: theme.fontFeatures,
-                  }}
-                >
-                  :
-                </span>
-                <TimerBlock value={timeRemaining.minutes} label="Minutes" />
-                <span
-                  aria-hidden
-                  style={{
-                    fontFamily: theme.fontFamily.body,
-                    fontSize: 22,
-                    fontWeight: theme.fontWeight.bold,
-                    color: 'rgba(255,255,255,0.35)',
-                    alignSelf: 'flex-start',
-                    marginTop: 18,
-                    fontFeatureSettings: theme.fontFeatures,
-                  }}
-                >
-                  :
-                </span>
-                <TimerBlock value={timeRemaining.seconds} label="Seconds" />
-              </div>
-            )}
+            {/* Subtext — single line, balanced */}
+            <p
+              style={{
+                margin: 0,
+                fontFamily: theme.fontFamily.body,
+                fontSize: 13,
+                fontWeight: theme.fontWeight.regular,
+                color: 'rgba(255,255,255,0.55)',
+                lineHeight: 1.5,
+                fontFeatureSettings: theme.fontFeatures,
+                maxWidth: 280,
+              }}
+            >
+              Exclusive premium sneakers at special pricing.
+              <br />
+              Offer expires when countdown ends.
+            </p>
           </div>
+
+          {/* ── Countdown timer — centered, full HH:MM:SS visible ────── */}
+          {/* Rev 2: moved below the headline, centered. Three blocks with
+              colons between. Scales to fit 360px viewports comfortably. */}
+          {timeRemaining && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                gap: 8,
+                padding: `0 ${theme.spacing.xxl}px ${theme.spacing.xxl}px`,
+              }}
+            >
+              <TimerBlock value={timeRemaining.hours} label="Hours" />
+              <span
+                aria-hidden
+                style={{
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: 22,
+                  fontWeight: theme.fontWeight.bold,
+                  color: 'rgba(255,255,255,0.35)',
+                  alignSelf: 'flex-start',
+                  marginTop: 16,
+                  fontFeatureSettings: theme.fontFeatures,
+                }}
+              >
+                :
+              </span>
+              <TimerBlock value={timeRemaining.minutes} label="Minutes" />
+              <span
+                aria-hidden
+                style={{
+                  fontFamily: theme.fontFamily.body,
+                  fontSize: 22,
+                  fontWeight: theme.fontWeight.bold,
+                  color: 'rgba(255,255,255,0.35)',
+                  alignSelf: 'flex-start',
+                  marginTop: 16,
+                  fontFeatureSettings: theme.fontFeatures,
+                }}
+              >
+                :
+              </span>
+              <TimerBlock value={timeRemaining.seconds} label="Seconds" />
+            </div>
+          )}
 
           {/* ── Product showcase: main image + thumbnail gallery ──────── */}
           <div
@@ -409,9 +417,8 @@ function MobileFlashSaleImpl() {
                 justifyContent: 'center',
               }}
             >
-              {/* Cross-fade layers — one <img> per gallery item, opacity-toggled.
-                  This avoids layout shift and gives a true fade transition. */}
               {gallery.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={`${src}-${i}`}
                   src={src}
@@ -477,6 +484,7 @@ function MobileFlashSaleImpl() {
                         transition: `opacity ${theme.duration.fast} ${theme.easing.easeOut}, border-color ${theme.duration.fast} ${theme.easing.easeOut}`,
                       }}
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={src}
                         alt=""
@@ -541,7 +549,7 @@ function MobileFlashSaleImpl() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: theme.spacing.sm,
-                marginTop: 10,
+                marginTop: 12,
                 flexWrap: 'wrap',
               }}
             >
@@ -573,21 +581,21 @@ function MobileFlashSaleImpl() {
                 {config.salePrice}
               </span>
 
-              {/* Discount badge — subtle pill */}
+              {/* Discount badge — subtle dark-red pill (accent) */}
               {config.discountBadge && (
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    background: 'rgba(255,255,255,0.10)',
-                    color: theme.colors.white,
+                    background: ACCENT_DARK_RED_SOFT,
+                    color: '#FCA5A5',
                     fontFamily: theme.fontFamily.body,
                     fontSize: 11,
                     fontWeight: theme.fontWeight.semibold,
                     padding: '4px 10px',
                     borderRadius: 999,
                     letterSpacing: '0.02em',
-                    border: '1px solid rgba(255,255,255,0.10)',
+                    border: '1px solid rgba(127, 29, 29, 0.45)',
                     fontFeatureSettings: theme.fontFeatures,
                   }}
                 >
@@ -624,7 +632,7 @@ function MobileFlashSaleImpl() {
                 letterSpacing: '-0.01em',
                 textDecoration: 'none',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.30), 0 2px 6px rgba(0,0,0,0.20)',
-                transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}, box-shadow ${theme.duration.fast} ${theme.easing.easeOut}`,
+                transition: `transform ${theme.duration.instant} ${theme.easing.easeOut}, box-shadow ${theme.duration.fast} ${theme.easing.easeOut}, background-color ${theme.duration.fast} ${theme.easing.easeOut}`,
                 fontFeatureSettings: theme.fontFeatures,
               }}
             >
@@ -664,8 +672,11 @@ function MobileFlashSaleImpl() {
         }
         @media (hover: hover) {
           .mfs-cta:hover {
+            /* Rev 2: subtle dark-red tint on hover — accent tie-in */
+            background: ${ACCENT_DARK_RED};
+            color: ${theme.colors.white};
             transform: scale(1.01);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.36), 0 4px 8px rgba(0,0,0,0.24);
+            box-shadow: 0 12px 32px rgba(127, 29, 29, 0.40), 0 4px 8px rgba(0,0,0,0.24);
           }
           .mfs-thumb:hover {
             opacity: 1;
