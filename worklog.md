@@ -3937,3 +3937,13 @@ Stage Summary:
 - Dark/light/system theme with system preference detection.
 - Toast notification system.
 - Real-time live updates on dashboard.
+
+---
+Task ID: 34-foundation
+Agent: main
+Task: LNKICKS Enterprise Admin — Build complete Design System foundation (tokens, icons, primitives, showcase). Additive only — must NOT break existing 19 pages that import from @/components/admin/ui.
+
+Work Log:
+- Audited current state: ui.tsx (1206 lines, ~25 primitives), adminTheme.ts (light/dark color tokens), 4 inline icons only.
+- Identified gaps: no unified spacing/typography/radius/motion tokens; only 4 icons; missing Tooltip/Stat/AvatarGroup/ButtonGroup/SegmentedControl/Radio/Tag/FilterPanel/ProgressRing/PanelHeader; accessibility issues in Checkbox/Toggle/Dropdown/Modal (no focus trap, no ARIA).
+- Plan: (1) lib/admin/designTokens.ts — complete token system; (2) components/admin/icons/Icon.tsx — 60+ icon set; (3) extend ui.tsx additively with missing primitives + a11y fixes; (4) /admin/foundation showcase page; (5) build+typecheck+commit+push.

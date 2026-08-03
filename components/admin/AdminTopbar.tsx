@@ -739,7 +739,7 @@ export function AdminTopbar({
               ))}
               {filteredCommands.length === 0 && (
                 <div style={{ padding: 32, textAlign: 'center', color: tokens.text.secondary, fontSize: 12 }}>
-                  No commands match "{paletteQuery}"
+                  No commands match &ldquo;{paletteQuery}&rdquo;
                 </div>
               )}
             </div>

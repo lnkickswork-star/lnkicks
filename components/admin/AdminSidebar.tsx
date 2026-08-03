@@ -484,7 +484,7 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
           {/* No results */}
           {!isCollapsed && query && filteredSections.length === 0 && (
             <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: tokens.text.tertiary }}>
-              No matches for "{query}"
+              No matches for &ldquo;{query}&rdquo;
             </div>
           )}
         </nav>
