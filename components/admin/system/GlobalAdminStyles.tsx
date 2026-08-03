@@ -270,6 +270,46 @@ export function GlobalAdminStyles({ tokens }: Props) {
     [data-admin-theme] {
       color-scheme: ${tokens.mode === 'dark' ? 'dark' : 'light'};
     }
+
+    /* ============================================================ */
+    /* BOX-SIZING RESET — border-box for all admin elements          */
+    /* ============================================================ */
+    /* Without this, <main style="width:100%; padding:0 32px"> in
+       AdminLayout overflows its flex parent by the padding amount
+       (64px), causing horizontal scroll and exposing the body's
+       black (#0A0A0A) background as a vertical strip on the right
+       edge of the viewport. Applying border-box globally inside the
+       admin theme is the standard CSS reset and prevents this and
+       similar overflow bugs without modifying AdminLayout. */
+    [data-admin-theme],
+    [data-admin-theme] *,
+    [data-admin-theme] *::before,
+    [data-admin-theme] *::after {
+      box-sizing: border-box;
+    }
+
+    /* ============================================================ */
+    /* HORIZONTAL OVERFLOW GUARD — belt-and-braces                   */
+    /* ============================================================ */
+    /* Even with box-sizing reset, some deeply-nested component may
+       still overflow. Clamp the body and html to viewport width so
+       no black strip can ever leak through. */
+    [data-admin-theme] html,
+    [data-admin-theme] body {
+      overflow-x: hidden;
+    }
+
+    /* ============================================================ */
+    /* BODY BACKGROUND OVERRIDE — match admin theme                  */
+    /* ============================================================ */
+    /* The root <body> in app/layout.tsx has a hardcoded #0A0A0A
+       background (for the dark customer-facing site). When the admin
+       theme is active, override it with the admin theme's bg.app so
+       any rare overflow leak never shows black. !important is
+       required to beat the inline style on <body>. */
+    [data-admin-theme] body {
+      background: ${tokens.bg.app} !important;
+    }
   `;
 
   return (
