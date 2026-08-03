@@ -3476,3 +3476,25 @@ Stage Summary:
 - Auth detection: reuses the same localStorage lnk_user key written by app/profile/page.tsx
   and cleared by the logout handler — no separate auth mechanism needed.
 - Not yet pushed to GitHub — pending user confirmation.
+
+---
+Task ID: phase-24
+Agent: Main (Super Z)
+Task: Phase 24 — Refine MobileNewArrivals banner to match new Adobe Express reference file. User said "add this banner below popular shoe section and remove the existing similar banner."
+
+Work Log:
+- Analyzed uploaded Adobe Express file (1536x1024 PNG) using VLM (z-ai vision CLI).
+- Compared Adobe Express design with current MobileNewArrivals (Phase 22 implementation).
+- VLM analysis confirmed design matches: black bg (#0A0A0A), centered "NEW" watermark (220px, rgba(255,255,255,0.06)), "New Arrival" white pill, "AIR JORDAN" grey label, "Air Jordan 1" white headline, "Rs. 8,899" price, "Shop Now →" button (#262626 bg), "+" circular icon button, Air Jordan 1 Low sneaker on right.
+- Key difference identified: grid split. Current was 50/50, Adobe Express reference shows ~40-45% text / ~55-60% image (image column gets more space).
+- Cropped image into left/right halves and ran separate VLM analysis to confirm: text column ~40-45% of full width, image column ~55-60%, no visible border on card, shoe fully visible (not cropped).
+- Updated MobileNewArrivals.tsx: gridTemplateColumns from '50fr 50fr' → '45fr 55fr'.
+- Committed locally: a205c08 "mobile(new-arrivals): Phase 24 — adjust grid split to 45/55 to match Adobe Express reference".
+- NOTE: Could not push to GitHub — no PAT available in environment. Previous session's PAT is not stored/cached. Need user to provide GitHub PAT for push.
+
+Stage Summary:
+- MobileNewArrivals already placed below Popular Shoes section (Phase 22, unchanged).
+- MobileNewArrivals already matches Adobe Express design (Phase 22, refined in Phase 24).
+- Phase 24 change: grid split 50/50 → 45/55 (image gets more space, matching Adobe Express).
+- Change committed locally (a205c08) but NOT pushed — awaiting GitHub PAT from user.
+- Desktop homepage untouched (mobile-only change).
