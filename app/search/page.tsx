@@ -88,7 +88,13 @@ export default function SearchPage() {
   }, []);
 
   return (
-    <MobileLayout headerVariant="back" title="Search">
+    <MobileLayout headerVariant="back" title="Search"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Search' },
+      ]}
+      desktopMaxWidth={1280}
+    >
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
         {/* BREADCRUMB */}
         <div
@@ -289,9 +295,12 @@ export default function SearchPage() {
             >
               <option value="All">All Brands</option>
               <option value="NIKE">Nike</option>
+              <option value="JORDAN">Jordan</option>
               <option value="ADIDAS">Adidas</option>
               <option value="PUMA">Puma</option>
               <option value="NEW BALANCE">New Balance</option>
+              <option value="REEBOK">Reebok</option>
+              <option value="YEEZY">Yeezy</option>
             </select>
 
             <select

@@ -99,23 +99,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{ cart, wishlist, addToCart, removeFromCart, updateQty, toggleWishlist, clearCart, toastMsg, showToast }}>
       {children}
       {toastMsg && (
-        <div style={{
-          position: 'fixed',
-          bottom: '90px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#111111',
-          color: '#ffffff',
-          padding: '12px 24px',
-          borderRadius: '30px',
-          fontSize: '13px',
-          fontWeight: 700,
-          zIndex: 99999,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-          transition: 'all 0.3s ease'
-        }}>
-          {toastMsg}
-        </div>
+        <ToastPortal msg={toastMsg} />
       )}
     </AppContext.Provider>
   );
@@ -126,3 +110,57 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };
+
+/**
+ * ToastPortal — viewport-aware toast.
+ *
+ * On mobile, sits at bottom: 90px (clears the floating bottom nav).
+ * On desktop (≥768px), sits at bottom: 24px (no bottom nav present).
+ *
+ * The viewport detection runs client-side after mount; SSR renders
+ * nothing (toast only fires from user interactions, never on first
+ * paint, so there's no hydration mismatch risk).
+ */
+function ToastPortal({ msg }: { msg: string }) {
+  const [isMobile, setIsMobile] = useState<boolean>(true);
+
+  useEffect(() => {
+    const detect = () => {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+      const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Silk/i.test(ua);
+      setIsMobile(mobileUA || vw <= 768);
+    };
+    detect();
+    window.addEventListener('resize', detect);
+    return () => window.removeEventListener('resize', detect);
+  }, []);
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      style={{
+        position: 'fixed',
+        bottom: isMobile ? '90px' : '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: '#0a0a0a',
+        color: '#ffffff',
+        padding: isMobile ? '12px 24px' : '14px 28px',
+        borderRadius: isMobile ? '30px' : '12px',
+        fontSize: isMobile ? '13px' : '14px',
+        fontWeight: 700,
+        letterSpacing: isMobile ? 0 : '0.02em',
+        zIndex: 99999,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)',
+        fontFamily: 'inherit',
+        maxWidth: 'calc(100vw - 32px)',
+        transition: 'bottom 200ms ease, padding 200ms ease, border-radius 200ms ease',
+        pointerEvents: 'none',
+      }}
+    >
+      {msg}
+    </div>
+  );
+}

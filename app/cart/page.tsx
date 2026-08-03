@@ -8,12 +8,19 @@ import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { resolveImage } from '@/lib/images';
 
 /**
  * CartPage — LN KICKS mobile shopping cart.
  *
  * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="back" title="Shopping Cart" hideCartFab>
+ *  - Mounts <MobileLayout headerVariant="back" title="Shopping Cart" hideCartFab
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Cart' },
+      ]}
+      desktopMaxWidth={1280}
+    >
  *    so the page gets the same premium chrome (glass header, floating bottom
  *    nav with Cart FAB hidden, safe-area) as the rest of the app.
  *  - `hideCartFab` avoids the double-cart UX (we're already on /cart).
@@ -165,11 +172,7 @@ export default function CartPage() {
                     }}
                   >
                     <Image
-                      src={
-                        item.image.startsWith('/')
-                          ? item.image
-                          : `/${item.image}`
-                      }
+                      src={resolveImage(item.image)}
                       alt={item.name}
                       width={70}
                       height={70}

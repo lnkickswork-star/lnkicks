@@ -19,7 +19,14 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  *    no duplicate labels.
  *
  * Phase 4 (Universal Polish) — preserved:
- *  - Mounts <MobileLayout headerVariant="back" title={categoryName}>
+ *  - Mounts <MobileLayout headerVariant="back" title={categoryName}
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Categories', href: '/categories' },
+        { label: categoryName },
+      ]}
+      desktopMaxWidth={1280}
+    >
  *  - All colors/sizes/radii use mobile design tokens.
  *
  * Desktop rendering preserved — MobileLayout detects UA + viewport width

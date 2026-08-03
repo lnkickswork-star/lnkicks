@@ -11,6 +11,7 @@ import { theme } from '@/lib/mobile/theme/theme';
 import { safeArea } from '@/lib/mobile/utils/safeArea';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { DesktopShell, type BreadcrumbItem } from '@/components/layout/DesktopShell';
 
 /**
  * MobileLayout — universal mobile shell for every LN KICKS mobile page.
@@ -78,8 +79,20 @@ export interface MobileLayoutProps {
   hideBottomNav?: boolean;
   /** Hide just the cart FAB inside the bottom nav (/cart, /checkout). */
   hideCartFab?: boolean;
-  /** Override the default max content width (default 440). */
+  /** Override the default max content width (default 440 — mobile only). */
   maxWidth?: number;
+  /** Desktop-only: breadcrumb rendered above main content. */
+  desktopBreadcrumb?: BreadcrumbItem[];
+  /** Desktop-only: max content width in pixels (default 1280). */
+  desktopMaxWidth?: number;
+  /** Desktop-only: hide the dark footer (e.g. /checkout). */
+  desktopHideFooter?: boolean;
+  /** Desktop-only: hide the announcement bar. */
+  desktopHideAnnouncement?: boolean;
+  /** Desktop-only: override the main content padding-top (default 32). */
+  desktopPaddingTop?: number;
+  /** Desktop-only: override the main content padding-bottom (default 96). */
+  desktopPaddingBottom?: number;
 }
 
 /** Canonical mobile-UA regex (matches app/page.tsx + ResponsiveAppLayout). */
@@ -94,6 +107,12 @@ export function MobileLayout({
   hideBottomNav = false,
   hideCartFab = false,
   maxWidth = 440,
+  desktopBreadcrumb,
+  desktopMaxWidth = 1280,
+  desktopHideFooter = false,
+  desktopHideAnnouncement = false,
+  desktopPaddingTop = 32,
+  desktopPaddingBottom = 96,
 }: MobileLayoutProps) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -143,11 +162,26 @@ export function MobileLayout({
   // (both empty), then the effect runs and the shell mounts.
   if (isMobile === null) return null;
 
-  // Desktop: pass children through untouched. (Desktop chrome is handled
-  // by the route's page.tsx, which should conditionally wrap content in
-  // <MobileLayout> only for mobile UAs. If we got here on desktop, render
-  // children bare — preserves existing desktop behavior.)
-  if (!isMobile) return <>{children}</>;
+  // ── Desktop: wrap children in the shared DesktopShell ─────────────
+  // This is the critical fix — previously MobileLayout returned
+  // `<>{children}</>` on desktop, which left 28 shared pages with no
+  // header, no footer, no max-width, and no breadcrumb context. Now
+  // every shared page inherits the same premium chrome as the approved
+  // homepage (AnnouncementBar + MainHeader + MainFooter).
+  if (!isMobile) {
+    return (
+      <DesktopShell
+        breadcrumb={desktopBreadcrumb}
+        maxWidth={desktopMaxWidth}
+        hideFooter={desktopHideFooter}
+        hideAnnouncement={desktopHideAnnouncement}
+        paddingTop={desktopPaddingTop}
+        paddingBottom={desktopPaddingBottom}
+      >
+        {children}
+      </DesktopShell>
+    );
+  }
 
   // ── Mobile shell ──────────────────────────────────────────────────
   return (

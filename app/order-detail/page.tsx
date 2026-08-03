@@ -9,6 +9,7 @@ import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { resolveImage } from '@/lib/images';
 import type { Order } from '@/types';
 
 /**
@@ -81,8 +82,8 @@ const DEMO_ORDER: DemoOrderData = {
   customerName: 'Jonathan Sterling',
   addressLines: [
     'Jonathan Sterling',
-    '124 High-Fashion Blvd, Suite 402',
-    'New York, NY 10012',
+    'Flat 402, Luxury Heights, Bandra West',
+    'Mumbai, Maharashtra 400050',
   ],
   paymentLabel: 'Visa ending in •••• 4492',
   paymentBrand: 'VISA',
@@ -203,7 +204,14 @@ export default function OrderDetailPage() {
   };
 
   return (
-    <MobileLayout headerVariant="back" title="Order Detail">
+    <MobileLayout headerVariant="back" title="Order Detail"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'My Orders', href: '/my-orders' },
+        { label: 'Order Detail' },
+      ]}
+      desktopMaxWidth={1280}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,
@@ -512,10 +520,11 @@ export default function OrderDetailPage() {
                       }}
                     >
                       <Image
-                        src={item.image}
+                        src={resolveImage(item.image)}
                         alt={item.imageAlt}
                         width={120}
                         height={90}
+                        loading="lazy"
                         unoptimized
                         style={{
                           maxWidth: '100%',

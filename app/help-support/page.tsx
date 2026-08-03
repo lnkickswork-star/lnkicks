@@ -34,7 +34,13 @@ export default function HelpSupportPage() {
   ];
 
   return (
-    <MobileLayout headerVariant="back" title="Help & Support">
+    <MobileLayout headerVariant="back" title="Help & Support"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Help & Support' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,

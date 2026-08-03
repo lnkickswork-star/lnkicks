@@ -99,7 +99,13 @@ export default function PrivacyPolicyPage() {
   const badges = ['GDPR Compliant', 'End-to-End Encryption'];
 
   return (
-    <MobileLayout headerVariant="back" title="Privacy Policy">
+    <MobileLayout headerVariant="back" title="Privacy Policy"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Privacy Policy' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           background: theme.colors.grey50,

@@ -74,7 +74,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <MobileLayout headerVariant="back" title="Profile">
+    <MobileLayout headerVariant="back" title="Profile"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Account', href: '/profile' },
+        { label: 'Profile' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
         <div
           style={{

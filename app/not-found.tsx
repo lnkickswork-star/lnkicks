@@ -19,7 +19,16 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  */
 export default function NotFound() {
   return (
-    <MobileLayout headerVariant="default">
+    <MobileLayout
+      headerVariant="default"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: '404 Not Found' },
+      ]}
+      desktopMaxWidth={640}
+      desktopPaddingTop={64}
+      desktopPaddingBottom={96}
+    >
       <div
         style={{
           textAlign: 'center',

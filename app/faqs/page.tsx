@@ -114,7 +114,13 @@ export default function FaqsPage() {
   })).filter((cat) => cat.items.length > 0);
 
   return (
-    <MobileLayout headerVariant="back" title="FAQs">
+    <MobileLayout headerVariant="back" title="FAQs"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'FAQs' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,

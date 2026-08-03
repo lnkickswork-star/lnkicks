@@ -7,6 +7,7 @@ import { MobileLayout } from '@/components/layout/MobileLayout';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { resolveImage } from '@/lib/images';
 import type { Order } from '@/types';
 
 /**
@@ -66,7 +67,14 @@ export default function MyOrdersPage() {
   }, []);
 
   return (
-    <MobileLayout headerVariant="back" title="My Orders">
+    <MobileLayout headerVariant="back" title="My Orders"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Account', href: '/profile' },
+        { label: 'My Orders' },
+      ]}
+      desktopMaxWidth={1280}
+    >
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
         {/* BREADCRUMB */}
         <div
@@ -261,10 +269,11 @@ export default function MyOrdersPage() {
                               }}
                             >
                               <Image
-                                src={img}
+                                src={resolveImage(img)}
                                 alt={item.name}
                                 width={45}
                                 height={45}
+                                loading="lazy"
                                 style={{
                                   maxHeight: '45px',
                                   width: 'auto',

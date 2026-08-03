@@ -3,6 +3,30 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+
+  /* ------------------------------------------------------------------
+     next/image remote patterns
+     ------------------------------------------------------------------
+     Permits next/image to optimize images served from these external
+     hosts. All product images in /public/*.png are Git LFS pointers
+     (broken), so we substitute working CDN URLs at runtime via
+     lib/images.ts → resolveImage(). These patterns authorize those
+     CDNs so <Image> components can optimize them.
+
+     Hosts:
+       lh3.googleusercontent.com   — Google-hosted aida-public images
+                                    (used by homepage + product images)
+       z-cdn.chatglm.cn            — ZAI image-search OSS (designer
+                                    sneakers on homepage)
+     ------------------------------------------------------------------ */
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'z-cdn.chatglm.cn' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
+  },
+
   async headers() {
     return [
       {

@@ -47,9 +47,9 @@ const INITIAL_ADDRESSES: Address[] = [
     id: 'home',
     label: 'Home',
     recipient: 'Alex Thompson',
-    street: '124 Luxury Plaza, Suite 402',
-    area: 'Upper East Side, New York, NY 10021',
-    phone: '+1 (555) 0123-4567',
+    street: 'Flat 402, Luxury Heights, Bandra West',
+    area: 'Mumbai, Maharashtra 400050',
+    phone: '+91 98765 43210',
     isDefault: true,
     icon: 'home',
   },
@@ -57,18 +57,18 @@ const INITIAL_ADDRESSES: Address[] = [
     id: 'work',
     label: 'Work',
     recipient: 'Alex Thompson',
-    street: 'Design District Tower, Floor 18',
-    area: 'Chelsea, New York, NY 10011',
-    phone: '+1 (555) 0123-9988',
+    street: 'Tower B, 18th Floor, Cyber Hub',
+    area: 'Gurugram, Haryana 122002',
+    phone: '+91 98765 43210',
     icon: 'work',
   },
   {
     id: 'summer',
-    label: 'Summer House',
+    label: 'Hill Station',
     recipient: 'Alex Thompson',
-    street: '45 Ocean Drive, Bayview',
-    area: 'East Hampton, NY 11937',
-    phone: '+1 (555) 0123-1122',
+    street: 'Villa 12, Pine Valley, Mussoorie Road',
+    area: 'Dehradun, Uttarakhand 248001',
+    phone: '+91 98765 43210',
     icon: 'holiday',
   },
 ];
@@ -130,7 +130,14 @@ export default function AddressesPage() {
   };
 
   return (
-    <MobileLayout headerVariant="back" title="My Addresses">
+    <MobileLayout headerVariant="back" title="My Addresses"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Account', href: '/profile' },
+        { label: 'Addresses' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,

@@ -26,7 +26,13 @@ export default function FiltersPage() {
   const sizes = ['UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11'];
 
   return (
-    <MobileLayout headerVariant="back" title="Filters">
+    <MobileLayout headerVariant="back" title="Filters"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Filters' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,

@@ -123,7 +123,13 @@ export default function ContactUsPage() {
   } as const;
 
   return (
-    <MobileLayout headerVariant="back" title="Contact Us">
+    <MobileLayout headerVariant="back" title="Contact Us"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Contact Us' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,
@@ -149,7 +155,7 @@ export default function ContactUsPage() {
           >
             <Image
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgX3y3VxCdIBLuRkSel6rmWqkumRMqfbJ4xxvZji0k8vul9QVb-2pyXP1SrZjdHoLWfoDAhW7hCPB7emhHJVENf71kSVinCnPZl9OSwhjfm7wJGIOi4tVDFKpKbDXnmzCRR7hjzIuAsiGZFpYl3ImxkdwkQM_TXbjOrb62Qk1AK0rWwr-Wn-gfSB9OmC4YTQxlMwUo_z_A1RJTy_EFM0QrgCGgiAano932pbvG76PDyKuqkbPRXVOI8LOYjQh9E0qhA29okIV-OUp4"
-              alt="Luxury high-end fashion boutique entrance on 5th Ave with bright airy lighting and minimalist signage."
+              alt="Luxury high-end fashion boutique entrance in Dehradun with bright airy lighting and minimalist signage."
               width={400}
               height={300}
               unoptimized
@@ -188,7 +194,7 @@ export default function ContactUsPage() {
                   margin: `${theme.spacing.xs}px 0 0 0`,
                 }}
               >
-                5th Ave, New York, NY
+                Rajpur Road, Dehradun, Uttarakhand
               </p>
             </div>
           </div>
@@ -391,9 +397,9 @@ export default function ContactUsPage() {
                   lineHeight: theme.lineHeight.relaxed,
                 }}
               >
-                721 5th Ave, New York, NY 10022,
+                123 Rajpur Road,
                 <br />
-                United States
+                Dehradun, Uttarakhand 248001, India
               </p>
             </div>
 

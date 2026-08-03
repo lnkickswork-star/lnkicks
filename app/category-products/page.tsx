@@ -28,7 +28,13 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  */
 export default function CategoryProductsPage() {
   return (
-    <MobileLayout headerVariant="back" title="Category">
+    <MobileLayout headerVariant="back" title="Category"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Products' },
+      ]}
+      desktopMaxWidth={1280}
+    >
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
         {/* BREADCRUMB */}
         <div

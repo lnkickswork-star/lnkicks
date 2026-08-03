@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { createRouteMetadata } from '@/lib/route-metadata';
 
@@ -13,5 +13,5 @@ export default function RouteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <Suspense fallback={null}>{children}</Suspense>;
 }

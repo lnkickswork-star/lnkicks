@@ -13,7 +13,14 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  * CheckoutPage — LN KICKS mobile express checkout.
  *
  * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="back" title="Checkout" hideCartFab>
+ *  - Mounts <MobileLayout headerVariant="back" title="Checkout" hideCartFab
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Cart', href: '/cart' },
+        { label: 'Checkout' },
+      ]}
+      desktopMaxWidth={1280}
+    >
  *    so the page gets the same premium chrome (glass header, floating bottom
  *    nav with Cart FAB hidden, safe-area) as the rest of the app.
  *  - `hideCartFab` avoids the double-cart UX.

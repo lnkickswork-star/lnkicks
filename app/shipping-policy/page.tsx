@@ -85,18 +85,24 @@ export default function ShippingPolicyPage() {
   const { showToast } = useApp();
 
   const rates = [
-    { name: 'Standard Shipping', eta: '5-7 Business Days', price: '$15.00' },
-    { name: 'Express Delivery', eta: '2-3 Business Days', price: '$35.00' },
+    { name: 'Standard Shipping', eta: '5-7 Business Days', price: '₹149' },
+    { name: 'Express Delivery', eta: '2-3 Business Days', price: '₹299' },
     {
       name: 'Premium Overnight',
       eta: 'Next Day Delivery',
-      price: '$65.00',
+      price: '₹499',
       highlight: true,
     },
   ];
 
   return (
-    <MobileLayout headerVariant="back" title="Shipping Policy">
+    <MobileLayout headerVariant="back" title="Shipping Policy"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Shipping Policy' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           background: theme.colors.grey50,

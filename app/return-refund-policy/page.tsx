@@ -125,7 +125,13 @@ export default function ReturnRefundPolicyPage() {
   ];
 
   return (
-    <MobileLayout headerVariant="back" title="Return & Refund Policy">
+    <MobileLayout headerVariant="back" title="Return & Refund Policy"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Return & Refund Policy' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           background: theme.colors.grey50,

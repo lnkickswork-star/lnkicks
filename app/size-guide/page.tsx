@@ -66,7 +66,13 @@ export default function SizeGuidePage() {
   const [tab, setTab] = useState<TabKey>('Men');
 
   return (
-    <MobileLayout headerVariant="back" title="Size Guide">
+    <MobileLayout headerVariant="back" title="Size Guide"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Size Guide' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,

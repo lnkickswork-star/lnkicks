@@ -74,7 +74,14 @@ export default function PaymentMethodsPage() {
   const [selectedWallet, setSelectedWallet] = useState<string>('apple-pay');
 
   return (
-    <MobileLayout headerVariant="back" title="Payment Methods">
+    <MobileLayout headerVariant="back" title="Payment Methods"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Account', href: '/profile' },
+        { label: 'Payment Methods' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           padding: `0 ${theme.spacing.pad}px`,

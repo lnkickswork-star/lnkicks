@@ -79,7 +79,13 @@ export default function TermsConditionsPage() {
   const { showToast } = useApp();
 
   return (
-    <MobileLayout headerVariant="back" title="Terms & Conditions">
+    <MobileLayout headerVariant="back" title="Terms & Conditions"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Terms & Conditions' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           background: theme.colors.grey50,

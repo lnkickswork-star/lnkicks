@@ -11,6 +11,9 @@ import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { resolveImage } from '@/lib/images';
+import { useIsMobile } from '@/lib/mobile/utils/useIsMobile';
+import { DesktopProductDetail } from '@/components/desktop/DesktopProductDetail';
 
 /**
  * ProductDetailPage — flagship mobile product page.
@@ -142,6 +145,7 @@ export default function ProductDetailPage() {
   const slug = params?.slug as string;
   const router = useRouter();
   const { addToCart, showToast } = useApp();
+  const isMobile = useIsMobile();
 
   const product =
     PRODUCT_REGISTRY.find((p) => p.slug === slug) || PRODUCT_REGISTRY[0];
@@ -169,7 +173,7 @@ export default function ProductDetailPage() {
       id: `${product.id}-${selectedSize}-${selectedColor}`,
       name: `${product.name} (${selectedSize}, ${selectedColor})`,
       price: product.price,
-      image: product.primaryImage,
+      image: resolveImage(product.primaryImage),
       qty: 1,
     });
     showToast(`${product.name} added to cart`);
@@ -181,7 +185,7 @@ export default function ProductDetailPage() {
       id: `${product.id}-${selectedSize}-${selectedColor}`,
       name: `${product.name} (${selectedSize}, ${selectedColor})`,
       price: product.price,
-      image: product.primaryImage,
+      image: resolveImage(product.primaryImage),
       qty: 1,
     });
     router.push('/checkout');
@@ -202,6 +206,33 @@ export default function ProductDetailPage() {
     setSelectedColor(c);
   }, []);
 
+  // ── Desktop: render the premium desktop PDP layout ────────────────
+  // MobileLayout will detect desktop and wrap this in DesktopShell
+  // (AnnouncementBar + MainHeader + MainFooter), but we still pass
+  // desktopMaxWidth=1280 and a synthetic breadcrumb so the page
+  // looks intentional on desktop rather than stretched-mobile.
+  //
+  // IMPORTANT: we must call all hooks above (useState, useMemo,
+  // useCallback) BEFORE any early return, to satisfy the Rules of
+  // Hooks. The mobile branch below uses some of these hooks; the
+  // desktop branch (DesktopProductDetail) manages its own state.
+  if (isMobile === false) {
+    return (
+      <MobileLayout
+        headerVariant="back"
+        title={product.brand}
+        desktopMaxWidth={1280}
+        desktopPaddingTop={32}
+        desktopPaddingBottom={96}
+      >
+        <DesktopProductDetail product={product} />
+      </MobileLayout>
+    );
+  }
+
+  // During SSR + first paint, isMobile is null — render the mobile
+  // layout (which itself returns null until detection completes, so
+  // there's no flash of wrong content).
   return (
     <MobileLayout headerVariant="back" title={product.brand}>
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
@@ -241,7 +272,7 @@ export default function ProductDetailPage() {
           </span>
 
           <Image
-            src={activeImg}
+            src={resolveImage(activeImg)}
             alt={product.name}
             width={300}
             height={300}
@@ -289,7 +320,7 @@ export default function ProductDetailPage() {
               }}
             >
               <Image
-                src={img}
+                src={resolveImage(img)}
                 alt="Thumbnail"
                 width={56}
                 height={56}

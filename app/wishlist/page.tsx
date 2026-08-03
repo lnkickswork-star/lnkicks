@@ -8,6 +8,7 @@ import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import { ProductCard } from '@/components/mobile/ProductCard';
+import { resolveImage as resolveImageUrl } from '@/lib/images';
 import type { WishlistItem } from '@/types/wishlist';
 
 /**
@@ -44,7 +45,7 @@ export default function WishlistPage() {
         id: item.id,
         name: item.name,
         price: item.price || 8899,
-        image: item.image || 'jordan_powder_blue_nobg.png',
+        image: resolveImageUrl(item.image || '/jordan_powder_blue_nobg.png'),
         qty: 1,
       });
       toggleWishlist(item);
@@ -53,10 +54,11 @@ export default function WishlistPage() {
   );
 
   // Normalize a wishlist item's image into a usable <img src>.
-  // WishlistItem.image is root-relative ("/foo.png") or undefined.
+  // Uses the global image resolver so broken LFS pointers are
+  // transparently substituted with working CDN URLs.
   const resolveImage = (item: WishlistItem) => {
     const src = item.image || '/jordan_powder_blue_nobg.png';
-    return src.startsWith('/') ? src : `/${src}`;
+    return resolveImageUrl(src);
   };
 
   // Build a small ✕ remove button to pass into ProductCard's actionSlot.
@@ -90,7 +92,13 @@ export default function WishlistPage() {
   );
 
   return (
-    <MobileLayout headerVariant="back" title="Wishlist">
+    <MobileLayout headerVariant="back" title="Wishlist"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Wishlist' },
+      ]}
+      desktopMaxWidth={1280}
+    >
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
         {/* BREADCRUMB */}
         <div

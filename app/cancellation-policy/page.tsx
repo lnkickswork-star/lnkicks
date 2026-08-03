@@ -124,7 +124,13 @@ export default function CancellationPolicyPage() {
   const { showToast } = useApp();
 
   return (
-    <MobileLayout headerVariant="back" title="Cancellation Policy">
+    <MobileLayout headerVariant="back" title="Cancellation Policy"
+      desktopBreadcrumb={[
+        { label: 'Home', href: '/' },
+        { label: 'Cancellation Policy' },
+      ]}
+      desktopMaxWidth={1024}
+    >
       <div
         style={{
           background: theme.colors.grey50,
