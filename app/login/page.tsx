@@ -1,221 +1,187 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MobileLayout } from '@/components/layout/MobileLayout';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { TextField } from '@/components/auth/TextField';
+import { PasswordInput } from '@/components/auth/PasswordInput';
+import { ORDivider } from '@/components/auth/ORDivider';
+import { GoogleIcon } from '@/components/auth/GoogleIcon';
+import { PrimaryButton, SecondaryButton, pressableStyle } from '@/components/auth/AuthButtons';
+import { WelcomeBonusPopup } from '@/components/auth/WelcomeBonusPopup';
+import { authService } from '@/lib/auth/authService';
 import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
-import { pressableStyle } from '@/lib/mobile/utils/interactions';
 
 /**
- * LoginPage — LN KICKS members portal.
+ * LoginPage — Phase 31 Premium Authentication
  *
- * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="minimal" hideBottomNav title="Login">
- *    so the page gets the same premium chrome (glass header with centered
- *    LNKICKS wordmark, safe-area clearance, skip link, service worker) as
- *    the rest of the app, WITHOUT the bottom nav — the user is not yet
- *    authenticated, so nav entries (Home / Wishlist / Cart / Profile) are
- *    not appropriate here.
- *  - All hardcoded colors / sizes / radii / shadows migrated to mobile
- *    design tokens. FORBIDDEN iOS red not present here, but #111111 /
- *    #777777 / #EBEBEB / #E0E0E0 all replaced with theme.colors.* tokens.
- *  - Form inputs are token-driven: radius.lg, 1.5px solid grey300 border,
- *    black focus border (via <style jsx>), md/lg padding.
- *  - Submit SIGN IN button fires haptic.medium() on press and uses the
- *    `pressable-strong` class for the primary-CTA scale animation.
+ * Three login methods:
+ *  1. Email + Password (with eye toggle, Remember Me, Forgot Password)
+ *  2. Continue with Google (mock Firebase Google Auth)
+ *  3. Continue with Mobile Number (OTP) → routes to /verify-otp
  *
- * Desktop rendering preserved — MobileLayout detects UA + viewport width
- * and renders children untouched on desktop.
+ * Premium UX:
+ *  - Floating-label eyebrow inputs
+ *  - Eye toggle on password (200ms crossfade)
+ *  - Loading spinner on Sign In (button disabled while loading)
+ *  - Haptic feedback on every interaction
+ *  - Error messages with icon + red border
+ *  - "OR" divider between email and social login (Google-style)
+ *  - Welcome Bonus popup if first-time Google login credits ₹50
+ *  - Safe-area-aware, mobile-first, no overflow
+ *
+ * Button order (per spec):
+ *   Email → Password (eye) → Forgot Password → Sign In →
+ *   OR divider → Continue with Google → Continue with Mobile →
+ *   Create Account link
  */
 export default function LoginPage() {
   const router = useRouter();
   const { showToast } = useApp();
-  const [email, setEmail] = useState('charles.taylor@lnkicks.com');
-  const [password, setPassword] = useState('password123');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [passwordError, setPasswordError] = useState<string | undefined>();
+  const [formError, setFormError] = useState<string | undefined>();
+
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Welcome bonus popup state
+  const [bonusOpen, setBonusOpen] = useState(false);
+
+  // Hydration safety — only render after mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Load remembered email
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedEmail = localStorage.getItem('lnk_remember_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const session = authService.getCurrentSession();
+    if (session) {
+      router.replace('/profile');
+    }
+  }, [router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      showToast('Please enter both Email and Password.');
+    setFormError(undefined);
+    setEmailError(undefined);
+    setPasswordError(undefined);
+
+    // Validate email
+    const emailCheck = authService.validators.email(email);
+    if (!emailCheck.valid) {
+      setEmailError(emailCheck.message);
+      haptic.error();
+      return;
+    }
+    if (!password) {
+      setPasswordError('Password is required');
+      haptic.error();
       return;
     }
 
-    const user = { name: 'Charles Taylor', email, phone: '+91 98765 43210', joined: 'January 2026', isLoggedIn: true };
-    localStorage.setItem('lnk_user', JSON.stringify(user));
-    showToast('Login Successful!');
+    setLoading(true);
+
+    // Simulate network latency for premium feel (real Firebase call would be async)
+    await new Promise((r) => setTimeout(r, 700));
+
+    const result = authService.loginWithEmail(email, password);
+    setLoading(false);
+
+    if (!result.ok) {
+      setFormError(result.error);
+      haptic.error();
+      return;
+    }
+
+    // Persist "Remember Me"
+    if (rememberMe) {
+      localStorage.setItem('lnk_remember_email', email);
+    } else {
+      localStorage.removeItem('lnk_remember_email');
+    }
+
+    haptic.success();
+    showToast(`Welcome back, ${result.session.name.split(' ')[0]}!`);
+
+    // Existing user → no bonus popup, just go to profile
     router.push('/profile');
   };
 
-  // Shared token-driven input style — matches the stage-4b/4c/4d form recipe:
-  // radius.lg + 1.5px solid grey300 + md/lg padding.
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
-    borderRadius: theme.radius.lg,
-    border: `1.5px solid ${theme.colors.grey300}`,
-    fontSize: theme.fontSize.body,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.textPrimary,
-    outline: 'none',
-    boxSizing: 'border-box',
-    background: theme.colors.white,
-    transition: 'border-color 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+  const handleGoogleLogin = async () => {
+    setFormError(undefined);
+    setGoogleLoading(true);
+
+    await new Promise((r) => setTimeout(r, 900));
+
+    /**
+     * MOCK Google Auth — simulates the user picking a Google account.
+     * In production, replace with:
+     *   const provider = new firebase.auth.GoogleAuthProvider();
+     *   const cred = await firebase.auth().signInWithPopup(provider);
+     *   const user = cred.user;
+     *   authService.loginWithGoogle({ name: user.displayName, email: user.email, avatar: user.photoURL });
+     *
+     * For demo, we use a fixed test Google identity the user can override
+     * later by registering with their real email.
+     */
+    const mockGoogleUser = {
+      name: 'Demo Google User',
+      email: 'demo.google@gmail.com',
+    };
+
+    const result = authService.loginWithGoogle(mockGoogleUser);
+    setGoogleLoading(false);
+
+    if (!result.ok) {
+      setFormError(result.error);
+      haptic.error();
+      return;
+    }
+
+    haptic.success();
+    showToast(`Signed in as ${result.session.name}`);
+
+    if (result.result.isNewUser && result.result.welcomeBonusCredited) {
+      // Show welcome bonus popup, then route to profile on close
+      setBonusOpen(true);
+    } else {
+      router.push('/profile');
+    }
   };
 
-  // Shared eyebrow-label style (EMAIL ADDRESS / PASSWORD)
-  const labelStyle: React.CSSProperties = {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    display: 'block',
-    marginBottom: theme.spacing.sm - 2,
-    letterSpacing: theme.letterSpacing.wider,
-    textTransform: 'uppercase',
+  const handleMobileOtp = () => {
+    haptic.light();
+    router.push('/verify-otp');
   };
+
+  if (!mounted) return null;
 
   return (
-    <MobileLayout headerVariant="minimal" hideBottomNav title="Login">
-      <div
-        style={{
-          padding: `0 ${theme.spacing.pad}px`,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          minHeight: 'calc(100vh - 120px)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 440,
-            margin: `${theme.spacing.xxl}px auto`,
-            background: theme.colors.white,
-            borderRadius: theme.radius.hero,
-            padding: theme.spacing.section,
-            border: `1px solid ${theme.colors.grey150}`,
-            boxShadow: theme.shadows.sm,
-          }}
-        >
-          {/* BRAND HEAD — secondary wordmark inside the card body.
-              The MobileMinimalHeader already shows LNKICKS in the top bar;
-              this is a decorative editorial reinforcement (Playfair serif)
-              paired with the "MEMBERS PORTAL" eyebrow. */}
-          <div style={{ textAlign: 'center', marginBottom: theme.spacing.xxxl }}>
-            <div
-              style={{
-                fontFamily: theme.fontFamily.editorial,
-                fontSize: theme.fontSize.h2,
-                fontWeight: theme.fontWeight.bold,
-                color: theme.colors.textPrimary,
-                lineHeight: theme.lineHeight.tight,
-              }}
-            >
-              LNKICKS
-            </div>
-            <div
-              style={{
-                fontSize: theme.fontSize.xs,
-                fontWeight: theme.fontWeight.extrabold,
-                letterSpacing: theme.letterSpacing.widest,
-                textTransform: 'uppercase',
-                color: theme.colors.textSecondary,
-                marginTop: theme.spacing.hairline,
-              }}
-            >
-              Members Portal
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleLogin}
-            style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
-          >
-            <div>
-              <label htmlFor="login-email" style={labelStyle}>
-                Email Address
-              </label>
-              <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="auth-input"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: theme.spacing.sm - 2,
-                }}
-              >
-                <label htmlFor="login-password" style={{ ...labelStyle, marginBottom: 0 }}>
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="pressable"
-                  onPointerDown={() => haptic.light()}
-                  style={{
-                    fontSize: theme.fontSize.sm,
-                    color: theme.colors.textSecondary,
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Forgot?
-                </Link>
-              </div>
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="auth-input"
-                style={inputStyle}
-              />
-            </div>
-
-            <button
-              type="submit"
-              onPointerDown={() => haptic.medium()}
-              className="pressable-strong auth-submit"
-              style={{
-                width: '100%',
-                padding: `${theme.spacing.lg - 2}px ${theme.spacing.md}px`,
-                background: theme.colors.black,
-                color: theme.colors.white,
-                borderRadius: theme.radius.pill,
-                fontFamily: theme.fontFamily.display,
-                fontSize: theme.fontSize.md,
-                fontWeight: theme.fontWeight.bold,
-                border: 'none',
-                cursor: 'pointer',
-                letterSpacing: theme.letterSpacing.wider,
-                textTransform: 'uppercase',
-                marginTop: theme.spacing.sm + 2,
-              }}
-            >
-              Sign In
-            </button>
-          </form>
-
-          <div
-            style={{
-              textAlign: 'center',
-              marginTop: theme.spacing.xxl,
-              fontSize: theme.fontSize.body,
-              color: theme.colors.textSecondary,
-              fontFamily: theme.fontFamily.body,
-            }}
-          >
+    <>
+      <AuthShell
+        layoutTitle="Login"
+        eyebrow="Members Portal"
+        headline="Welcome Back"
+        subtext="Sign in to your LNKICKS account to access orders, wishlist, and faster checkout."
+        footer={
+          <>
             Don&apos;t have an account?{' '}
             <Link
               href="/register"
@@ -227,29 +193,171 @@ export default function LoginPage() {
                 textDecoration: 'underline',
               }}
             >
-              Join LNKICKS
+              Create Account
             </Link>
-          </div>
+          </>
+        }
+      >
+        <form
+          onSubmit={handleLogin}
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+        >
+          <TextField
+            id="login-email"
+            label="Email Address"
+            value={email}
+            onChange={(v) => {
+              setEmail(v);
+              if (emailError) setEmailError(undefined);
+              if (formError) setFormError(undefined);
+            }}
+            placeholder="you@example.com"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            error={emailError}
+            autoFocus
+          />
+
+          <PasswordInput
+            id="login-password"
+            label="Password"
+            value={password}
+            onChange={(v) => {
+              setPassword(v);
+              if (passwordError) setPasswordError(undefined);
+              if (formError) setFormError(undefined);
+            }}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            error={passwordError}
+            rightHelper={
+              <Link
+                href="/forgot-password"
+                className="pressable"
+                onPointerDown={() => haptic.light()}
+                style={{
+                  fontSize: theme.fontSize.sm,
+                  color: theme.colors.textSecondary,
+                  textDecoration: 'underline',
+                }}
+              >
+                Forgot?
+              </Link>
+            }
+          />
+
+          {/* Remember Me */}
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing.sm,
+              cursor: 'pointer',
+              userSelect: 'none',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => {
+                haptic.selection();
+                setRememberMe(e.target.checked);
+              }}
+              style={{
+                width: 18,
+                height: 18,
+                accentColor: theme.colors.black,
+                cursor: 'pointer',
+              }}
+            />
+            <span
+              style={{
+                fontSize: theme.fontSize.md,
+                color: theme.colors.textSecondary,
+                fontFamily: theme.fontFamily.body,
+              }}
+            >
+              Remember me on this device
+            </span>
+          </label>
+
+          {/* Form-level error */}
+          {formError && (
+            <div
+              role="alert"
+              style={{
+                background: 'rgba(127, 29, 29, 0.06)',
+                border: `1px solid rgba(127, 29, 29, 0.18)`,
+                borderRadius: theme.radius.md,
+                padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
+                fontSize: theme.fontSize.md,
+                color: theme.colors.error,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: theme.spacing.sm,
+                fontFamily: theme.fontFamily.body,
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
+                <circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              {formError}
+            </div>
+          )}
+
+          <PrimaryButton type="submit" loading={loading}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </PrimaryButton>
+        </form>
+
+        {/* OR divider */}
+        <ORDivider />
+
+        {/* Social login buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
+          <SecondaryButton
+            onClick={handleGoogleLogin}
+            loading={googleLoading}
+            icon={<GoogleIcon size={18} />}
+          >
+            Continue with Google
+          </SecondaryButton>
+
+          <SecondaryButton
+            onClick={handleMobileOtp}
+            icon={
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12" y2="18" />
+              </svg>
+            }
+          >
+            Continue with Mobile Number
+          </SecondaryButton>
         </div>
-      </div>
+      </AuthShell>
+
+      <WelcomeBonusPopup
+        open={bonusOpen}
+        onClose={() => {
+          setBonusOpen(false);
+          router.push('/profile');
+        }}
+        onContinue={() => {
+          setBonusOpen(false);
+          router.push('/profile');
+        }}
+      />
 
       <style jsx>{pressableStyle}</style>
       <style jsx>{`
-        .auth-input:focus {
-          border-color: ${theme.colors.black};
-        }
-        .auth-input:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 2px;
-        }
-        .auth-submit:active {
-          transform: scale(0.97);
-        }
-        .auth-submit:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 3px;
+        @keyframes auth-spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
-    </MobileLayout>
+    </>
   );
 }
