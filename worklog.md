@@ -3615,3 +3615,129 @@ Stage Summary:
 - Auth-aware: shows "Create Account" + Step 1 active when logged out; "Invite Friends" + Step 1 completed + Step 2 active when logged in.
 - Subtle green accent (#14532D) on completed step, active badge, connecting line — luxury muted, not flashy.
 - Mobile-only — desktop homepage completely untouched.
+
+---
+Task ID: phase-31
+Agent: Main (Super Z)
+Task: Phase 31 — LNKICKS Authentication Page Upgrade (Premium, Mobile-First, 3 login methods, ₹50 welcome bonus)
+
+Work Log:
+- User requested premium auth upgrade (Samsung/Google/Nike style) with 3 login methods:
+  Email+Password, Continue with Google, Continue with Mobile Number (OTP).
+  Plus: password eye toggle, forgot password flow, signup with referral code +
+  Terms checkbox, ₹50 welcome bonus on FIRST-TIME signup only, modern UI.
+- Reviewed existing /login (basic email+password) and /register (name/email/password).
+- Examined theme tokens, MobileLayout (minimal header variant), AppContext, types/user.ts.
+
+Architecture Decision:
+- App uses localStorage-only (no Firebase creds available). Built
+  lib/auth/authService.ts as a localStorage-backed mock that STRUCTURALLY
+  mirrors Firebase Auth — swapping to real Firebase later is a drop-in
+  function-body replacement (signatures match firebase/auth API).
+- ₹50 Welcome Bonus credited ONLY on first-time signup (idempotent — checks
+  if 'Welcome Bonus' transaction already exists in wallet history).
+- Demo OTP = '123456' (shown via toast so user can complete OTP flow
+  without an SMS gateway).
+- OTP: 60s expiry, 5 max attempts, 60s resend cooldown.
+
+Files Created:
+- lib/auth/authService.ts (~700 lines) — signupWithEmail, loginWithEmail,
+  loginWithGoogle, sendOtp, verifyOtp, requestPasswordReset,
+  creditWelcomeBonus, getWalletHistory, validators (email/phone/password/
+  referralCode/name), password hashing (btoa obfuscation — not real crypto).
+  Wallet history stored as lnk_wallet_<uid> per user.
+- components/auth/AuthShell.tsx — Premium card wrapper (LNKICKS header +
+  eyebrow + headline + subtext + footer slot).
+- components/auth/TextField.tsx — Floating-label input with prefix/suffix,
+  focus ring, error/hint states.
+- components/auth/PasswordInput.tsx — Eye toggle (200ms crossfade), strength
+  meter (4 bars: weak/fair/good/strong), focus ring, error state.
+- components/auth/ORDivider.tsx — Google-style 'OR' divider with gradient
+  lines.
+- components/auth/GoogleIcon.tsx — Official Google 4-color G logo SVG.
+- components/auth/AuthButtons.tsx — PrimaryButton (black CTA + spinner),
+  SecondaryButton (white + border + icon slot), LoadingSpinner.
+- components/auth/WelcomeBonusPopup.tsx — Modal with animated ₹50 counter
+  (ease-out cubic), gift emoji pop animation, wallet badge, Continue CTA.
+- app/forgot-password/page.tsx + layout.tsx — Email input → Send Reset Link
+  → success screen with animated check icon. Security: same success
+  message regardless of email existence (no enumeration).
+- app/verify-otp/page.tsx + layout.tsx — 3-step flow:
+  Step 1 (phone): Mobile input (+91 prefix, 10 digits) → Send OTP
+  Step 2 (name, new users only): Name entry → Send OTP
+  Step 3 (otp): 6-digit OTP entry (auto-advance, paste support, backspace
+  navigation), 60s countdown timer, Resend OTP button (cooldown-enforced),
+  Verify & Continue → login or create account + ₹50 bonus.
+
+Files Rewritten:
+- app/login/page.tsx — Premium 3-method login:
+  * Email + Password with eye toggle (PasswordInput component)
+  * Remember Me checkbox (persists email to localStorage)
+  * Forgot? link → /forgot-password
+  * Form-level error alert (red tinted card with icon)
+  * Sign In button (PrimaryButton, loading spinner, disabled state)
+  * OR divider
+  * Continue with Google (SecondaryButton with GoogleIcon, mock Firebase
+    Google Auth — uses demo.google@gmail.com identity)
+  * Continue with Mobile Number (SecondaryButton with phone icon → /verify-otp)
+  * Create Account link footer
+  * Auto-redirects to /profile if already logged in
+  * Haptic feedback on every interaction
+
+- app/register/page.tsx — Premium signup:
+  * First Name + Last Name (2-column grid)
+  * Email Address
+  * Mobile Number (+91 prefix, 10 digits, hint about SMS verification)
+  * Password (strength meter, eye toggle)
+  * Confirm Password (eye toggle + match indicator)
+  * Referral Code (optional, alphanumeric 4-12 chars)
+  * ₹50 Welcome Bonus hint card (green-tinted)
+  * Terms & Privacy Policy checkbox (required, with inline links)
+  * Per-field validation with inline errors
+  * On new-user signup: credits ₹50 → WelcomeBonusPopup → /profile
+  * On duplicate email/phone: surfaces specific field error
+
+Type-check & Build:
+- TypeScript: clean (fixed 2 minor warnings — unused 'confirmMismatch'
+  variable, unused 'useCallback' import).
+- Next.js build: success — 45 routes generated, 4 auth pages:
+    /login           2.9 kB
+    /register        2.92 kB
+    /forgot-password 1.88 kB
+    /verify-otp      4.52 kB
+
+Deployment:
+- Committed: 1070d11 (14 files changed, +3575 -369 lines).
+- Pushed to GitHub: 30a9dfb..1070d11.
+- Vercel auto-deployed. Verified HTTP 200 on all 4 routes:
+    /login, /register, /forgot-password, /verify-otp
+- Inspected deployed JS chunks:
+    /login           → contains "Continue with Google", "Continue with
+                        Mobile", "Welcome Back", "Members Portal",
+                        "Remember me", "Forgot", "welcomeBonus"
+    /register        → contains "First Name", "Last Name", "Referral
+                        Code", "Terms", "Privacy Policy", "Welcome Bonus",
+                        "₹50", "Confirm Password", "Create Account"
+    /verify-otp      → contains "Send OTP", "Resend OTP", "Verify",
+                        "Continue", "Mobile Number", "6-digit", "otp-box",
+                        "welcomeBonus"
+    /forgot-password → contains "Send Reset Link", "Account Recovery",
+                        "Forgot Password", "Check Your Email"
+
+Stage Summary:
+- Premium authentication system live at LNKICKS — Samsung/Google/Nike
+  quality, mobile-first, no overflow, safe-area aware.
+- Three login methods operational: Email+Password, Google (mock), Mobile OTP.
+- ₹50 Welcome Bonus credited automatically on FIRST-TIME signup via any
+  method — idempotent (can't be triggered twice for the same account).
+- Existing users log in normally without bonus.
+- Wallet history stored per user (lnk_wallet_<uid>) with Welcome Bonus
+  transaction (type, amount, status, description, timestamp).
+- Strong password validation (8+ chars, 3+ character classes).
+- OTP: 60s expiry, 5 max attempts, 60s resend cooldown, paste support.
+- Forgot Password flow doesn't leak email existence (security best practice).
+- Welcome Bonus popup with animated ₹50 counter, gift emoji, wallet badge.
+- All interactions have haptic feedback (light/medium/selection/success/error).
+- Auto-redirect to /profile if already logged in.
+- Swapping to real Firebase later: replace function bodies in
+  authService.ts — signatures match Firebase Auth API exactly.
