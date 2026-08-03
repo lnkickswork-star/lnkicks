@@ -10,6 +10,7 @@ import MobileHeroBanner from '@/components/mobile/MobileHeroBanner';
 import MobileFlashSale from '@/components/mobile/MobileFlashSale';
 import MobilePopularShoes from '@/components/mobile/MobilePopularShoes';
 import MobileNewArrivals from '@/components/mobile/MobileNewArrivals';
+import MobileSplashScreen from '@/components/mobile/MobileSplashScreen';
 import {
   MOBILE_TRENDING,
   MOBILE_RECOMMENDED,
@@ -130,6 +131,24 @@ function SectionSkeleton({ height = 240 }: { height?: number }) {
 
 export default function MobileHome() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // ── Splash screen state ────────────────────────────────────────────
+  // Phase 28: Premium LNKICKS splash overlay shown once per session on
+  // the mobile homepage. Auto-dismisses after ~5.5s or on user tap
+  // (Skip → / Enter Store →). sessionStorage flag prevents re-showing
+  // within the same browser session. Mobile-only — DesktopHome is
+  // completely untouched and never mounts MobileSplashScreen.
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const seen = sessionStorage.getItem('lnkicks_splash_seen_session');
+      if (!seen) setShowSplash(true);
+    } catch {
+      // sessionStorage may be blocked — skip splash silently
+    }
+  }, []);
 
   // Close drawer on Escape key (keyboard accessibility)
   useEffect(() => {
@@ -326,6 +345,14 @@ export default function MobileHome() {
       <Suspense fallback={null}>
         <MobileServiceWorkerRegister />
       </Suspense>
+
+      {/* 6. Phase 28: Premium LNKICKS splash overlay — shown once per
+            session, above all other content. Mobile-only. Auto-dismisses
+            after ~5.5s OR on Skip / Enter Store tap. Body scroll is
+            locked while visible. Desktop homepage never mounts this. */}
+      {showSplash && (
+        <MobileSplashScreen onComplete={() => setShowSplash(false)} />
+      )}
     </div>
   );
 }
