@@ -4124,3 +4124,136 @@ Stage Summary:
 - Every existing field preserved. No business logic changed. No APIs
   touched. No routes modified. No fake data introduced.
 - Build passes. Type-check passes. Ready for Vercel deploy.
+
+---
+Task ID: orders-redesign
+Agent: Main (Senior Ecommerce UX Architect / OMS Specialist)
+Task: Redesign ONLY the Orders Management module of the LNKICKS Admin Suite
+  into a world-class enterprise OMS matching Amazon Seller Central, Shopify
+  Admin, ShipStation, Stripe Dashboard, Adobe Commerce. Strict rules: no
+  business-logic changes, no API changes, no route changes, no fake orders,
+  no removing existing features. Only UI/UX/workflow/responsiveness.
+
+Work Log:
+- Audited previous /app/orders-management/page.tsx — basic PageHeader +
+  8 status tabs + search/courier/date filters + EnterpriseDataTable
+  (7 cols: Order ID, Customer, Product, Amount, Payment, Courier, Status,
+  Actions) + 520px Drawer (status, quick update, 6-stage timeline, customer
+  info, items, courier, address, notes). Identified gaps: no KPI strip,
+  weak filters (date non-functional), missing columns (Expected Delivery,
+  Assigned Staff, Order Date), weak timeline (no timestamps, no cancelled/
+  returned/refunded branches), no billing address, no payment breakdown,
+  no invoice, no refund info, no activity history, no bulk refund/courier.
+- Re-read /components/admin/ui.tsx (Button, Badge, StatusPill, Select,
+  SearchInput, Drawer, Tabs, Dropdown, MenuItem, MenuDivider, KeyValue,
+  Avatar, Stat, Tooltip, Skeleton, EmptyState, ProgressBar, Modal,
+  ConfirmDialog, useToast), /components/admin/EnterpriseDataTable.tsx
+  (Column type, selectable, sortable, stickyHeader, bulkActions, pageSize,
+  loading skeleton, empty state, pagination),
+  /components/admin/AdminLayout.tsx (auth + RBAC + theme + sidebar shell,
+  maxWidth 1600, padding clamp), /components/admin/PageHeader.tsx
+  (title/subtitle/breadcrumb/actions/meta), /lib/admin/types.ts
+  (AdminThemeTokens shape), /lib/admin/designTokens.ts (spacing/radius/
+  elevation/motion/zIndex scales), /lib/admin/adminTheme.ts (light/dark
+  token values), /components/admin/widgets/KPICard.tsx (hover-lift card
+  pattern reference), and /app/dashboard/page.tsx (established responsive
+  grid + derived-analytics patterns).
+- Rewrote /app/orders-management/page.tsx as a single-file enterprise OMS
+  (~1556 lines, 11.3 kB compiled):
+    * PAGE HEADER: title + subtitle + 3 live status badges (pending /
+      in-transit / delivered) + Refresh / Export / Print Invoices actions.
+    * KPI STRIP: 5 click-to-filter stat cards (Today's Orders / Pending /
+      Processing / Completed / Cancelled) with accent-colored values,
+      hover lift, radial gradient overlay, contextual sub-labels.
+      Responsive: 5→3→2→1 columns at 1024/640/420px breakpoints.
+    * STATUS TABS: 10 tabs (All + Pending/Confirmed/Packed/Shipped/Out for
+      Delivery/Delivered/Cancelled/Returned/Refunded) with live count
+      badges. Horizontal scroll on narrow viewports.
+    * TOOLBAR: instant search (order ID, customer, phone, email, product,
+      brand, tracking, invoice, staff, city, txn ID) + "Filters" toggle
+      button with active-filter-count badge + "Clear all" + result count.
+    * ADVANCED FILTERS PANEL: collapsible, 8 filters in a responsive grid
+      (4→3→2→1 cols): Payment Status, Courier, Date Range, Payment Method,
+      Brand, City, State, Order Amount. Slide-down animation on open.
+    * ENTERPRISE TABLE: 12 columns — Order #, Customer (avatar + city),
+      Products, Order Value, Payment Status, Fulfillment Status, Courier/
+      Tracking, Expected Delivery (with overdue indicator), Assigned Staff
+      (avatar), Actions (View + context menu). Sticky header, sortable,
+      row selection, hover, row click → drawer, 25/page pagination,
+      loading skeleton on mount.
+    * BULK ACTION BAR: Print Invoices, Generate Labels, Assign Courier,
+      Update Status dropdown (Confirmed/Packed/Shipped/Delivered/Cancel/
+      Refund), Export. Slide-in animation.
+    * ORDER DETAIL DRAWER (680px wide):
+      - Status hero: fulfillment + payment status pills + total + invoice #
+      - Quick status update: 9 status buttons (active highlight)
+      - Visual timeline: 7 stages (Placed → Payment → Confirmed → Packed →
+        Shipped → Out for Delivery → Delivered) with timestamps + done/
+        current/pending indicators. Branch logic for Cancelled (2-stage),
+        Returned (6-stage), Refunded (7-stage). Current stage pulses.
+        Stagger entrance animation.
+      - Items: product cards with image placeholder + price breakdown
+        (subtotal, shipping, tax, total)
+      - Customer & Addresses: customer card (avatar, name, contact) +
+        shipping address + billing address
+      - Payment Information: method, status, transaction ID, amount +
+        download invoice button
+      - Courier & Tracking: courier, assigned staff, tracking #, expected
+        delivery
+      - Refund Information: highlighted panel (amount + reason) shown only
+        if refundAmount > 0
+      - Internal Notes: view existing notes + add new note (Enter to save,
+        persists in local state)
+      - Activity History: timestamped log of all order events (placed,
+        payment, confirmed, packed, shipped, delivered, cancelled,
+        returned, refunded) with actor + detail. Stagger animation.
+      - Footer actions: Invoice, Print Label, Track Shipment, Notify
+        Customer
+    * STATUS SYSTEM: reuses StatusPill with consistent enterprise tones
+      (success/warning/critical/info) auto-derived from status string.
+    * RESPONSIVE: all grids use minmax(0, 1fr) — no auto-fit with pixel
+      minimums, preventing overflow. Root wrapper has overflow-x: hidden.
+      KPI strip 5→3→2→1, filters 4→3→2→1, table horizontal scroll, drawer
+      full-width on mobile.
+    * MICRO-INTERACTIONS: drawer slide-in (240ms), timeline stagger
+      (50ms per stage), current-stage pulse (2s), filter panel slide-down
+      (200ms), KPI card hover lift (translateY -2px + shadow.md), bulk bar
+      slide-in, skeleton loading on mount (380ms), button press scale.
+    * PERFORMANCE: useMemo for counts, filtered orders, column definitions,
+      filter options, KPI strip. 25/page pagination handles scale.
+      Instant search (no debounce needed for 60 orders; memoized).
+- Preserved existing mock order generator (60 orders, generateOrders()).
+  Enriched AdminOrder interface with DERIVED display metadata computed
+  from existing fields (same pattern as dashboard's derived analytics):
+    * expectedDelivery = placedAt + status-based ETA (0-5 days)
+    * assignedStaff = rotated from 5-member staff list
+    * city/state/country = parsed from CITIES geo list
+    * invoiceNumber = INV-{id}-{year}
+    * refundAmount/refundReason = 0/undefined unless status=Refunded
+    * activity[] = derived timestamped log from status progression
+    * subtotal/shippingCost/tax/amount = computed from price + qty
+    * transactionId = derived from courier + index
+    * billingAddress = same as shipping (default)
+  No new orders created. No business logic changed.
+- Save workflow identical to previous version (toast notifications).
+  No API changes. Route unchanged (/orders-management). AdminLayout +
+  RBAC permission unchanged (order.view).
+- Cleaned up: removed unused imports (Card, Checkbox, Tooltip, Skeleton
+  were never imported in final version), unused functions (fmtTime,
+  fmtMoneyShort, statusToTone), unused variable (now in counts useMemo).
+  Type-checked clean (npx tsc --noEmit). Build clean
+  (npm run build → /orders-management 11.3 kB, no errors, no warnings).
+
+Stage Summary:
+- /app/orders-management/page.tsx fully rewritten as a single-file
+  enterprise OMS with KPI strip, 10 status tabs, instant search + 8
+  advanced filters, 12-column enterprise table, bulk operations (9
+  actions), rich 680px order drawer (timeline, items, customer,
+  addresses, payment, courier, invoice, refund, notes, activity
+  history), premium status chips, full responsive design, and
+  micro-interactions.
+- Existing 60 mock orders preserved + enriched with derived display
+  metadata. No business logic changed. No APIs touched. No routes
+  modified. No fake orders created.
+- Build passes. Type-check passes. Pushed to main (commit 3ff15d6).
+  Vercel auto-deploy triggered.
