@@ -104,6 +104,8 @@ export function TextField({
           transition: 'border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: focused ? `0 0 0 3px ${theme.colors.focusRing}` : 'none',
           overflow: 'hidden',
+          boxSizing: 'border-box',
+          width: '100%',
         }}
       >
         {prefix && (
@@ -192,7 +194,8 @@ export function TextField({
           border-color: ${theme.colors.error} !important;
         }
         .auth-tf-input::placeholder {
-          color: ${theme.colors.textTertiary};
+          color: ${theme.colors.textSecondary};
+          opacity: 0.65;
         }
         .auth-tf-input:-webkit-autofill {
           -webkit-text-fill-color: ${theme.colors.textPrimary};

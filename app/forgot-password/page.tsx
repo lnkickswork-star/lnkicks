@@ -198,7 +198,7 @@ export default function ForgotPasswordPage() {
     >
       <form
         onSubmit={handleReset}
-        style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+        style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, maxWidth: '100%', boxSizing: 'border-box' }}
       >
         <TextField
           id="forgot-email"

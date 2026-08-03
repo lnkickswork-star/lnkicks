@@ -200,7 +200,7 @@ export default function LoginPage() {
       >
         <form
           onSubmit={handleLogin}
-          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, maxWidth: '100%', boxSizing: 'border-box' }}
         >
           <TextField
             id="login-email"

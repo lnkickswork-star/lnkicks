@@ -287,7 +287,7 @@ export default function VerifyOtpPage() {
       >
         <form
           onSubmit={handleSendOtp}
-          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, maxWidth: '100%', boxSizing: 'border-box' }}
         >
           <TextField
             id="otp-phone"
@@ -353,7 +353,7 @@ export default function VerifyOtpPage() {
       >
         <form
           onSubmit={handleNameSubmit}
-          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, maxWidth: '100%', boxSizing: 'border-box' }}
         >
           <TextField
             id="otp-name"
@@ -414,16 +414,17 @@ export default function VerifyOtpPage() {
       >
         <form
           onSubmit={handleVerify}
-          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, maxWidth: '100%', boxSizing: 'border-box' }}
         >
           {/* OTP input boxes */}
           <div
             onPaste={handleOtpPaste}
             style={{
               display: 'flex',
-              gap: theme.spacing.sm,
+              gap: 'clamp(6px, 2vw, 10px)',
               justifyContent: 'center',
               marginBottom: theme.spacing.md,
+              flexWrap: 'nowrap',
             }}
           >
             {otp.map((digit, i) => (
@@ -440,10 +441,10 @@ export default function VerifyOtpPage() {
                 aria-label={`OTP digit ${i + 1}`}
                 className="otp-box"
                 style={{
-                  width: 44,
-                  height: 52,
+                  width: 'clamp(36px, 11vw, 48px)',
+                  height: 'clamp(44px, 13vw, 54px)',
                   textAlign: 'center',
-                  fontSize: 20,
+                  fontSize: 'clamp(18px, 5vw, 22px)',
                   fontWeight: theme.fontWeight.bold,
                   fontFamily: theme.fontFamily.display,
                   color: theme.colors.textPrimary,
@@ -453,6 +454,8 @@ export default function VerifyOtpPage() {
                   outline: 'none',
                   transition: 'border-color 200ms ease, box-shadow 200ms ease',
                   caretColor: theme.colors.black,
+                  boxSizing: 'border-box',
+                  flexShrink: 0,
                 }}
               />
             ))}

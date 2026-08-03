@@ -206,10 +206,10 @@ export default function RegisterPage() {
       >
         <form
           onSubmit={handleRegister}
-          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, maxWidth: '100%', boxSizing: 'border-box' }}
         >
           {/* First Name + Last Name */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.md }}>
+          <div className="auth-name-row" style={{ display: 'grid', gap: theme.spacing.md }}>
             <TextField
               id="register-firstName"
               label="First Name"
@@ -468,6 +468,16 @@ export default function RegisterPage() {
       />
 
       <style jsx>{pressableStyle}</style>
+      <style jsx>{`
+        .auth-name-row {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        @media (max-width: 380px) {
+          .auth-name-row {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+      `}</style>
     </>
   );
 }

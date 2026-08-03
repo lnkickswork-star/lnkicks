@@ -124,6 +124,8 @@ export function PasswordInput({
           transition: 'border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: focused ? `0 0 0 3px ${theme.colors.focusRing}` : 'none',
           overflow: 'hidden',
+          boxSizing: 'border-box',
+          width: '100%',
         }}
       >
         <input
@@ -243,7 +245,8 @@ export function PasswordInput({
           border-color: ${theme.colors.error} !important;
         }
         .auth-pw-input::placeholder {
-          color: ${theme.colors.textTertiary};
+          color: ${theme.colors.textSecondary};
+          opacity: 0.65;
           letter-spacing: normal;
         }
         .auth-pw-input:-webkit-autofill {

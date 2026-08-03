@@ -91,13 +91,14 @@ export function WelcomeBonusPopup({
           maxWidth: 380,
           background: theme.colors.white,
           borderRadius: theme.radius.largeCard,
-          padding: `${theme.spacing.xxxl + 4}px ${theme.spacing.xxxl}px ${theme.spacing.xxxl}px`,
+          padding: `clamp(24px, 5vw, 28px) clamp(20px, 4vw, 24px) clamp(20px, 4vw, 24px)`,
           textAlign: 'center',
           boxShadow: theme.shadows.xxl,
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.92) translateY(12px)',
           transition: 'transform 360ms cubic-bezier(0.16, 1, 0.3, 1)',
           position: 'relative',
           overflow: 'hidden',
+          boxSizing: 'border-box',
         }}
       >
         {/* Decorative top accent */}

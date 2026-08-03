@@ -43,7 +43,8 @@ export function PrimaryButton({
       className="pressable-strong auth-primary-btn"
       style={{
         width: fullWidth ? '100%' : 'auto',
-        padding: `${theme.spacing.lg - 2}px ${theme.spacing.md}px`,
+        minHeight: 48,
+        padding: `clamp(14px, 3vw, 16px) ${theme.spacing.md}px`,
         background: isDisabled ? theme.colors.grey400 : theme.colors.black,
         color: theme.colors.white,
         border: 'none',
@@ -59,6 +60,7 @@ export function PrimaryButton({
         gap: theme.spacing.sm,
         transition: 'background 200ms ease, transform 120ms ease',
         opacity: isDisabled ? 0.7 : 1,
+        boxSizing: 'border-box',
       }}
     >
       {loading && <LoadingSpinner />}
@@ -97,7 +99,8 @@ export function SecondaryButton({
       className="pressable auth-secondary-btn"
       style={{
         width: '100%',
-        padding: `${theme.spacing.lg - 2}px ${theme.spacing.md}px`,
+        minHeight: 48,
+        padding: `clamp(14px, 3vw, 16px) ${theme.spacing.md}px`,
         background: theme.colors.white,
         color: theme.colors.textPrimary,
         border: `1.5px solid ${theme.colors.grey300}`,
@@ -112,6 +115,7 @@ export function SecondaryButton({
         justifyContent: 'center',
         gap: theme.spacing.md,
         transition: 'background 180ms ease, border-color 180ms ease, transform 120ms ease',
+        boxSizing: 'border-box',
       }}
     >
       {loading ? <LoadingSpinner /> : icon}
@@ -175,7 +179,8 @@ export function PrimaryLinkButton({
       className="pressable-strong"
       style={{
         width: '100%',
-        padding: `${theme.spacing.lg - 2}px ${theme.spacing.md}px`,
+        minHeight: 48,
+        padding: `clamp(14px, 3vw, 16px) ${theme.spacing.md}px`,
         background: disabled ? theme.colors.grey400 : theme.colors.black,
         color: theme.colors.white,
         border: 'none',
@@ -185,6 +190,7 @@ export function PrimaryLinkButton({
         fontWeight: theme.fontWeight.semibold,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.7 : 1,
+        boxSizing: 'border-box',
       }}
     >
       {children}
