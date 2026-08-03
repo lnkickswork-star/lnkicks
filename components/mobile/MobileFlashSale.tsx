@@ -330,24 +330,6 @@ function MobileFlashSaleImpl() {
             >
               Flash Sale
             </h3>
-
-            {/* Subtext — single line, balanced */}
-            <p
-              style={{
-                margin: 0,
-                fontFamily: theme.fontFamily.body,
-                fontSize: 13,
-                fontWeight: theme.fontWeight.regular,
-                color: 'rgba(255,255,255,0.55)',
-                lineHeight: 1.5,
-                fontFeatureSettings: theme.fontFeatures,
-                maxWidth: 280,
-              }}
-            >
-              Exclusive premium sneakers at special pricing.
-              <br />
-              Offer expires when countdown ends.
-            </p>
           </div>
 
           {/* ── Countdown timer — centered, full HH:MM:SS visible ────── */}
