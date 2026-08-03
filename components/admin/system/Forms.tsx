@@ -675,6 +675,8 @@ export function Autocomplete<T extends string>({
     inputRef.current?.blur();
   }
 
+  const listboxId = useId();
+
   return (
     <div ref={ref} style={{ position: 'relative', ...style }}>
       <input
@@ -690,6 +692,8 @@ export function Autocomplete<T extends string>({
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
+        aria-controls={listboxId}
+        aria-activedescendant={open && filtered[highlight] ? `${listboxId}-opt-${highlight}` : undefined}
         style={{
           ...baseInput(tokens),
           borderColor: error ? tokens.status.error : tokens.border.subtle,
@@ -705,6 +709,7 @@ export function Autocomplete<T extends string>({
       />
       {open && filtered.length > 0 && (
         <div
+          id={listboxId}
           role="listbox"
           style={{
             position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
@@ -718,6 +723,7 @@ export function Autocomplete<T extends string>({
           {filtered.map((o, i) => (
             <button
               key={o.value}
+              id={`${listboxId}-opt-${i}`}
               role="option"
               aria-selected={i === highlight}
               onClick={() => pick(o)}

@@ -322,6 +322,7 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
       {mobileOpen && (
         <div
           onClick={onCloseMobile}
+          aria-hidden="true"
           style={{
             position: 'fixed', inset: 0,
             background: tokens.bg.overlay,
