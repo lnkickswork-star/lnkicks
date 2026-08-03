@@ -3947,3 +3947,13 @@ Work Log:
 - Audited current state: ui.tsx (1206 lines, ~25 primitives), adminTheme.ts (light/dark color tokens), 4 inline icons only.
 - Identified gaps: no unified spacing/typography/radius/motion tokens; only 4 icons; missing Tooltip/Stat/AvatarGroup/ButtonGroup/SegmentedControl/Radio/Tag/FilterPanel/ProgressRing/PanelHeader; accessibility issues in Checkbox/Toggle/Dropdown/Modal (no focus trap, no ARIA).
 - Plan: (1) lib/admin/designTokens.ts — complete token system; (2) components/admin/icons/Icon.tsx — 60+ icon set; (3) extend ui.tsx additively with missing primitives + a11y fixes; (4) /admin/foundation showcase page; (5) build+typecheck+commit+push.
+
+Stage Summary:
+- Built lib/admin/designTokens.ts (511 lines) — 8pt spacing, modular typography scale (12 roles), 6-step radius, 5-step elevation + dark variants, motion (3 easings × 7 durations), z-index scale (8 layers), color palette (7 hues × 11 shades), component sizing, focus ring helper.
+- Built components/admin/icons/Icon.tsx (700+ lines) — single Icon component, 150+ named icons, 24×24 viewBox, 1.75 stroke, round caps. Includes ALL_ICON_NAMES export for showcase. Backwards-compat aliases (CloseIcon, ChevronDown, PlusIcon, SearchIcon) so existing imports keep working.
+- Extended components/admin/ui.tsx (+1490 lines, total ~2700) — 20 new primitives added without touching existing 25 exports. Added: Tooltip, Stat, StatGrid, AvatarGroup, ButtonGroup, SegmentedControl, Radio, Tag, ProgressRing, PanelHeader, Container, Stack, Inline, Grid, Code, Kbd, EmptyTable, ErrorState, SuccessState, NumberInput, TabsBar, Stepper, FileUpload, FilterPanel, DescriptionList, Th, Td, TableWrap, Section, ChevronIcon, NotificationsBell, DrawerA11y. Added useFocusTrap hook for a11y.
+- Built app/admin/foundation/page.tsx (~900 lines) — Storybook-style showcase demonstrating every primitive, every token scale, every icon. Includes interactive demos: theme switcher, modal/drawer triggers, toast buttons, sortable table, progress slider, etc.
+- Fixed pre-existing ESLint errors in AdminSidebar.tsx (line 487) and AdminTopbar.tsx (line 742) — unescaped quote marks. These were blocking production builds.
+- TypeScript: clean (no errors). Build: passed (50+ pages, /admin/foundation = 9.15kB). Commit: f6ded7d pushed to origin/main. Vercel auto-deploy triggered.
+- API compatibility: 19 existing admin pages verified to still import from @/components/admin/ui without any change. Zero breaking changes.
+
