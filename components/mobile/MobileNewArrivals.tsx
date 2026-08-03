@@ -99,8 +99,9 @@ function MobileNewArrivalsImpl({
             borderRadius: theme.radius.productCard,
             overflow: 'hidden',
             display: 'grid',
-            // Phase 22: 50/50 split — image gets more breathing room
-            gridTemplateColumns: '50fr 50fr',
+            // Phase 24: 45/55 split — image column gets more space,
+            // matching Adobe Express reference (text ~40-45%, image ~55-60%)
+            gridTemplateColumns: '45fr 55fr',
             minHeight: 260,
             // Phase 8: standard premium shadow
             boxShadow: theme.shadows.premium,
