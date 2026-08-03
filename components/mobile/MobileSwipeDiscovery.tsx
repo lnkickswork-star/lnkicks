@@ -119,20 +119,25 @@ const CARD_GRADIENTS: string[] = [
  * the page, rather than a flat rectangle pasted on.
  */
 const CARD_SHADOW =
-  '0 1px 1px rgba(0,0,0,0.04), ' + // contact line
+  '0 2px 4px rgba(0,0,0,0.10), ' + // contact line
   '0 8px 16px rgba(0,0,0,0.18), ' + // tight dark
-  '0 24px 48px rgba(0,0,0,0.32), ' + // medium
-  '0 48px 96px rgba(0,0,0,0.24), ' + // wide soft
+  '0 24px 40px rgba(0,0,0,0.28), ' + // medium
   'inset 0 1px 0 rgba(255,255,255,0.06)'; // top edge highlight
 
 /**
- * Card height — viewport-aware so the full card always fits on screen
- * with the bottom nav visible. On a 700px mobile viewport we need:
- *   header (~80) + card + hint pill (~40) + bottom nav clearance (~90) ≤ 700
- *   → card ≤ ~490. We cap at 380px to leave breathing room on small phones
- *     (iPhone SE: 667px viewport) and never get cut off.
+ * Card height — viewport-relative so it ALWAYS fits on screen.
+ * Uses CSS min() so the card scales down on short viewports (iPhone SE)
+ * but never exceeds 380px on tall phones. The 60vh cap leaves room for
+ * the section header (~80px), hint pill (~40px), and bottom nav (~90px).
  */
-const CARD_HEIGHT = 380;
+const CARD_HEIGHT_CSS = 'min(380px, 60vh)';
+
+/** Fixed pixel height for the button row — guarantees Buy Now / Wishlist
+ *  never get clipped regardless of card body % calculations. */
+const BUTTON_ROW_HEIGHT = 48;
+
+/** Fixed pixel height for the product name area. */
+const NAME_AREA_HEIGHT = 44;
 
 /** Number of cards visible in the stack (1 top + 2 behind for depth). */
 const VISIBLE_STACK = 3;
@@ -209,21 +214,25 @@ function SwipeCard({
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
+        boxSizing: 'border-box',
+        // Flex column so image area + body always sum to 100% with no overflow
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {/* ── Shoe image area — 72% of card height ──────────────────────
-          Rev 3: mix-blend-mode: multiply makes the white JPEG background
-          blend into the dark card gradient — only the shoe remains visible,
-          no white box. This works because multiply: result = img × bg / 255,
-          so white pixels (255) take on the card's dark color, effectively
-          becoming "transparent". Colored shoe pixels stay nearly unchanged. */}
+      {/* ── Shoe image area — flex: 1 (fills remaining space) ──────────
+          Rev 4: NO white box. mix-blend-mode: screen makes white JPEG
+          backgrounds blend into the dark card — white pixels (255) become
+          the card's dark color (transparent effect). Colored shoe pixels
+          stay nearly unchanged. screen = inverse of multiply, perfect for
+          dark surfaces. */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          height: '70%',
+          flex: 1,
+          minHeight: 0, // critical: lets flex item shrink
           overflow: 'hidden',
-          // Subtle radial glow centered behind the shoe — warm spotlight feel
           background:
             'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0) 75%)',
           // ISOLATE the blend mode so it only affects this subtree,
@@ -241,12 +250,12 @@ function SwipeCard({
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center',
-            padding: '24px 28px 8px',
-            // Multiply blend: white bg → card color (transparent effect),
-            // shoe pixels stay visible. Best on dark backgrounds.
-            mixBlendMode: 'multiply',
-            // Slight brightness lift so the shoe doesn't get too dark
-            filter: 'brightness(1.08) contrast(1.02)',
+            padding: '20px 24px 8px',
+            // screen blend: white bg → card color (transparent effect),
+            // shoe pixels stay visible. Perfect on dark backgrounds.
+            mixBlendMode: 'screen',
+            // Slight brightness lift so the shoe pops
+            filter: 'brightness(1.05) contrast(1.02) saturate(1.05)',
           }}
         />
 
@@ -260,16 +269,16 @@ function SwipeCard({
             inset: 0,
             pointerEvents: 'none',
             background:
-              'radial-gradient(ellipse 65% 50% at 50% 45%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 60%)',
+              'radial-gradient(ellipse 65% 50% at 50% 45%, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 60%)',
           }}
         />
 
-        {/* Card index pill — top-left, subtle, premium */}
+        {/* Brand badge — top-left, frosted glass */}
         <div
           style={{
             position: 'absolute',
-            top: 16,
-            left: 16,
+            top: 14,
+            left: 14,
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
@@ -291,31 +300,34 @@ function SwipeCard({
         </div>
       </div>
 
-      {/* ── Card body — name + CTAs (30% of card height) ──────────────
-          Rev 2: Product name sits BELOW the image on the card body —
-          clean typography, no overlay hack. */}
+      {/* ── Card body — name + CTAs (FIXED height, never overflows) ───
+          Rev 4: switched from % heights to a flex-shrink:0 fixed-height
+          body. This GUARANTEES the Buy Now / Wishlist buttons are always
+          fully visible — they can never be clipped by the image area
+          growing too tall. */}
       <div
         style={{
-          height: '30%',
-          padding: '12px 16px 16px',
+          flexShrink: 0,
+          height: NAME_AREA_HEIGHT + BUTTON_ROW_HEIGHT + 28, // name + buttons + padding
+          padding: '10px 16px 16px',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          gap: 10,
+          gap: 8,
+          boxSizing: 'border-box',
         }}
       >
-        {/* Product name — clean, single line if possible */}
+        {/* Product name — fixed height, 2-line clamp */}
         <h3
           style={{
             margin: 0,
+            height: NAME_AREA_HEIGHT,
             fontFamily: theme.fontFamily.body,
-            fontSize: 15,
+            fontSize: 14.5,
             fontWeight: theme.fontWeight.semibold,
             color: theme.colors.white,
             letterSpacing: '-0.01em',
             lineHeight: 1.3,
             fontFeatureSettings: theme.fontFeatures,
-            // Clamp to 2 lines
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -325,12 +337,13 @@ function SwipeCard({
           {product.name}
         </h3>
 
-        {/* Action buttons — equal-width, refined weights */}
+        {/* Action buttons — fixed height row */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 10,
+            height: BUTTON_ROW_HEIGHT,
           }}
         >
           {/* Buy Now — primary white pill with chevron */}
@@ -348,7 +361,7 @@ function SwipeCard({
             className="msd-buy"
             style={{
               flex: 1,
-              height: 44,
+              height: '100%',
               borderRadius: 999,
               border: 'none',
               background: theme.colors.white,
@@ -406,8 +419,9 @@ function SwipeCard({
             aria-pressed={wishlistActive}
             className="msd-wish"
             style={{
-              height: 44,
-              width: 56,
+              height: '100%',
+              width: 52,
+              flexShrink: 0,
               borderRadius: 999,
               display: 'inline-flex',
               alignItems: 'center',
@@ -617,8 +631,14 @@ export default function MobileSwipeDiscovery() {
       aria-label="Swipe to Discover"
       style={{
         width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        overflowX: 'hidden',
         paddingTop: theme.spacing.xl,
         paddingBottom: theme.spacing.section,
+        // Respect safe-area insets on notched Android/iOS devices
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
         background: 'transparent',
       }}
     >
@@ -632,6 +652,8 @@ export default function MobileSwipeDiscovery() {
           display: 'flex',
           flexDirection: 'column',
           gap: 6,
+          maxWidth: '100%',
+          boxSizing: 'border-box',
         }}
       >
         <span
@@ -693,6 +715,8 @@ export default function MobileSwipeDiscovery() {
       <div
         style={{
           width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           padding: `0 ${theme.spacing.pad}px`,
           display: 'flex',
           justifyContent: 'center',
@@ -703,7 +727,8 @@ export default function MobileSwipeDiscovery() {
             position: 'relative',
             width: '100%',
             maxWidth: 380,
-            height: CARD_HEIGHT,
+            height: CARD_HEIGHT_CSS,
+            boxSizing: 'border-box',
           }}
         >
           {visibleProducts
