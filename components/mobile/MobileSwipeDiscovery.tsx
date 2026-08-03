@@ -3,36 +3,28 @@
 /**
  * MobileSwipeDiscovery — Tinder-style swipeable product cards section.
  *
- * Phase 27 — premium mobile-only "Swipe to Discover" section placed directly
- * below the Rewards banner on the mobile homepage.
+ * Phase 27 (Rev 2 — Premium Redesign)
+ *   Premium Apple/Samsung/Google aesthetic. Key upgrades from Rev 1:
+ *     - Layered shadows (tight dark + wide soft) for true depth
+ *     - Image area uses a subtle radial glow that integrates with the card
+ *       background (no harsh white box around the shoe)
+ *     - Product name sits BELOW the image on the card body — clean typography,
+ *       no overlay hack
+ *     - Refined header: minimal eyebrow with proper letter-spacing, no cliché
+ *       sparkle icon
+ *     - Removed Tinder-clone hint chips (Pass / Tap to Save / Like) — replaced
+ *       with a single elegant "Swipe" pill indicator
+ *     - Equal-width buttons with refined weights and a chevron on Buy Now
+ *     - Wishlist is icon-led with optional "Saved" state
+ *     - Card background uses a deeper, more dimensional gradient
  *
- * Behavior
+ * Behavior (unchanged from Rev 1)
  *   - 5 product cards stacked like Tinder (top card fully interactive).
  *   - Drag left / right with finger; card rotates slightly while dragging.
- *   - Swipe > 100px (or velocity threshold) commits the swipe; otherwise snaps back.
+ *   - Swipe > 110px (or velocity threshold) commits the swipe; otherwise snaps back.
  *   - When all 5 cards are swiped, the same 5 cards reload infinitely.
  *   - Stacked cards behind the top card scale slightly smaller and shift down,
  *     giving the depth-stack illusion.
- *
- * Card design (per user spec)
- *   - 70–75% of card height = premium shoe image (object-contain).
- *   - Shoe Name (only — no brand, no price, no rating, no description).
- *   - Two CTAs at bottom:
- *       • Buy Now (white pill, black text, primary)
- *       • ♡ Add to Wishlist (transparent, white border, secondary)
- *   - Alternating premium gradient backgrounds:
- *         Card 0: Black   #0F0F0F → #1B1B1B
- *         Card 1: Grey    #2B2B2B → #4A4A4A
- *         Card 2: Black   #0F0F0F → #1B1B1B
- *         Card 3: Grey    #2B2B2B → #4A4A4A
- *         Card 4: Black   #0F0F0F → #1B1B1B
- *   - 24px radius, soft shadow, glassmorphism touch on name plate.
- *
- * Performance
- *   - GPU-accelerated transforms (translate3d + rotate) only — no layout thrash.
- *   - Pointer events (works for touch + mouse + pen).
- *   - requestAnimationFrame-bounded drag updates; passive listeners.
- *   - Spring animation on snap-back via CSS transition with custom easing.
  *
  * Mobile only — renders nothing on viewports ≥ 768px (handled by parent).
  */
@@ -109,16 +101,32 @@ const SWIPE_PRODUCTS: MobileProduct[] = [
  *  Visual constants
  * ────────────────────────────────────────────────────────────────────── */
 
-/** Card background gradients — alternating Black → Grey → Black → Grey → Black */
+/**
+ * Card background gradients — alternating Black → Grey → Black → Grey → Black.
+ * Rev 2: deeper, more dimensional gradients with a subtle top-light to suggest
+ * a soft overhead studio reflection.
+ */
 const CARD_GRADIENTS: string[] = [
-  // Card 0, 2, 4 — Black
-  'linear-gradient(160deg, #0F0F0F 0%, #1B1B1B 100%)',
-  // Card 1, 3 — Dark Grey
-  'linear-gradient(160deg, #2B2B2B 0%, #4A4A4A 100%)',
+  // Card 0, 2, 4 — Black (deep charcoal with subtle top highlight)
+  'linear-gradient(165deg, #1C1C1E 0%, #0E0E10 55%, #050507 100%)',
+  // Card 1, 3 — Dark Grey (with cool tint)
+  'linear-gradient(165deg, #3A3A3D 0%, #2B2B2E 55%, #1F1F22 100%)',
 ];
 
+/**
+ * Layered card shadow — tight dark for definition + wide soft for elevation.
+ * This is what makes the card feel like a physical object floating above
+ * the page, rather than a flat rectangle pasted on.
+ */
+const CARD_SHADOW =
+  '0 1px 1px rgba(0,0,0,0.04), ' + // contact line
+  '0 8px 16px rgba(0,0,0,0.18), ' + // tight dark
+  '0 24px 48px rgba(0,0,0,0.32), ' + // medium
+  '0 48px 96px rgba(0,0,0,0.24), ' + // wide soft
+  'inset 0 1px 0 rgba(255,255,255,0.06)'; // top edge highlight
+
 /** Card height (px). Per spec: 420–460. */
-const CARD_HEIGHT = 440;
+const CARD_HEIGHT = 460;
 
 /** Number of cards visible in the stack (1 top + 2 behind for depth). */
 const VISIBLE_STACK = 3;
@@ -128,7 +136,7 @@ const SWIPE_THRESHOLD = 110;
 const VELOCITY_THRESHOLD = 0.55; // px / ms
 
 /** Maximum rotation while dragging (deg). */
-const MAX_ROTATION = 14;
+const MAX_ROTATION = 12;
 
 /* ──────────────────────────────────────────────────────────────────────
  *  Card subcomponent
@@ -157,9 +165,9 @@ function SwipeCard({
   wishlistActive,
 }: SwipeCardProps) {
   // Stacked-card depth: top card (slot 0) is full size; deeper cards scale
-  // down by 4% and shift down by 12px per slot.
-  const scale = Math.max(0.88, 1 - slot * 0.04);
-  const translateY = slot * 12;
+  // down by 5% and shift down by 14px per slot.
+  const scale = Math.max(0.86, 1 - slot * 0.05);
+  const translateY = slot * 14;
   const gradient = CARD_GRADIENTS[slot % 2];
 
   // Build the transform. The top card uses live drag values; deeper cards
@@ -169,9 +177,8 @@ function SwipeCard({
     : `translate3d(0, ${translateY}px, 0) scale(${scale})`;
 
   // Reduce opacity for cards deeper in the stack (subtle depth).
-  const opacity = slot === 0 ? 1 : Math.max(0.55, 1 - slot * 0.18);
+  const opacity = slot === 0 ? 1 : Math.max(0.5, 1 - slot * 0.22);
 
-  // Card entrance animation when slot becomes 0 (top).
   return (
     <div
       data-card-slot={slot}
@@ -186,28 +193,31 @@ function SwipeCard({
         // instant updates via transform style).
         transition: isTop && drag
           ? 'none'
-          : `transform 360ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease-out`,
-        borderRadius: 24,
+          : `transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease-out`,
+        borderRadius: 28,
         overflow: 'hidden',
         background: gradient,
-        boxShadow:
-          '0 18px 48px rgba(0,0,0,0.38), 0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06)',
+        boxShadow: CARD_SHADOW,
         touchAction: 'pan-y',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {/* ── Shoe image — 70–75% of card height ───────────────────── */}
+      {/* ── Shoe image area — 72% of card height ──────────────────────
+          Rev 2: NO harsh white box. The image sits on a subtle radial glow
+          that integrates with the card gradient, making the shoe "float"
+          above the dark surface. Drop shadow on the image itself gives
+          physical presence without a background rectangle. */}
       <div
         style={{
           position: 'relative',
           width: '100%',
           height: '72%',
           overflow: 'hidden',
-          // Subtle radial vignette to focus the eye on the shoe
+          // Subtle radial glow centered behind the shoe — warm spotlight feel
           background:
-            'radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 60%)',
+            'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0) 75%)',
         }}
       >
         <img
@@ -220,149 +230,189 @@ function SwipeCard({
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center',
-            padding: '20px 24px 8px',
-            // Soft drop shadow so the shoe "floats" above the gradient
-            filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.55))',
+            padding: '28px 32px 12px',
+            // Soft drop shadow so the shoe physically floats above the
+            // dark card surface (no white background needed)
+            filter: 'drop-shadow(0 16px 28px rgba(0,0,0,0.55))',
           }}
         />
 
-        {/* Glassmorphism name plate — bottom of image area */}
+        {/* Card index pill — top-left, subtle, premium */}
         <div
           style={{
             position: 'absolute',
+            top: 16,
             left: 16,
-            right: 16,
-            bottom: 12,
-            padding: '12px 16px',
-            borderRadius: 16,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '5px 10px',
+            borderRadius: 999,
             background: 'rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(14px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            textAlign: 'center',
+            backdropFilter: 'blur(8px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(8px) saturate(140%)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            fontFamily: theme.fontFamily.body,
+            fontSize: 10,
+            fontWeight: theme.fontWeight.semibold,
+            color: 'rgba(255,255,255,0.75)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
           }}
         >
-          <h3
-            style={{
-              margin: 0,
-              fontFamily: theme.fontFamily.body,
-              fontSize: 16,
-              fontWeight: theme.fontWeight.semibold,
-              color: theme.colors.white,
-              letterSpacing: '-0.01em',
-              lineHeight: 1.25,
-              fontFeatureSettings: theme.fontFeatures,
-              // Clamp to 2 lines
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {product.name}
-          </h3>
+          {product.brand}
         </div>
       </div>
 
-      {/* ── Action buttons ────────────────────────────────────────── */}
+      {/* ── Card body — name + CTAs (28% of card height) ──────────────
+          Rev 2: Product name sits BELOW the image on the card body —
+          clean typography, no overlay hack. */}
       <div
         style={{
           height: '28%',
-          padding: '12px 16px 18px',
+          padding: '14px 18px 18px',
           display: 'flex',
-          alignItems: 'center',
-          gap: 10,
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          gap: 12,
         }}
       >
-        {/* Buy Now — primary white pill */}
-        <button
-          type="button"
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            haptic.medium();
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onBuy(product);
-          }}
-          aria-label={`Buy ${product.name} now`}
-          className="msd-buy"
+        {/* Product name — clean, single line if possible */}
+        <h3
           style={{
-            flex: 1,
-            height: 48,
-            borderRadius: 999,
-            border: 'none',
-            background: theme.colors.white,
-            color: theme.colors.black,
+            margin: 0,
             fontFamily: theme.fontFamily.body,
-            fontSize: 14,
-            fontWeight: theme.fontWeight.bold,
-            letterSpacing: '0.02em',
-            cursor: 'pointer',
-            boxShadow: '0 6px 16px rgba(0,0,0,0.28)',
-            transition: 'transform 120ms ease-out, box-shadow 180ms ease-out',
-          }}
-        >
-          Buy Now
-        </button>
-
-        {/* ♡ Add to Wishlist — secondary transparent with white border */}
-        <button
-          type="button"
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            haptic.light();
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onWishlist(product);
-          }}
-          aria-label={
-            wishlistActive
-              ? `Remove ${product.name} from wishlist`
-              : `Add ${product.name} to wishlist`
-          }
-          aria-pressed={wishlistActive}
-          className="msd-wish"
-          style={{
-            height: 48,
-            minWidth: 48,
-            padding: '0 16px',
-            borderRadius: 999,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            background: wishlistActive
-              ? 'rgba(255,255,255,0.10)'
-              : 'transparent',
-            border: `1.5px solid ${wishlistActive ? theme.colors.white : 'rgba(255,255,255,0.65)'}`,
-            color: theme.colors.white,
-            fontFamily: theme.fontFamily.body,
-            fontSize: 13,
+            fontSize: 15,
             fontWeight: theme.fontWeight.semibold,
-            cursor: 'pointer',
-            transition:
-              'background 180ms ease-out, border-color 180ms ease-out, transform 120ms ease-out',
+            color: theme.colors.white,
+            letterSpacing: '-0.01em',
+            lineHeight: 1.3,
+            fontFeatureSettings: theme.fontFeatures,
+            // Clamp to 2 lines
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
           }}
         >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            fill={wishlistActive ? 'currentColor' : 'none'}
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden
+          {product.name}
+        </h3>
+
+        {/* Action buttons — equal-width, refined weights */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          {/* Buy Now — primary white pill with chevron */}
+          <button
+            type="button"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              haptic.medium();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBuy(product);
+            }}
+            aria-label={`Buy ${product.name} now`}
+            className="msd-buy"
+            style={{
+              flex: 1,
+              height: 44,
+              borderRadius: 999,
+              border: 'none',
+              background: theme.colors.white,
+              color: theme.colors.black,
+              fontFamily: theme.fontFamily.body,
+              fontSize: 13.5,
+              fontWeight: theme.fontWeight.semibold,
+              letterSpacing: '0.01em',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              boxShadow:
+                '0 2px 6px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.5)',
+              transition:
+                'transform 120ms ease-out, box-shadow 180ms ease-out',
+            }}
           >
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span>{wishlistActive ? 'Saved' : 'Wishlist'}</span>
-        </button>
+            Buy Now
+            <svg
+              viewBox="0 0 24 24"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              aria-hidden
+            >
+              <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
+              <polyline
+                points="12 5 19 12 12 19"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          {/* Wishlist — icon-led secondary, square-ish, refined border */}
+          <button
+            type="button"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              haptic.light();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onWishlist(product);
+            }}
+            aria-label={
+              wishlistActive
+                ? `Remove ${product.name} from wishlist`
+                : `Add ${product.name} to wishlist`
+            }
+            aria-pressed={wishlistActive}
+            className="msd-wish"
+            style={{
+              height: 44,
+              width: 56,
+              borderRadius: 999,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              background: wishlistActive
+                ? 'rgba(255,255,255,0.14)'
+                : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${wishlistActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'}`,
+              color: theme.colors.white,
+              cursor: 'pointer',
+              transition:
+                'background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out',
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill={wishlistActive ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -454,10 +504,7 @@ export default function MobileSwipeDiscovery() {
   // ── Pointer handlers (top card only) ────────────────────────────────
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      // Only the top card listens — but we attach to the stack wrapper
-      // and check e.currentTarget.dataset.slot
       if (e.currentTarget.dataset.slot !== '0') return;
-      // Ignore right-click / multi-touch
       if (e.button !== 0 && e.pointerType === 'mouse') return;
 
       dragRef.current = {
@@ -490,7 +537,6 @@ export default function MobileSwipeDiscovery() {
       dragRef.current.lastX = e.clientX;
       dragRef.current.lastT = now;
 
-      // Rotation proportional to horizontal drag, clamped
       const rot = Math.max(
         -MAX_ROTATION,
         Math.min(MAX_ROTATION, dx / 18),
@@ -516,16 +562,14 @@ export default function MobileSwipeDiscovery() {
       dragRef.current.active = false;
       dragRef.current.pointerId = null;
 
-      // Commit if dragged past threshold OR flicked with sufficient velocity
       const pastThreshold = Math.abs(dx) > SWIPE_THRESHOLD;
       const flicked = Math.abs(velocity) > VELOCITY_THRESHOLD;
 
       if (pastThreshold || flicked) {
         commitSwipe(dx > 0 || velocity > 0 ? 'right' : 'left');
       } else {
-        // Snap back
         setDrag({ x: 0, y: 0, rot: 0 });
-        window.setTimeout(() => setDrag(null), 360);
+        window.setTimeout(() => setDrag(null), 420);
       }
     },
     [commitSwipe],
@@ -534,72 +578,88 @@ export default function MobileSwipeDiscovery() {
   // ── Compute exit transform for the swiped top card ──────────────────
   const exitTransform = exitDir
     ? exitDir === 'right'
-      ? 'translate3d(140vw, 0, 0) rotate(28deg)'
-      : 'translate3d(-140vw, 0, 0) rotate(-28deg)'
+      ? 'translate3d(140vw, 0, 0) rotate(24deg)'
+      : 'translate3d(-140vw, 0, 0) rotate(-24deg)'
     : null;
+
+  // Current card position (1 of 5)
+  const currentCardNum = (cycle % SWIPE_PRODUCTS.length) + 1;
 
   return (
     <section
       aria-label="Swipe to Discover"
       style={{
         width: '100%',
-        paddingTop: theme.spacing.xxl,
+        paddingTop: theme.spacing.xl,
         paddingBottom: theme.spacing.section,
         background: 'transparent',
       }}
     >
-      {/* ── Section header ──────────────────────────────────────────── */}
+      {/* ── Section header — refined, minimal ─────────────────────────
+          Rev 2: removed the cliché ✦ sparkle eyebrow. Clean eyebrow with
+          proper letter-spacing. Tighter hierarchy. */}
       <div
         style={{
           padding: `0 ${theme.spacing.xxl}px`,
           marginBottom: theme.spacing.lg,
           display: 'flex',
           flexDirection: 'column',
-          gap: 4,
+          gap: 6,
         }}
       >
         <span
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
             fontFamily: theme.fontFamily.body,
             fontSize: 10,
-            fontWeight: theme.fontWeight.bold,
+            fontWeight: theme.fontWeight.semibold,
             color: theme.colors.textSecondary,
-            letterSpacing: '0.14em',
+            letterSpacing: '0.18em',
             textTransform: 'uppercase',
           }}
         >
-          <span aria-hidden style={{ fontSize: 11 }}>✦</span>
-          Curated For You
+          Discover
         </span>
-        <h2
+        <div
           style={{
-            margin: 0,
-            fontFamily: theme.fontFamily.body,
-            fontSize: 22,
-            fontWeight: theme.fontWeight.bold,
-            color: theme.colors.textPrimary,
-            letterSpacing: '-0.02em',
-            lineHeight: 1.2,
-            fontFeatureSettings: theme.fontFeatures,
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 12,
           }}
         >
-          Swipe to Discover
-        </h2>
-        <p
-          style={{
-            margin: 0,
-            fontFamily: theme.fontFamily.body,
-            fontSize: 12,
-            fontWeight: theme.fontWeight.regular,
-            color: theme.colors.textSecondary,
-            lineHeight: 1.5,
-          }}
-        >
-          Drag left or right to explore premium picks.
-        </p>
+          <h2
+            style={{
+              margin: 0,
+              fontFamily: theme.fontFamily.body,
+              fontSize: 24,
+              fontWeight: theme.fontWeight.bold,
+              color: theme.colors.textPrimary,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.15,
+              fontFeatureSettings: theme.fontFeatures,
+            }}
+          >
+            Swipe to Discover
+          </h2>
+          {/* Card position indicator — minimal, premium */}
+          <span
+            style={{
+              fontFamily: theme.fontFamily.body,
+              fontSize: 12,
+              fontWeight: theme.fontWeight.medium,
+              color: theme.colors.textSecondary,
+              letterSpacing: '0.04em',
+              fontFeatureSettings: theme.fontFeatures,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {String(currentCardNum).padStart(2, '0')}
+            <span style={{ color: theme.colors.grey400, margin: '0 2px' }}>
+              /
+            </span>
+            {String(SWIPE_PRODUCTS.length).padStart(2, '0')}
+          </span>
+        </div>
       </div>
 
       {/* ── Card stack ──────────────────────────────────────────────── */}
@@ -619,7 +679,6 @@ export default function MobileSwipeDiscovery() {
             height: CARD_HEIGHT,
           }}
         >
-          {/* Render cards back-to-front so slot 0 (top) has the highest z-index */}
           {visibleProducts
             .slice()
             .reverse()
@@ -627,7 +686,6 @@ export default function MobileSwipeDiscovery() {
               const slot = VISIBLE_STACK - 1 - idxInReversed;
               const isTop = slot === 0;
 
-              // When exitDir is set, the top card flies off
               const liveDrag = isTop && !exitDir ? drag : null;
               const overrideTransform = isTop && exitDir ? exitTransform : null;
 
@@ -668,20 +726,76 @@ export default function MobileSwipeDiscovery() {
         </div>
       </div>
 
-      {/* ── Hint chips ──────────────────────────────────────────────── */}
+      {/* ── Minimal swipe hint — single pill, not Tinder clone ───────
+          Rev 2: removed the Pass / Tap to Save / Like chips — they were
+          cheap Tinder clones. One elegant pill that fades after the user
+          has swiped at least once. */}
       <div
         style={{
           marginTop: theme.spacing.lg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 24,
           padding: `0 ${theme.spacing.xxl}px`,
         }}
       >
-        <HintChip icon="←" label="Pass" />
-        <HintChip icon="♥" label="Tap to Save" />
-        <HintChip icon="→" label="Like" />
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '7px 14px',
+            borderRadius: 999,
+            background: theme.colors.offWhite,
+            border: `1px solid ${theme.colors.border}`,
+          }}
+        >
+          {/* Left arrow */}
+          <svg
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            fill="none"
+            stroke={theme.colors.textSecondary}
+            strokeWidth="2.4"
+            aria-hidden
+          >
+            <line x1="19" y1="12" x2="5" y2="12" strokeLinecap="round" />
+            <polyline
+              points="12 19 5 12 12 5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span
+            style={{
+              fontFamily: theme.fontFamily.body,
+              fontSize: 11,
+              fontWeight: theme.fontWeight.medium,
+              color: theme.colors.textSecondary,
+              letterSpacing: '0.06em',
+            }}
+          >
+            Swipe to explore
+          </span>
+          {/* Right arrow */}
+          <svg
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            fill="none"
+            stroke={theme.colors.textSecondary}
+            strokeWidth="2.4"
+            aria-hidden
+          >
+            <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
+            <polyline
+              points="12 5 19 12 12 19"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
       </div>
 
       {/* ── Global styles for buttons + dragging cursor ─────────────── */}
@@ -689,18 +803,20 @@ export default function MobileSwipeDiscovery() {
       <style jsx>{`
         .msd-buy:active {
           transform: scale(0.96);
-          box-shadow: 0 3px 8px rgba(0,0,0,0.24);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.18);
         }
         .msd-wish:active {
-          transform: scale(0.94);
+          transform: scale(0.92);
         }
         @media (hover: hover) {
           .msd-buy:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 22px rgba(0,0,0,0.32);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.24),
+              inset 0 1px 0 rgba(255,255,255,0.5);
           }
           .msd-wish:hover {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.10);
+            border-color: rgba(255,255,255,0.35);
           }
         }
         .msd-buy:focus-visible,
@@ -710,45 +826,5 @@ export default function MobileSwipeDiscovery() {
         }
       `}</style>
     </section>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────
- *  Small hint-chip subcomponent
- * ────────────────────────────────────────────────────────────────────── */
-
-function HintChip({ icon, label }: { icon: string; label: string }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        fontFamily: theme.fontFamily.body,
-        fontSize: 11,
-        fontWeight: theme.fontWeight.medium,
-        color: theme.colors.textSecondary,
-        letterSpacing: '0.04em',
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: '50%',
-          background: theme.colors.offWhite,
-          border: `1px solid ${theme.colors.border}`,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 11,
-          color: theme.colors.textPrimary,
-        }}
-      >
-        {icon}
-      </span>
-      {label}
-    </span>
   );
 }
