@@ -125,8 +125,14 @@ const CARD_SHADOW =
   '0 48px 96px rgba(0,0,0,0.24), ' + // wide soft
   'inset 0 1px 0 rgba(255,255,255,0.06)'; // top edge highlight
 
-/** Card height (px). Per spec: 420–460. */
-const CARD_HEIGHT = 460;
+/**
+ * Card height — viewport-aware so the full card always fits on screen
+ * with the bottom nav visible. On a 700px mobile viewport we need:
+ *   header (~80) + card + hint pill (~40) + bottom nav clearance (~90) ≤ 700
+ *   → card ≤ ~490. We cap at 380px to leave breathing room on small phones
+ *     (iPhone SE: 667px viewport) and never get cut off.
+ */
+const CARD_HEIGHT = 380;
 
 /** Number of cards visible in the stack (1 top + 2 behind for depth). */
 const VISIBLE_STACK = 3;
@@ -165,9 +171,10 @@ function SwipeCard({
   wishlistActive,
 }: SwipeCardProps) {
   // Stacked-card depth: top card (slot 0) is full size; deeper cards scale
-  // down by 5% and shift down by 14px per slot.
-  const scale = Math.max(0.86, 1 - slot * 0.05);
-  const translateY = slot * 14;
+  // down by 4% and shift down by 10px per slot (Rev 3: tighter so total
+  // stack height stays within the 380px card frame).
+  const scale = Math.max(0.88, 1 - slot * 0.04);
+  const translateY = slot * 10;
   const gradient = CARD_GRADIENTS[slot % 2];
 
   // Build the transform. The top card uses live drag values; deeper cards
@@ -205,19 +212,23 @@ function SwipeCard({
       }}
     >
       {/* ── Shoe image area — 72% of card height ──────────────────────
-          Rev 2: NO harsh white box. The image sits on a subtle radial glow
-          that integrates with the card gradient, making the shoe "float"
-          above the dark surface. Drop shadow on the image itself gives
-          physical presence without a background rectangle. */}
+          Rev 3: mix-blend-mode: multiply makes the white JPEG background
+          blend into the dark card gradient — only the shoe remains visible,
+          no white box. This works because multiply: result = img × bg / 255,
+          so white pixels (255) take on the card's dark color, effectively
+          becoming "transparent". Colored shoe pixels stay nearly unchanged. */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          height: '72%',
+          height: '70%',
           overflow: 'hidden',
           // Subtle radial glow centered behind the shoe — warm spotlight feel
           background:
             'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0) 75%)',
+          // ISOLATE the blend mode so it only affects this subtree,
+          // not the card body below
+          isolation: 'isolate',
         }}
       >
         <img
@@ -230,10 +241,26 @@ function SwipeCard({
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center',
-            padding: '28px 32px 12px',
-            // Soft drop shadow so the shoe physically floats above the
-            // dark card surface (no white background needed)
-            filter: 'drop-shadow(0 16px 28px rgba(0,0,0,0.55))',
+            padding: '24px 28px 8px',
+            // Multiply blend: white bg → card color (transparent effect),
+            // shoe pixels stay visible. Best on dark backgrounds.
+            mixBlendMode: 'multiply',
+            // Slight brightness lift so the shoe doesn't get too dark
+            filter: 'brightness(1.08) contrast(1.02)',
+          }}
+        />
+
+        {/* Soft radial glow overlay ON TOP of the image to restore some
+            depth that mix-blend-mode can wash out. Pointer-events:none so
+            it never blocks drag. */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background:
+              'radial-gradient(ellipse 65% 50% at 50% 45%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 60%)',
           }}
         />
 
@@ -264,17 +291,17 @@ function SwipeCard({
         </div>
       </div>
 
-      {/* ── Card body — name + CTAs (28% of card height) ──────────────
+      {/* ── Card body — name + CTAs (30% of card height) ──────────────
           Rev 2: Product name sits BELOW the image on the card body —
           clean typography, no overlay hack. */}
       <div
         style={{
-          height: '28%',
-          padding: '14px 18px 18px',
+          height: '30%',
+          padding: '12px 16px 16px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          gap: 12,
+          gap: 10,
         }}
       >
         {/* Product name — clean, single line if possible */}
