@@ -55,6 +55,12 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: 'Compliance',
+    items: [
+      { href: '/admin/compliance', label: 'Compliance Center', icon: 'shield', permission: 'product.publish', shortcut: 'G B' },
+    ],
+  },
+  {
     title: 'Sales',
     items: [
       { href: '/orders-management', label: 'Orders', icon: 'cart', badge: '87', badgeTone: 'warning', permission: 'order.view', shortcut: 'G O' },

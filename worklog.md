@@ -5142,3 +5142,158 @@ Stage Summary:
   Mailchimp, HubSpot Marketing Hub, Meta WhatsApp Business Platform
 - Ready for incremental adoption: existing marketing page continues
   to work, new modules are additive.
+
+---
+Task ID: compliance-center-1
+Agent: Main (Senior Ecommerce Compliance Architect & Frontend Architect)
+Task: Build "Copyright & Brand Compliance Center" module — pre-publish
+  IP / trademark / branding / SEO / policy risk screening for the
+  LNKICKS admin suite. Includes a hard publish-gate that blocks
+  publication of products with critical IP violations.
+
+Work Log:
+- Read codebase to align with existing patterns:
+  - lib/admin/{designTokens,adminTheme,types,adminData,adminAuth}.ts
+  - components/admin/{AdminLayout,AdminSidebar,ui,icons/Icon}.tsx
+  - app/dashboard/page.tsx (1900-line reference implementation)
+  - app/admin/audit/page.tsx (tab navigation pattern reference)
+- Created lib/admin/complianceTypes.ts (~330 lines) — full type system:
+  RiskLevel, IssueCategory, IssueSeverity, ProductFieldType, TrademarkEntry,
+  TrademarkHit, ImageFlag, SeoFlag, ContentFlag, ComplianceIssue,
+  ComplianceScanResult, ComplianceProduct, ComplianceHistoryEntry,
+  ComplianceScoreTrendPoint, ComplianceKPI. Includes label/tone/icon
+  metadata maps for every enum.
+- Created lib/admin/complianceData.ts (~400 lines) — mock data layer:
+  - TRADEMARK_REGISTRY: 12 well-known footwear brands (Nike, Jordan,
+    Adidas, Puma, New Balance, ASICS, Hoka, Salomon, Converse, Yeezy,
+    Travis Scott, Off-White) with variants, IP owner, category,
+    guidance text, and authorization status
+  - COMPLIANCE_PRODUCTS: 8 sample products spanning all risk levels
+    (a clean Samba OG, a counterfeit Dunk replica, a high-risk
+    Travis Scott collab, a thin-content NB 530, etc.) — each with
+    intentional compliance issues for the engine to detect
+  - COMPLIANCE_HISTORY: 15 audit-trail entries
+  - COMPLIANCE_SCORE_TREND: 30-day deterministic curve
+- Created lib/admin/complianceEngine.ts (~830 lines) — pure detection:
+  - detectTrademarks() — scans 8 text fields + tags + collections
+    against the trademark registry using word-boundary regex
+  - analyzeImages() — heuristic vision-API simulation: large_logo,
+    watermark, marketing_artwork, brand_graphic, screenshot,
+    edited_material, low_resolution, missing_alt,
+    unauthorized_photography
+  - analyzeSeo() — keyword_stuffing (4+ repeats), misleading_title
+    (replica/fake/copy terms), duplicate_description (4-gram overlap),
+    thin_content (<30 words), missing_meta, title_too_long/short
+  - analyzeContent() — readability (avg sentence >25 words),
+    duplicate_text, incomplete_info (missing materials/sizing),
+    missing_specs, formatting (generic file names IMG_/DSC_/marketing)
+  - analyzePolicy() — counterfeit/replica terms (critical),
+    authenticity claims without verification (warning),
+    pricing superlatives (info)
+  - runComplianceScan() — orchestrates all detectors, rolls up into
+    unified ComplianceIssue[], computes weighted score (info=-3,
+    warning=-8, critical=-18), derives RiskLevel + PublishRecommendation
+  - computeRecommendation() — HARD BLOCK when critical issue present
+    OR score < 40; review required at 40-79; cleared at 80+
+- Created lib/admin/complianceExport.ts (~330 lines) — client-side export:
+  - exportScanCSV() — UTF-8 BOM CSV with full report metadata + issues table
+  - exportScanXLSX() — SpreadsheetML 2003 XML (.xls) with styled
+    headers, product info, summary, next steps, issues table
+  - exportScanPDF() — opens print-optimized HTML window with branded
+    header, score card, recommendation pill, issues table, auto-triggers
+    browser print dialog (user selects "Save as PDF")
+- Created app/admin/compliance/_components/shared.tsx (~370 lines):
+  - RiskGauge (circular SVG progress, animated stroke-dasharray)
+  - SeverityBadge, RiskPill
+  - IssueCard (category icon + severity + rule ID + explanation +
+    code snippet + highlighted recommendation block)
+  - RecommendationBanner (publish / review / do-not-publish — color-coded)
+  - StatCard (compact KPI with accent bar, delta, click handler)
+  - SectionLabel
+- Created app/admin/compliance/_components/ScanStudio.tsx (~510 lines):
+  - Two-pane layout: searchable/filterable product queue (left) +
+    detailed scan report (right)
+  - Auto-runs scan on product select, with simulated 700ms latency
+    and loading state
+  - Score hero (RiskGauge + summary + 6 inline stats)
+  - RecommendationBanner (publish gate status)
+  - Next steps ordered list
+  - Issue category filter chips (All / Trademark / Image / SEO /
+    Content / Policy with counts)
+  - Issue cards (one per detected issue, fully expanded)
+  - Export dropdown menu (PDF / XLSX / CSV)
+  - PUBLISH BUTTON IS HARD-DISABLED when recommendation ===
+    'do_not_publish' — this is the active IP-protection mechanism
+- Created app/admin/compliance/_components/Views.tsx (~830 lines):
+  - OverviewView: 4 StatCards (Waiting Review, High Risk, Recently
+    Scanned, Published), LineChart for 30-day score trend, DonutChart
+    for risk distribution, High-Risk Products queue, Recent Activity feed
+  - HistoryView: searchable + filterable audit trail with 7 action
+    types, CSV export, timeline-style rows with action icon, risk pill,
+    score, actor, timestamp
+  - TrademarkRegistryView: searchable brand registry grid with
+    authorization status badges (Authorized / Pending / Unauthorized /
+    Unknown), guidance text, variant chips
+  - SettingsView: engine configuration display (5 category cards,
+    penalty weights, risk level bands, publish gate logic explanation),
+    Legal & Educational Notice panel with brand-owner takedown guidance
+- Created app/admin/compliance/layout.tsx — Next.js metadata (noIndex)
+- Created app/admin/compliance/page.tsx (~180 lines) — page shell:
+  - Hero with shield watermark + mission statement
+  - 5-tab navigation (Overview / Scan Studio / History / Trademark
+    Registry / Settings) with badge count on Scan Studio tab
+  - Tab content switcher
+- Modified components/admin/AdminSidebar.tsx — added new "Compliance"
+  section with single nav item linking to /admin/compliance,
+  permission 'product.publish', shortcut 'G B' (avoided conflict with
+  existing 'G C' for Customers)
+
+Verification:
+- TypeScript type-check: PASSED (npx tsc --noEmit, 0 errors after
+  initial 16 errors fixed: unused imports, ToastTone type, IconName
+  type, Panel padding prop, string[][] vs number)
+- Next.js production build: PASSED — 63 routes compiled, including
+  new /admin/compliance (28 kB / 170 kB First Load JS)
+- Runtime QA via agent-browser (logged in as admin@lnkicks.com):
+  - /admin/compliance loads in 200 OK
+  - Compliance Center nav item visible in sidebar
+  - Overview tab: hero, 4 KPI cards, score trend line chart, risk
+    distribution donut, high-risk products queue (4 items), recent
+    activity feed all render correctly
+  - Scan Studio tab: product queue (8 items) + scan report renders;
+    Air Jordan 1 Chicago auto-scanned with 28 issues (Trademark 14,
+    Image 6, SEO 3, Content 3, Policy 2); publish button HARD-DISABLED
+    ("Publishing Blocked"); switching to Generic White Leather Sneakers
+    re-runs scan → score 92 → publish button ENABLED ("Publish Product")
+  - History tab: 15 audit entries with filter chips and search
+  - Trademark Registry tab: 12 brand cards with auth-status badges
+  - Settings tab: 5 category cards + scoring model + legal notice
+  - Export menu opens with PDF / Excel / CSV options
+  - Mobile responsive (414×896): layout stacks to single column,
+    tab nav scrolls horizontally
+  - Dark mode: theme toggle works, all components adapt
+  - Console: zero errors, zero warnings
+
+Stage Summary:
+- 7 new files, 1 modified file:
+  - lib/admin/complianceTypes.ts (new, ~330 lines)
+  - lib/admin/complianceData.ts (new, ~400 lines)
+  - lib/admin/complianceEngine.ts (new, ~830 lines)
+  - lib/admin/complianceExport.ts (new, ~330 lines)
+  - app/admin/compliance/layout.tsx (new, ~13 lines)
+  - app/admin/compliance/page.tsx (new, ~180 lines)
+  - app/admin/compliance/_components/shared.tsx (new, ~370 lines)
+  - app/admin/compliance/_components/ScanStudio.tsx (new, ~510 lines)
+  - app/admin/compliance/_components/Views.tsx (new, ~830 lines)
+  - components/admin/AdminSidebar.tsx (modified — added nav entry)
+- ~3,800 lines of new code total
+- HARD IP-PROTECTION GATE: products with critical compliance
+  violations (counterfeit listings, unauthorized collaborations,
+  watermarked marketing artwork) cannot be published — the Publish
+  button is hard-disabled until all critical issues are resolved
+  and a re-scan passes. This actively prevents copyright/trademark/
+  policy enforcement actions against the platform.
+- Module is compliance-focused (encourages original content, proper
+  attribution, verified reseller authorization) and explicitly does
+  NOT bypass any IP enforcement — it adds a pre-publish screening
+  layer that did not previously exist.
