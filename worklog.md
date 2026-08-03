@@ -3852,3 +3852,34 @@ Stage Summary:
 - Name fields stack vertically on 320–380px screens, 2-column on wider
 - OTP boxes scale with viewport width, never overflow
 - Design language unchanged — same premium minimal Apple/Nike aesthetic
+
+---
+Task ID: Phase 33
+Agent: Super Z (main)
+Task: Build Enterprise Admin Dashboard foundation — analytics, dark/light mode, RBAC, admin shell, charts, login upgrade. Also verify ALLEN KICKS → LNKICKS rename complete.
+
+Work Log:
+- Searched codebase for "ALLEN" / "allen" — 0 matches found. Rename is already complete (58 files use LNKICKS).
+- Inspected existing /dashboard (mobile-only, 4 KPIs, 2 quick links) — basic foundation.
+- Created lib/admin/types.ts: 6 roles, 27 permissions, RBAC matrix, audit log, KPI types.
+- Created lib/admin/adminAuth.ts: localStorage-backed admin auth (mirrors Firebase Admin Auth). 8h sliding session, audit log, 2FA hook, 3 seeded demo accounts.
+- Created lib/admin/adminTheme.ts: dark/light/system theme tokens. Persists choice, listens to prefers-color-scheme.
+- Created lib/admin/adminData.ts: mock analytics data with live deltas (12 KPIs, 30d sales trend, order status, top products, stock alerts, traffic sources, notifications).
+- Created components/admin/charts/: LineChart (multi-series + crosshair), BarChart (gradient bars), DonutChart (interactive legend), Sparkline (inline). All pure SVG, zero external deps.
+- Created components/admin/widgets/KPICard.tsx: reusable KPI card with icon, label, value, delta chip, sparkline, hover lift.
+- Created components/admin/AdminSidebar.tsx: 6-section collapsible nav (Overview/Catalog/Sales/Marketing/Insights/System), 17 items, role-aware visibility, badges, icon-only rail mode.
+- Created components/admin/AdminTopbar.tsx: sticky topbar with global search, live IST clock, theme cycle button, notifications dropdown with unread badge, profile menu.
+- Created components/admin/AdminLayout.tsx: enterprise shell with auth guard, RBAC route guard, theme provider, sidebar + topbar + content area, mobile drawer state.
+- Rewrote app/dashboard/page.tsx: enterprise Dashboard Home with 12 KPI cards (responsive grid), sales trend line chart (7d/30d/90d toggle), order status donut, top products bar, traffic sources, 4 data tables (Trending/Best Sellers/Low Stock/Out of Stock), live real-time counters updating every 8s.
+- Rewrote app/admin-login/page.tsx: premium split layout (desktop: branding panel with stats + form card; mobile: stacked). Wires to new RBAC admin auth. Demo role quick-fill buttons (Admin/Manager/Warehouse). Show/hide password, remember device, loading state with spinner, 2FA stub.
+- Fixed multiple TypeScript errors during build: unused imports, Th/Td children prop, LineChart unused vars, AdminSidebar duplicate CSS properties, KPICard import path, AdminLayout useAdminTheme destructuring.
+- Fixed styled-jsx compiler crash on /admin-login by removing nested <style jsx> from inside button element; consolidated into single <style jsx global>.
+- Build passed: 45/45 static pages generated. /dashboard = 17.2kB, /admin-login = 6.06kB.
+- Committed (90829ab) and pushed to origin/main. Vercel auto-deploy triggered.
+
+Stage Summary:
+- ALLEN KICKS → LNKICKS: VERIFIED COMPLETE (0 references).
+- Enterprise admin dashboard foundation built and deployed.
+- Default admin credentials: admin@lnkicks.com / Admin@123 (super-admin), manager@lnkicks.com / Manager@123, warehouse@lnkicks.com / Warehouse@123.
+- 6-phase roadmap proposed: Phase 33 (Foundation + Dashboard) ✅ | Phase 34 (Products Enterprise) | Phase 35 (Banners) | Phase 36 (SEO Center) | Phase 37 (Orders+Customers) | Phase 38 (Inventory+Wallet+Coupons+Reviews) | Phase 39 (Notifications+Reports+Security).
+- Architecture note: localStorage-backed now but types/structure mirror Firebase Admin Auth + Firestore so a future migration is a drop-in replacement.
