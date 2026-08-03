@@ -3883,3 +3883,57 @@ Stage Summary:
 - Default admin credentials: admin@lnkicks.com / Admin@123 (super-admin), manager@lnkicks.com / Manager@123, warehouse@lnkicks.com / Warehouse@123.
 - 6-phase roadmap proposed: Phase 33 (Foundation + Dashboard) ✅ | Phase 34 (Products Enterprise) | Phase 35 (Banners) | Phase 36 (SEO Center) | Phase 37 (Orders+Customers) | Phase 38 (Inventory+Wallet+Coupons+Reviews) | Phase 39 (Notifications+Reports+Security).
 - Architecture note: localStorage-backed now but types/structure mirror Firebase Admin Auth + Firestore so a future migration is a drop-in replacement.
+
+---
+Task ID: Phase 34
+Agent: Super Z (main)
+Task: Enterprise Admin Desktop-First UI/UX Upgrade — transform existing admin dashboard into world-class enterprise panel inspired by Apple/Google/Samsung/Stripe/Shopify/Linear/Vercel/Notion.
+
+Work Log:
+- Audited existing admin pages — found Products/Orders/Customers/Reports/Settings/etc all using MobileLayout (mobile-only), missing pages: Banners/Coupons/SEO/Reviews/Notifications/Inventory/Wallet/Audit.
+- Created components/admin/ui.tsx — comprehensive UI primitives library (Button x6 variants, IconButton, Badge x6 tones, StatusPill, Input, Textarea, Select, Checkbox, Toggle, SearchInput, Card, Panel, Divider, Tabs, Modal, Drawer, ConfirmDialog, Dropdown, MenuItem, MenuDivider, EmptyState, Skeleton, Spinner, PageLoading, Breadcrumb, Pagination, ToastProvider + useToast, ProgressBar, Avatar, KeyValue, shared icons).
+- Created components/admin/EnterpriseDataTable.tsx — sortable columns, row selection with bulk action bar, pagination, row click, loading skeleton, empty state, sticky header.
+- Created components/admin/PageHeader.tsx — title + subtitle + breadcrumb + meta + actions.
+- Upgraded components/admin/AdminSidebar.tsx — searchable nav (Cmd+/), favorites (star toggle, persisted), recent pages (auto-tracked), keyboard shortcuts (Ctrl+B collapse, Cmd+/ search), 6 grouped sections, 17 nav items, role-aware visibility, badge counts, icon-only rail mode, mobile off-canvas drawer with overlay.
+- Upgraded components/admin/AdminTopbar.tsx — sticky with blur backdrop, breadcrumb (auto-derived from pathname), live IST clock + date, command palette (Cmd+K fuzzy search 18 destinations grouped), quick create dropdown (4 actions), theme cycle button (light/dark/system), notifications dropdown (filter All/Unread/Critical, mark all read, mark individual), profile menu (role chip, 2FA status, account settings, audit log, logout).
+- Upgraded components/admin/AdminLayout.tsx — wraps with ToastProvider, accepts breadcrumb prop.
+- Upgraded components/admin/widgets/KPICard.tsx — premium hover lift, gradient overlay, sparkline, delta chip, clickable, keyboard accessible.
+- Upgraded app/dashboard/page.tsx — 12 KPI cards, sales trend line chart (7d/30d/90d + Compare mode), order status donut, top products bar, traffic sources, 4 data tables, live real-time counters every 8s, quick actions.
+- Rebuilt app/products-management/page.tsx — enterprise DataTable, bulk actions (Publish/Archive/Export/Delete), advanced filters, status tabs, quick edit drawer, import modal, delete/duplicate confirm modals, row actions, image thumbnails, stock progress bars.
+- Rebuilt app/orders-management/page.tsx — 60 mock orders, 9 status tabs, filters, bulk actions, order detail drawer with timeline (6 stages), customer info, product card, courier/tracking, notes, invoice/label/notify actions.
+- Rebuilt app/customers-management/page.tsx — 20 customers, filters, customer detail drawer with profile/wallet activity/recent orders/wishlist/activity timeline/internal notes, wallet credit drawer.
+- Created app/admin/banners/page.tsx — Desktop/Mobile/Tablet tabbed slots, banner cards with preview, drag-position, status pills, performance metrics, edit/create drawer, 5 banner types, empty state.
+- Created app/admin/coupons/page.tsx — DataTable, 4 coupon types, status tabs, usage progress, applies to All/Category/Brand/User, row actions, create/edit drawer.
+- Created app/admin/seo/page.tsx — 7 tabs (Overview/Meta/Schema/Integrations/Pixels/Audit/Performance), SEO Health Score donut, indexed pages, schema toggles, 9 Google/Microsoft integrations, 7 social pixels, content audit, Lighthouse scores, Core Web Vitals, AI SEO Assistant drawer.
+- Created app/admin/reviews/page.tsx — DataTable, status tabs, ratings, verified/spam badges, row actions (Approve/Reject/Reply), bulk approve/reject, reply modal.
+- Created app/admin/notifications/page.tsx — 24 notifications, filter tabs, type filter, severity borders, mark read/delete.
+- Created app/admin/inventory/page.tsx — DataTable, 4 stat cards, status tabs, warehouse filter, stock progress, forecast badges.
+- Created app/admin/wallet/page.tsx — 4 stat cards, DataTable, tabs, credit wallet drawer.
+- Created app/admin/audit/page.tsx — DataTable, filter tabs, role filter, search, default sort timestamp desc, color-coded actions.
+- Rebuilt app/settings-panel/page.tsx — 14 sections (General/Store/Payments/Shipping/Tax/Auth/Email/SMS/Integrations/API Keys/Security/Roles/Backup/Logs) with sticky section nav.
+- Rebuilt app/reports-analytics/page.tsx — 6 report types (Sales/Products/Customers/Inventory/Marketing/SEO), range selector, export CSV/Excel/PDF.
+- Rebuilt app/track-order/page.tsx — search panel, result panel with courier/ETA/status, visual tracking timeline.
+- Rebuilt app/add-product/page.tsx — 6-step wizard (Basic/Pricing/Inventory/Images/SEO/Placement) with auto-optimization toggles and 21 homepage placement options.
+- Rebuilt app/edit-product/page.tsx — 2-column layout, form + sidebar, status panel, image preview, stats panel.
+- Rebuilt app/flash-sale-settings/page.tsx — sale cards, status tabs, create form with banner/countdown toggles.
+- Rebuilt app/notification-settings/page.tsx — 5 channel tabs, 15 event types per channel, channel configuration.
+- Fixed multiple TypeScript errors (unused imports, missing children props, duplicate CSS properties, mono prop on Input).
+- Fixed styled-jsx compiler crash on Spinner (moved keyframes to global style block) and AdminTopbar (consolidated conditional style block).
+- Created 9 layout.tsx files for new admin routes with proper metadata.
+- Build passed: 45/45 pages compiled successfully. TypeScript clean.
+- Committed (fbd5e41) and pushed to origin/main. Vercel auto-deploy triggered.
+
+Stage Summary:
+- Complete enterprise admin redesign — desktop-first, world-class quality.
+- 35 files changed, 7717 insertions, 5856 deletions.
+- All admin pages now on AdminLayout (was MobileLayout).
+- 8 new admin pages built: Banners, Coupons, SEO Center, Reviews, Notifications, Inventory, Wallet, Audit.
+- 6 existing admin pages completely rebuilt: Dashboard, Products, Orders, Customers, Reports, Settings.
+- 4 admin pages upgraded: Add Product, Edit Product, Flash Sale, Notification Settings, Track Order.
+- Premium UI primitives library — reusable across all pages.
+- Enterprise DataTable with sorting, selection, pagination, bulk actions.
+- Command palette (Cmd+K) with fuzzy search.
+- Sidebar with search, favorites, recent, keyboard shortcuts.
+- Dark/light/system theme with system preference detection.
+- Toast notification system.
+- Real-time live updates on dashboard.
