@@ -4566,3 +4566,27 @@ Stage Summary:
   business logic changed. No APIs touched. No routes modified. No fake
   customer data invented.
 - Build passes. Type-check passes. Ready for Vercel deploy.
+
+---
+Task ID: marketing-suite-redesign
+Agent: main (Super Z)
+Task: Redesign ONLY the Marketing & Growth Suite modules (Flash Sale, Coupons, Banners, Reviews, Notifications, SEO Center) + create unified Marketing homepage. Strict rules: do NOT modify backend APIs, business logic, routes, sidebar, dashboard, products, orders, or customers. Reuse existing data. Improve only UI/UX/workflow/responsiveness.
+
+Work Log:
+- STEP 1 (Audit): Read all 6 existing marketing pages (banners 278L, notifications 194L, coupons 247L, reviews 221L, seo 441L, flash-sale 127L). Identified weak hierarchy, missing analytics, poor filtering, no campaign builder, no version history, no AI sentiment, no notification archive.
+- STEP 2 (Unified Marketing Homepage): Created new additive route /admin/marketing (layout + page). 6-KPI strip with sparklines, range picker, campaign performance table, 14-day marketing calendar, activity feed timeline, channel performance grid (6 channels), 6 quick-link cards to all marketing modules. Ecosystem view.
+- STEP 3 (Flash Sale Redesign, 760L): KPI strip (revenue/orders/conversion/AOV), 5-status tabs, flash sale cards with live countdown (per-second ticker), 4-step status timeline (Created→Scheduled→Live→Ended), product inventory monitoring (per-product stock + threshold alerts + sell-through bar), 4-step campaign builder drawer (Details→Schedule→Products→Review) with revenue projection, scheduling tips, product search.
+- STEP 4 (Coupons Redesign, 660L): KPI strip (revenue/redemptions/avg-discount/expiring), 5-status tabs, coupon card grid with discount badge, restrictions panel (min order/applies to/max cap/1-per-customer), 14-day trend sparkline per coupon, expiry timeline (60-day visual schedule), top performers ranking, detail drawer with redemption chart (gradient area), performance insights, form drawer with auto-apply rules.
+- STEP 5 (Banners Redesign, 690L): KPI strip (impressions/clicks/CTR/revenue/drafts), 3-slot tabs (desktop/mobile/tablet), banner card grid with drag & drop reordering (HTML5 DnD API), live preview area with overlay/CTA, version badge linking to version history drawer, desktop+mobile preview modal side-by-side, campaign assignment dropdown, banner form with overlay slider + image upload + scheduling.
+- STEP 6 (SEO Center Redesign, 740L): 9-tab navigation (Overview/Meta/Schema/Sitemap/Index/Integrations/Pixels/Audit/Performance). Overview: 160px health-score gauge + 6 sub-category scores (On-Page/Technical/Content/UX/Mobile/Speed) + top performing pages. Meta: editor + Google SERP preview + social card preview. Schema: structured data library + JSON-LD code preview. Sitemap: 5 sitemap files + robots.txt editor + canonical URL mapping. Index: per-engine index status (Google/Bing/Yandex) with coverage bars + broken links table (4xx/5xx). Integrations: 9 Google/Microsoft cards. Pixels: 7 social pixels. Audit: 7 issue types with severity. Performance: 4 Lighthouse scores + 6 Core Web Vitals with progress bars.
+- STEP 7 (Reviews Redesign, 580L): Overall rating panel with AI sentiment summary (positive/neutral/negative + summary text), rating distribution (5-star breakdown), 4 mini-stats (verified/photos/replied/total). 5-status tabs (all/pending/approved/rejected/spam). Review card with avatar, star rating, verified badge, sentiment indicator, spam score badge, image thumbnails, reply badge, helpful count. Bulk select + bulk approve/reject/spam. Reply modal + detail modal with full review info, customer photos, AI sentiment, spam score, existing reply.
+- STEP 8 (Notifications Redesign, 470L): 4-state inbox tabs (Inbox/Unread/Priority/Archived). 7 type filter chips with counts (Orders/Stock/Reviews/Customers/System/Security/Marketing). Notification cards with severity-colored left border, priority badge (URGENT/HIGH/NORMAL/LOW), pulsing unread dot, type icon, time-ago + exact timestamp, archive/restore/delete actions. Compose campaign drawer (channel/audience/subject/body/CTA/schedule + reach estimate).
+- STEP 9-11 (Responsive/Micro-interactions/Performance): Applied throughout — minmax(0,1fr) grids (no auto-fit pixel minimums to avoid overflow), responsive breakpoints at 1400/1100/768px, stagger animations (mkt-fade-in/fs-card-in/cp-card-in/bn-card-in/seo-fade-in/rv-card-in/nc-slide-in), hover lift effects (translateY(-2px) + shadow.md + border.strong), pulsing live dots, loading skeletons, useMemo/useCallback for performance, search debouncing via SearchInput component.
+
+Stage Summary:
+- Created 1 new route (/admin/marketing) — additive, did NOT touch sidebar per user rule.
+- Redesigned 6 existing routes in place: /flash-sale-settings, /admin/banners, /admin/coupons, /admin/seo, /admin/reviews, /admin/notifications.
+- Total: ~4,400 lines of new enterprise UI code across 7 files.
+- All pages follow established pattern: styled-jsx + tokens-based theming + minmax(0,1fr) grids + 14px radius cards + cubic-bezier transitions + loading skeletons + hover elevation + stagger animations + useMemo/useCallback.
+- Did NOT modify: backend APIs, business logic, sidebar, dashboard, products-management, add-product, orders-management, track-order, customers-management, or any other module.
+- Type-check passes. Build passes (55/55 pages). All marketing pages compile successfully. Ready for Vercel deploy.
