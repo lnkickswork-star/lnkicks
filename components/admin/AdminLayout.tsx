@@ -28,6 +28,7 @@ import { getCurrentSession } from '@/lib/admin/adminAuth';
 import { useAdminTheme } from '@/lib/admin/adminTheme';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminTopbar } from './AdminTopbar';
+import { ToastProvider } from './ui';
 
 interface Props {
   title: string;
@@ -36,9 +37,10 @@ interface Props {
   /** Optional permission required to view this route.
    *  If user lacks it, a "no access" screen is shown. */
   requirePermission?: Permission;
+  breadcrumb?: { label: string; href?: string }[];
 }
 
-export function AdminLayout({ title, subtitle, children, requirePermission }: Props) {
+export function AdminLayout({ title, subtitle, children, requirePermission, breadcrumb }: Props) {
   const router = useRouter();
   const { tokens, mode: themeMode, toggle, setMode } = useAdminTheme();
   const [session, setSession] = useState<AdminSession | null>(null);
@@ -93,74 +95,73 @@ export function AdminLayout({ title, subtitle, children, requirePermission }: Pr
   const hasAccess = !requirePermission || (session.role && requirePermission);
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      background: tokens.bg.app,
-      color: tokens.text.primary,
-      fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-      '--admin-text-primary': tokens.text.primary,
-      '--admin-text-secondary': tokens.text.secondary,
-      '--admin-bg-surface': tokens.bg.surface,
-      '--admin-border-subtle': tokens.border.subtle,
-    } as React.CSSProperties}>
-      <AdminSidebar
-        tokens={tokens}
-        role={session.role}
-        collapsed={false}
-        mobileOpen={mobileNavOpen}
-        onCloseMobile={() => setMobileNavOpen(false)}
-      />
-
+    <ToastProvider tokens={tokens}>
       <div style={{
-        flex: 1,
-        minWidth: 0,
         display: 'flex',
-        flexDirection: 'column',
         minHeight: '100vh',
+        background: tokens.bg.app,
+        color: tokens.text.primary,
+        fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
       }}>
-        <AdminTopbar
+        <AdminSidebar
           tokens={tokens}
-          themeMode={themeMode}
-          onToggleTheme={toggle}
-          onCycleTheme={cycleTheme}
-          session={session}
-          title={title}
-          subtitle={subtitle}
-          onOpenMobileNav={() => setMobileNavOpen(true)}
+          role={session.role}
+          collapsed={false}
+          mobileOpen={mobileNavOpen}
+          onCloseMobile={() => setMobileNavOpen(false)}
         />
 
-        <main style={{
+        <div style={{
           flex: 1,
-          padding: '24px clamp(16px, 3vw, 32px)',
-          maxWidth: 1600,
-          width: '100%',
-          margin: '0 auto',
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
         }}>
-          {hasAccess ? (
-            children
-          ) : (
-            <div style={{
-              background: tokens.bg.surface,
-              border: `1px solid ${tokens.border.subtle}`,
-              borderRadius: 14,
-              padding: 48,
-              textAlign: 'center',
-              maxWidth: 480, margin: '64px auto',
-            }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🚫</div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: tokens.text.primary }}>
-                Access Restricted
-              </h2>
-              <p style={{ fontSize: 13, color: tokens.text.secondary, lineHeight: 1.6 }}>
-                Your role <strong style={{ textTransform: 'uppercase' }}>{session.role}</strong> does
-                not have permission to view this page. Contact your administrator if you believe this
-                is an error.
-              </p>
-            </div>
-          )}
-        </main>
+          <AdminTopbar
+            tokens={tokens}
+            themeMode={themeMode}
+            onToggleTheme={toggle}
+            onCycleTheme={cycleTheme}
+            session={session}
+            title={title}
+            subtitle={subtitle}
+            onOpenMobileNav={() => setMobileNavOpen(true)}
+            breadcrumb={breadcrumb}
+          />
+
+          <main style={{
+            flex: 1,
+            padding: '24px clamp(16px, 3vw, 32px)',
+            maxWidth: 1600,
+            width: '100%',
+            margin: '0 auto',
+          }}>
+            {hasAccess ? (
+              children
+            ) : (
+              <div style={{
+                background: tokens.bg.surface,
+                border: `1px solid ${tokens.border.subtle}`,
+                borderRadius: 14,
+                padding: 48,
+                textAlign: 'center',
+                maxWidth: 480, margin: '64px auto',
+              }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🚫</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: tokens.text.primary }}>
+                  Access Restricted
+                </h2>
+                <p style={{ fontSize: 13, color: tokens.text.secondary, lineHeight: 1.6 }}>
+                  Your role <strong style={{ textTransform: 'uppercase' }}>{session.role}</strong> does
+                  not have permission to view this page. Contact your administrator if you believe this
+                  is an error.
+                </p>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

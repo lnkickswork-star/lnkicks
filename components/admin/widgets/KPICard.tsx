@@ -1,7 +1,15 @@
 /**
- * KPICard — reusable stat card for the enterprise dashboard.
- * Shows: icon, label, value, delta chip, sparkline.
- * Premium Apple/Nike-inspired minimal design.
+ * KPICard — premium stat card for the enterprise dashboard.
+ *
+ * Features:
+ *  - Icon (16 svg paths supported)
+ *  - Title + value + delta chip
+ *  - Sparkline (mini area chart)
+ *  - Hover lift + shadow
+ *  - Clickable (optional onClick)
+ *  - Delta tone auto-derived (positive/negative/neutral)
+ *  - Subtle gradient overlay on hover
+ *  - Trend label (vs last month/day)
  */
 
 'use client';
@@ -13,6 +21,7 @@ interface Props {
   kpi: KPI;
   tokens: AdminThemeTokens;
   compact?: boolean;
+  onClick?: () => void;
 }
 
 const ICON_PATHS: Record<string, string> = {
@@ -38,67 +47,83 @@ function Icon({ name, color, size = 16 }: { name: string; color: string; size?: 
   );
 }
 
-export function KPICard({ kpi, tokens, compact = false }: Props) {
+export function KPICard({ kpi, tokens, compact = false, onClick }: Props) {
   const positive = kpi.tone === 'positive';
   const negative = kpi.tone === 'negative';
   const deltaColor = positive ? tokens.status.success : negative ? tokens.status.error : tokens.text.secondary;
   const deltaBg = positive ? tokens.status.successBg : negative ? tokens.status.errorBg : tokens.bg.surfaceAlt;
+  const clickable = Boolean(onClick);
 
   return (
     <div
+      onClick={onClick}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={(e) => { if (clickable && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick?.(); } }}
       style={{
         background: tokens.bg.surface,
         border: `1px solid ${tokens.border.subtle}`,
         borderRadius: 14,
         padding: compact ? 14 : 18,
         boxShadow: tokens.shadow.sm,
-        transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1), box-shadow 180ms ease',
+        transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1), box-shadow 180ms ease, border-color 180ms ease',
         position: 'relative',
         overflow: 'hidden',
-        cursor: 'default',
+        cursor: clickable ? 'pointer' : 'default',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)';
         e.currentTarget.style.boxShadow = tokens.shadow.md;
+        e.currentTarget.style.borderColor = tokens.border.strong;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = tokens.shadow.sm;
+        e.currentTarget.style.borderColor = tokens.border.subtle;
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+      {/* Subtle gradient overlay top-right on hover */}
+      <div style={{
+        position: 'absolute', top: 0, right: 0, width: 120, height: 120,
+        background: `radial-gradient(circle at top right, ${kpi.accent}10, transparent 70%)`,
+        opacity: 0, transition: 'opacity 200ms ease',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, position: 'relative' }}>
         <div style={{
-          width: 32, height: 32, borderRadius: 8,
+          width: 36, height: 36, borderRadius: 10,
           background: tokens.bg.surfaceAlt,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: kpi.accent,
+          border: `1px solid ${tokens.border.subtle}`,
         }}>
-          <Icon name={kpi.icon} color={kpi.accent} size={16} />
+          <Icon name={kpi.icon} color={kpi.accent} size={18} />
         </div>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 3,
           fontSize: 11, fontWeight: 700,
           color: deltaColor,
           background: deltaBg,
-          padding: '3px 7px',
+          padding: '3px 8px',
           borderRadius: 6,
           letterSpacing: 0.3,
         }}>
-          <span>{positive ? '↑' : negative ? '↓' : '→'}</span>
+          <span style={{ fontSize: 10 }}>{positive ? '↑' : negative ? '↓' : '→'}</span>
           {Math.abs(kpi.delta)}%
         </div>
       </div>
       <div style={{
         fontSize: 11, fontWeight: 600, color: tokens.text.secondary,
-        textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4,
+        textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6,
         fontFamily: 'Inter, system-ui, sans-serif',
       }}>
         {kpi.label}
       </div>
       <div style={{
-        fontSize: compact ? 20 : 24, fontWeight: 800, color: tokens.text.primary,
+        fontSize: compact ? 20 : 26, fontWeight: 800, color: tokens.text.primary,
         fontFamily: 'Inter, system-ui, sans-serif',
-        letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 8,
+        letterSpacing: '-0.025em', lineHeight: 1.1, marginBottom: 10,
       }}>
         {kpi.formattedValue}
       </div>
@@ -106,7 +131,7 @@ export function KPICard({ kpi, tokens, compact = false }: Props) {
         <div style={{ fontSize: 10, color: tokens.text.tertiary, fontFamily: 'Inter, sans-serif' }}>
           {kpi.deltaLabel}
         </div>
-        <Sparkline data={kpi.trend} color={kpi.accent} width={70} height={22} />
+        <Sparkline data={kpi.trend} color={kpi.accent} width={72} height={24} />
       </div>
     </div>
   );

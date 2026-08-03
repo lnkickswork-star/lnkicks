@@ -1,816 +1,602 @@
+/**
+ * LNKICKS Enterprise Admin — Settings
+ * ------------------------------------------------------------
+ * Comprehensive settings panel with sections:
+ *  - General (store name, currency, timezone)
+ *  - Store (brand, logo, contact)
+ *  - Payments (Stripe, Razorpay, PayPal, COD)
+ *  - Shipping (carriers, flat rate, free shipping threshold)
+ *  - Tax (GST, state-wise)
+ *  - Authentication (login methods, 2FA enforcement)
+ *  - Email (SMTP, transactional)
+ *  - SMS (provider, templates)
+ *  - Google & Microsoft integrations
+ *  - Integrations (third-party)
+ *  - API Keys
+ *  - Security (IP restrictions, session timeout)
+ *  - Roles & Permissions
+ *  - Backup & Restore
+ *  - Logs
+ */
+
 'use client';
 
-import React, { useState } from 'react';
-import { MobileLayout } from '@/components/layout/MobileLayout';
-import { useApp } from '@/components/context/AppContext';
-import { theme } from '@/lib/mobile/theme/theme';
-import { haptic } from '@/lib/mobile/utils/haptics';
-import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { useState } from 'react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAdminTheme } from '@/lib/admin/adminTheme';
+import { PageHeader } from '@/components/admin/PageHeader';
+import {
+  Button, Badge, StatusPill, Panel, useToast, Input, Textarea,
+  Toggle, Select, Avatar,
+} from '@/components/admin/ui';
+import { listAdminUsers } from '@/lib/admin/adminAuth';
 
-/**
- * SettingsPanelPage — Admin Settings panel.
- *
- * Stage 4g (admin) — Pattern C FULL REWRITE.
- * The original file used undefined Tailwind utility classes
- * (`bg-surface`, `text-headline-lg-mobile`, `font-headline-lg-mobile`,
- * `material-symbols-outlined`, `rounded-xl`, `bg-surface-container-lowest`,
- * `border-[#EEEEEE]`, `bg-[#6772E5]`, `space-y-stack-md`, etc.) and Material
- * Symbols font icons — it rendered unstyled in production. This rewrite
- * rebuilds the page from scratch with MobileLayout + token-driven inline
- * styles + inline SVG icons.
- *
- * Layout:
- *  - `<MobileLayout headerVariant="back" title="Settings" hideBottomNav>`.
- *  - Page title + sub-copy.
- *  - Settings sections:
- *      1. General Settings — marketplace name input + Maintenance Mode +
- *         Automatic SEO toggles.
- *      2. Payment Gateway — Stripe (connected) + PayPal (not configured).
- *      3. Shipping Configuration — flat-rate input + DHL Express + FedEx
- *         Overnight toggles.
- *      4. User Roles & Permissions — Super Administrator + Content
- *         Moderator rows + Create New Role button.
- *  - Sticky Save Changes CTA.
- *
- * Token usage:
- *  - Section cards: theme.radius.lg + 1px solid theme.colors.grey150 +
- *    theme.shadows.xs on theme.colors.white.
- *  - Inputs: theme.radius.lg + grey100 bg + 1.5px solid grey300 border,
- *    focus → black border.
- *  - Toggles: 44×24 pill on black (on) or grey300 (off); 18×18 white knob.
- *  - Payment gateway chips (Stripe / PayPal): 40×40 radius.md tinted
- *    wells (Stripe = black tinted, PayPal = grey100) — original used
- *    brand blue #6772E5 for Stripe but brand colors are forbidden in LN
- *    KICKS design system → replaced with theme.colors.black for Stripe
- *    connected state (the design system's accent surface).
- *  - Role avatars: 32×32 radius.pill on black (Super Admin) or grey200
- *    (Moderator) with 3-letter monogram.
- *  - Save Changes CTA: black + radius.pill + display font + uppercase +
- *    haptic.medium() + showToast() on click.
- *
- * All settings data (LNKICKS Luxury Boutique default, Stripe connected,
- * PayPal not configured, DHL Express on, FedEx Overnight off, Super
- * Administrator + Content Moderator roles) preserved verbatim from the
- * original.
- */
-export default function SettingsPanelPage() {
-  const { showToast } = useApp();
+type Section = 'general' | 'store' | 'payments' | 'shipping' | 'tax' | 'auth' | 'email' | 'sms' | 'integrations' | 'apikeys' | 'security' | 'roles' | 'backup' | 'logs';
 
-  // Toggle states — defaults match the original markup.
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [automaticSeo, setAutomaticSeo] = useState(true);
-  const [dhlExpress, setDhlExpress] = useState(true);
-  const [fedExOvernight, setFedExOvernight] = useState(false);
+const SECTIONS: { key: Section; label: string; icon: string }[] = [
+  { key: 'general', label: 'General', icon: '⚙️' },
+  { key: 'store', label: 'Store', icon: '🏪' },
+  { key: 'payments', label: 'Payments', icon: '💳' },
+  { key: 'shipping', label: 'Shipping', icon: '🚚' },
+  { key: 'tax', label: 'Tax', icon: '🧾' },
+  { key: 'auth', label: 'Authentication', icon: '🔐' },
+  { key: 'email', label: 'Email', icon: '✉️' },
+  { key: 'sms', label: 'SMS', icon: '💬' },
+  { key: 'integrations', label: 'Integrations', icon: '🔌' },
+  { key: 'apikeys', label: 'API Keys', icon: '🔑' },
+  { key: 'security', label: 'Security', icon: '🛡️' },
+  { key: 'roles', label: 'Roles', icon: '👥' },
+  { key: 'backup', label: 'Backup', icon: '💾' },
+  { key: 'logs', label: 'Logs', icon: '📋' },
+];
 
-  const handleSave = () => {
-    haptic.medium();
-    showToast('Settings saved');
-  };
+export default function SettingsPage() {
+  const { tokens } = useAdminTheme();
+  const { push: pushToast } = useToast();
+  const [section, setSection] = useState<Section>('general');
+  const [saveLoading, setSaveLoading] = useState(false);
 
-  const handleToggle =
-    (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-      haptic.selection();
-      setter((v) => !v);
-    };
-
-  const handleRoleTap = (role: string) => {
-    haptic.light();
-    showToast(`Edit ${role} permissions`);
-  };
-
-  const handleCreateRole = () => {
-    haptic.light();
-    showToast('Create new role');
-  };
-
-  const handleSetupPaypal = () => {
-    haptic.medium();
-    showToast('Setup PayPal gateway');
-  };
+  function handleSave() {
+    setSaveLoading(true);
+    setTimeout(() => {
+      setSaveLoading(false);
+      pushToast({ tone: 'success', title: 'Settings saved', message: 'Your changes are now live.' });
+    }, 600);
+  }
 
   return (
-    <MobileLayout headerVariant="back" title="Settings" hideBottomNav>
-      <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
-        {/* TITLE */}
-        <div style={{ marginBottom: theme.spacing.xxl, paddingTop: theme.spacing.sm }}>
-          <h1
-            style={{
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.h1,
-              fontWeight: theme.fontWeight.extrabold,
-              color: theme.colors.textPrimary,
-              margin: 0,
-              letterSpacing: theme.letterSpacing.tight,
-              lineHeight: theme.lineHeight.tight,
-            }}
-          >
-            Admin Settings
-          </h1>
-          <p
-            style={{
-              fontSize: theme.fontSize.md,
-              color: theme.colors.textSecondary,
-              marginTop: theme.spacing.sm,
-              lineHeight: theme.lineHeight.relaxed,
-            }}
-          >
-            Manage your marketplace operations and global configurations.
-          </p>
-        </div>
-
-        {/* SETTINGS SECTIONS */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: theme.spacing.xxl,
-            paddingBottom: theme.spacing.giant,
-          }}
-        >
-          {/* ── GENERAL SETTINGS ─────────────────────────────────── */}
-          <section>
-            <SectionHeading icon="gear" title="General Settings" />
-            <div style={cardStyle}>
-              {/* Marketplace name */}
-              <div>
-                <label htmlFor="sp-marketplace" style={labelStyle}>
-                  Marketplace Name
-                </label>
-                <input
-                  id="sp-marketplace"
-                  type="text"
-                  defaultValue="LNKICKS Luxury Boutique"
-                  style={inputStyle}
-                  className="sp-input"
-                />
-              </div>
-              <ToggleRow
-                label="Maintenance Mode"
-                hint="Disable front-end access"
-                on={maintenanceMode}
-                onToggle={handleToggle(setMaintenanceMode)}
-              />
-              <ToggleRow
-                label="Automatic SEO"
-                hint="Generate meta tags automatically"
-                on={automaticSeo}
-                onToggle={handleToggle(setAutomaticSeo)}
-              />
-            </div>
-          </section>
-
-          {/* ── PAYMENT GATEWAY ──────────────────────────────────── */}
-          <section>
-            <SectionHeading icon="wallet" title="Payment Gateway" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-              {/* Stripe — connected */}
-              <div style={{ ...cardStyle, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.md }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md, minWidth: 0 }}>
-                  <GatewayChip variant="connected" icon="card" />
-                  <div style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: theme.fontSize.md,
-                        fontWeight: theme.fontWeight.semibold,
-                        color: theme.colors.textPrimary,
-                      }}
-                    >
-                      Stripe
-                    </div>
-                    <div
-                      style={{
-                        fontSize: theme.fontSize.xs,
-                        color: theme.colors.textSecondary,
-                        marginTop: 2,
-                      }}
-                    >
-                      Connected • 0.5% fee
-                    </div>
-                  </div>
-                </div>
-                <svg
-                  viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
-                  fill={theme.colors.success}
-                  stroke={theme.colors.success}
-                  strokeWidth="1.5"
-                  aria-hidden
-                  style={{ flexShrink: 0 }}
-                >
-                  <circle cx="12" cy="12" r="10" fill={theme.colors.success} stroke="none" />
-                  <polyline
-                    points="7.5 12.5 10.5 15.5 16.5 8.5"
-                    fill="none"
-                    stroke={theme.colors.white}
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-
-              {/* PayPal — not configured */}
-              <div style={{ ...cardStyle, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.md }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md, minWidth: 0 }}>
-                  <GatewayChip variant="off" icon="wallet" />
-                  <div style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: theme.fontSize.md,
-                        fontWeight: theme.fontWeight.semibold,
-                        color: theme.colors.textPrimary,
-                      }}
-                    >
-                      PayPal
-                    </div>
-                    <div
-                      style={{
-                        fontSize: theme.fontSize.xs,
-                        color: theme.colors.textSecondary,
-                        marginTop: 2,
-                      }}
-                    >
-                      Not configured
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSetupPaypal}
-                  className="pressable sp-setup"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: theme.colors.textPrimary,
-                    fontSize: theme.fontSize.body,
-                    fontWeight: theme.fontWeight.bold,
-                    cursor: 'pointer',
-                    borderBottom: `1.5px solid ${theme.colors.textPrimary}`,
-                    paddingBottom: 1,
-                    letterSpacing: theme.letterSpacing.wider,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Setup
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* ── SHIPPING CONFIGURATION ──────────────────────────── */}
-          <section>
-            <SectionHeading icon="truck" title="Shipping Configuration" />
-            <div style={cardStyle}>
-              <div>
-                <label htmlFor="sp-shipping" style={labelStyle}>
-                  Global Shipping Flat Rate ($)
-                </label>
-                <input
-                  id="sp-shipping"
-                  type="number"
-                  placeholder="25.00"
-                  style={inputStyle}
-                  className="sp-input"
-                />
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingTop: theme.spacing.md,
-                  borderTop: `1px solid ${theme.colors.grey150}`,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: theme.fontSize.md,
-                    color: theme.colors.textPrimary,
-                  }}
-                >
-                  DHL Express Integration
-                </span>
-                <Toggle on={dhlExpress} onToggle={handleToggle(setDhlExpress)} label="DHL Express Integration" />
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: theme.fontSize.md,
-                    color: theme.colors.textPrimary,
-                  }}
-                >
-                  FedEx Overnight
-                </span>
-                <Toggle on={fedExOvernight} onToggle={handleToggle(setFedExOvernight)} label="FedEx Overnight" />
-              </div>
-            </div>
-          </section>
-
-          {/* ── USER ROLES ───────────────────────────────────────── */}
-          <section>
-            <SectionHeading icon="badge" title="User Roles & Permissions" />
-            <div
-              style={{
-                background: theme.colors.white,
-                borderRadius: theme.radius.lg,
-                overflow: 'hidden',
-                border: `1px solid ${theme.colors.grey150}`,
-                boxShadow: theme.shadows.xs,
-              }}
-            >
-              <RoleRow
-                monogram="ADM"
-                variant="admin"
-                title="Super Administrator"
-                hint="Full System Access"
-                onTap={() => handleRoleTap('Super Administrator')}
-              />
-              <RoleRow
-                monogram="MOD"
-                variant="mod"
-                title="Content Moderator"
-                hint="Manage Listings & Users"
-                onTap={() => handleRoleTap('Content Moderator')}
-              />
-              <button
-                type="button"
-                onClick={handleCreateRole}
-                className="pressable sp-create-role"
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  padding: theme.spacing.lg,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: theme.spacing.sm,
-                  cursor: 'pointer',
-                  fontFamily: theme.fontFamily.body,
-                  fontSize: theme.fontSize.body,
-                  fontWeight: theme.fontWeight.bold,
-                  color: theme.colors.textPrimary,
-                  letterSpacing: theme.letterSpacing.wider,
-                  textTransform: 'uppercase',
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.6"
-                  aria-hidden
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
-                  <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
-                </svg>
-                Create New Role
-              </button>
-            </div>
-          </section>
-
-          {/* SAVE CHANGES CTA */}
-          <button
-            type="button"
-            onClick={handleSave}
-            className="pressable sp-save"
-            style={{
-              width: '100%',
-              padding: `${theme.spacing.lg}px ${theme.spacing.md}px`,
-              background: theme.colors.black,
-              color: theme.colors.white,
-              borderRadius: theme.radius.pill,
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.lg,
-              fontWeight: theme.fontWeight.bold,
-              border: 'none',
-              cursor: 'pointer',
-              letterSpacing: theme.letterSpacing.wider,
-              textTransform: 'uppercase',
-              boxShadow: theme.shadows.lg,
-            }}
-          >
+    <AdminLayout
+      title="Settings"
+      subtitle="Configuration & preferences"
+      requirePermission="settings.manage"
+      breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'System' }, { label: 'Settings' }]}
+    >
+      <PageHeader
+        tokens={tokens}
+        title="Settings"
+        subtitle="Configure your store, payments, shipping, security, and integrations."
+        breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'System' }, { label: 'Settings' }]}
+        actions={
+          <Button tokens={tokens} variant="primary" size="md" loading={saveLoading} onClick={handleSave}>
             Save Changes
-          </button>
-        </div>
-      </div>
-
-      <style jsx>{pressableStyle}</style>
-      <style jsx>{`
-        .sp-input:focus {
-          outline: none;
-          border-color: ${theme.colors.black};
+          </Button>
         }
-        .sp-setup:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 2px;
-        }
-        .sp-create-role:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: -2px;
-        }
-        .sp-save:active {
-          transform: scale(0.98);
-        }
-        .sp-save:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 3px;
-        }
-      `}</style>
-    </MobileLayout>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────
- * Shared form styles
- * ────────────────────────────────────────────────────────────────── */
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: theme.fontSize.xs,
-  fontWeight: theme.fontWeight.bold,
-  color: theme.colors.textPrimary,
-  marginBottom: theme.spacing.sm,
-  letterSpacing: theme.letterSpacing.wider,
-  textTransform: 'uppercase',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  background: theme.colors.grey100,
-  border: `1.5px solid ${theme.colors.grey300}`,
-  borderRadius: theme.radius.lg,
-  padding: `${theme.spacing.md + 2}px ${theme.spacing.lg}px`,
-  fontSize: theme.fontSize.md,
-  fontFamily: theme.fontFamily.body,
-  color: theme.colors.textPrimary,
-  transition: 'border-color 180ms cubic-bezier(0.16, 1, 0.3, 1)',
-};
-
-const cardStyle: React.CSSProperties = {
-  background: theme.colors.white,
-  borderRadius: theme.radius.lg,
-  padding: theme.spacing.lg,
-  border: `1px solid ${theme.colors.grey150}`,
-  boxShadow: theme.shadows.xs,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing.lg,
-};
-
-/* ──────────────────────────────────────────────────────────────────
- * SectionHeading — section icon + title row
- * ────────────────────────────────────────────────────────────────── */
-function SectionHeading({
-  icon,
-  title,
-}: {
-  icon: 'gear' | 'wallet' | 'truck' | 'badge';
-  title: string;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: theme.spacing.sm,
-        marginBottom: theme.spacing.md,
-      }}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        width="20"
-        height="20"
-        fill="none"
-        stroke={theme.colors.textPrimary}
-        strokeWidth="2"
-        aria-hidden
-      >
-        {icon === 'gear' && (
-          <>
-            <circle cx="12" cy="12" r="3" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
-            />
-          </>
-        )}
-        {icon === 'wallet' && (
-          <>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 7a2 2 0 012-2h12a2 2 0 012 2v0H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2V9"
-            />
-            <circle cx="16.5" cy="12.5" r="1.4" fill="currentColor" stroke="none" />
-          </>
-        )}
-        {icon === 'truck' && (
-          <>
-            <rect x="2" y="7" width="11" height="9" rx="1.5" strokeLinejoin="round" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13 10h4l3 3v3h-7z"
-            />
-            <circle cx="6" cy="18" r="1.6" />
-            <circle cx="17" cy="18" r="1.6" />
-          </>
-        )}
-        {icon === 'badge' && (
-          <>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 14a4 4 0 10-4-4"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 20a5 5 0 0114 0"
-            />
-          </>
-        )}
-      </svg>
-      <h2
-        style={{
-          fontFamily: theme.fontFamily.display,
-          fontSize: theme.fontSize.lg,
-          fontWeight: theme.fontWeight.extrabold,
-          color: theme.colors.textPrimary,
-          margin: 0,
-          letterSpacing: theme.letterSpacing.tight,
-        }}
-      >
-        {title}
-      </h2>
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────
- * ToggleRow — labeled toggle with hint
- * ────────────────────────────────────────────────────────────────── */
-function ToggleRow({
-  label,
-  hint,
-  on,
-  onToggle,
-}: {
-  label: string;
-  hint: string;
-  on: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: theme.spacing.md,
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span
-          style={{
-            fontSize: theme.fontSize.md,
-            fontWeight: theme.fontWeight.semibold,
-            color: theme.colors.textPrimary,
-          }}
-        >
-          {label}
-        </span>
-        <span
-          style={{
-            fontSize: theme.fontSize.xs,
-            color: theme.colors.textSecondary,
-            marginTop: 2,
-          }}
-        >
-          {hint}
-        </span>
-      </div>
-      <Toggle on={on} onToggle={onToggle} label={label} />
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────
- * Toggle — 44×24 pill switch with sliding 18×18 white knob
- * ────────────────────────────────────────────────────────────────── */
-function Toggle({
-  on,
-  onToggle,
-  label,
-}: {
-  on: boolean;
-  onToggle: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      onClick={onToggle}
-      className="pressable sp-toggle"
-      style={{
-        position: 'relative',
-        width: 44,
-        height: 24,
-        borderRadius: theme.radius.pill,
-        background: on ? theme.colors.black : theme.colors.grey300,
-        border: 'none',
-        cursor: 'pointer',
-        transition: 'background-color 180ms cubic-bezier(0.16, 1, 0.3, 1)',
-        flexShrink: 0,
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 3,
-          left: on ? 23 : 3,
-          width: 18,
-          height: 18,
-          borderRadius: '50%',
-          background: theme.colors.white,
-          boxShadow: theme.shadows.xs,
-          transition: 'left 180ms cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
       />
-    </button>
-  );
-}
 
-/* ──────────────────────────────────────────────────────────────────
- * GatewayChip — 40×40 tinted square with inline SVG icon
- *  - variant='connected' → black bg / white icon (Stripe — connected)
- *  - variant='off'       → grey100 bg / grey600 icon (PayPal — off)
- * ────────────────────────────────────────────────────────────────── */
-function GatewayChip({
-  variant,
-  icon,
-}: {
-  variant: 'connected' | 'off';
-  icon: 'card' | 'wallet';
-}) {
-  const isOn = variant === 'connected';
-  return (
-    <div
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: theme.radius.md,
-        background: isOn ? theme.colors.black : theme.colors.grey100,
-        color: isOn ? theme.colors.white : theme.colors.grey600,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        width="20"
-        height="20"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden
-      >
-        {icon === 'card' && (
-          <>
-            <rect x="3" y="5" width="18" height="14" rx="2" strokeLinejoin="round" />
-            <line x1="3" y1="9.5" x2="21" y2="9.5" />
-            <line x1="7" y1="14.5" x2="11" y2="14.5" strokeLinecap="round" />
-          </>
-        )}
-        {icon === 'wallet' && (
-          <>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 7a2 2 0 012-2h12a2 2 0 012 2v0H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2V9"
-            />
-            <circle cx="16.5" cy="12.5" r="1.4" fill="currentColor" stroke="none" />
-          </>
-        )}
-      </svg>
-    </div>
-  );
-}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 200px) minmax(0, 1fr)', gap: 16 }}>
+        {/* Section nav */}
+        <aside style={{
+          background: tokens.bg.surface, border: `1px solid ${tokens.border.subtle}`,
+          borderRadius: 12, padding: 6, height: 'fit-content', position: 'sticky', top: 80,
+        }}>
+          {SECTIONS.map(s => (
+            <button
+              key={s.key}
+              onClick={() => setSection(s.key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                width: '100%', padding: '8px 10px',
+                borderRadius: 7, border: 'none',
+                background: section === s.key ? tokens.bg.hover : 'transparent',
+                color: section === s.key ? tokens.text.primary : tokens.text.secondary,
+                fontSize: 12, fontWeight: section === s.key ? 700 : 500,
+                fontFamily: 'Inter, sans-serif', cursor: 'pointer',
+                textAlign: 'left', transition: 'all 120ms ease',
+              }}
+              onMouseEnter={(e) => { if (section !== s.key) e.currentTarget.style.background = tokens.bg.hover; }}
+              onMouseLeave={(e) => { if (section !== s.key) e.currentTarget.style.background = 'transparent'; }}
+            >
+              <span style={{ fontSize: 14 }}>{s.icon}</span>
+              <span style={{ flex: 1 }}>{s.label}</span>
+            </button>
+          ))}
+        </aside>
 
-/* ──────────────────────────────────────────────────────────────────
- * RoleRow — role avatar + title + hint + chevron
- *  - variant='admin' → black avatar / white monogram (Super Admin)
- *  - variant='mod'   → grey200 avatar / black monogram (Moderator)
- * ────────────────────────────────────────────────────────────────── */
-function RoleRow({
-  monogram,
-  variant,
-  title,
-  hint,
-  onTap,
-}: {
-  monogram: string;
-  variant: 'admin' | 'mod';
-  title: string;
-  hint: string;
-  onTap: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onTap}
-      className="pressable sp-role"
-      style={{
-        width: '100%',
-        background: 'transparent',
-        border: 'none',
-        borderBottom: `1px solid ${theme.colors.grey150}`,
-        padding: theme.spacing.lg,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: theme.spacing.md,
-        cursor: 'pointer',
-        textAlign: 'left',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md, minWidth: 0 }}>
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            background:
-              variant === 'admin' ? theme.colors.black : theme.colors.grey200,
-            color:
-              variant === 'admin'
-                ? theme.colors.white
-                : theme.colors.textPrimary,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: theme.fontSize.xs,
-            fontWeight: theme.fontWeight.extrabold,
-            letterSpacing: theme.letterSpacing.wider,
-            flexShrink: 0,
-          }}
-        >
-          {monogram}
-        </div>
+        {/* Section content */}
         <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: theme.fontSize.md,
-              fontWeight: theme.fontWeight.semibold,
-              color: theme.colors.textPrimary,
-            }}
-          >
-            {title}
+          {section === 'general' && <GeneralSection tokens={tokens} />}
+          {section === 'store' && <StoreSection tokens={tokens} />}
+          {section === 'payments' && <PaymentsSection tokens={tokens} pushToast={pushToast} />}
+          {section === 'shipping' && <ShippingSection tokens={tokens} />}
+          {section === 'tax' && <TaxSection tokens={tokens} />}
+          {section === 'auth' && <AuthSection tokens={tokens} pushToast={pushToast} />}
+          {section === 'email' && <EmailSection tokens={tokens} />}
+          {section === 'sms' && <SMSSection tokens={tokens} />}
+          {section === 'integrations' && <IntegrationsSection tokens={tokens} pushToast={pushToast} />}
+          {section === 'apikeys' && <ApiKeysSection tokens={tokens} pushToast={pushToast} />}
+          {section === 'security' && <SecuritySection tokens={tokens} />}
+          {section === 'roles' && <RolesSection tokens={tokens} pushToast={pushToast} />}
+          {section === 'backup' && <BackupSection tokens={tokens} pushToast={pushToast} />}
+          {section === 'logs' && <LogsSection tokens={tokens} pushToast={pushToast} />}
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}
+
+/* --------- Sections --------- */
+
+function GeneralSection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  return (
+    <Panel tokens={tokens} title="General Settings" subtitle="Basic marketplace configuration">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Input tokens={tokens} label="Marketplace Name" defaultValue="LNKICKS" hint="Displayed across the website and emails." />
+        <Input tokens={tokens} label="Support Email" defaultValue="support@lnkicks.com" type="email" />
+        <Input tokens={tokens} label="Support Phone" defaultValue="+91 98765 43210" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Select tokens={tokens} label="Currency"
+            options={[
+              { value: 'INR', label: '₹ Indian Rupee (INR)' },
+              { value: 'USD', label: '$ US Dollar (USD)' },
+              { value: 'EUR', label: '€ Euro (EUR)' },
+            ]}
+            defaultValue="INR"
+          />
+          <Select tokens={tokens} label="Timezone"
+            options={[
+              { value: 'IST', label: 'Asia/Kolkata (IST)' },
+              { value: 'UTC', label: 'UTC' },
+              { value: 'EST', label: 'America/New_York (EST)' },
+            ]}
+            defaultValue="IST"
+          />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Select tokens={tokens} label="Date Format"
+            options={[
+              { value: 'dmy', label: 'DD/MM/YYYY' },
+              { value: 'mdy', label: 'MM/DD/YYYY' },
+              { value: 'ymd', label: 'YYYY-MM-DD' },
+            ]}
+          />
+          <Select tokens={tokens} label="Language"
+            options={[
+              { value: 'en', label: 'English' },
+              { value: 'hi', label: 'हिन्दी (Hindi)' },
+              { value: 'ta', label: 'தமிழ் (Tamil)' },
+            ]}
+          />
+        </div>
+        <ToggleRow tokens={tokens} label="Maintenance Mode" desc="Temporarily disable the storefront for customers" checked={false} />
+        <ToggleRow tokens={tokens} label="Automatic SEO Optimization" desc="AI generates meta tags when products are added" checked={true} />
+        <ToggleRow tokens={tokens} label="Auto-generate Sitemap" desc="Update sitemap.xml when products change" checked={true} />
+      </div>
+    </Panel>
+  );
+}
+
+function StoreSection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  return (
+    <Panel tokens={tokens} title="Store Configuration" subtitle="Branding and storefront settings">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 600, color: tokens.text.secondary }}>Logo</label>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 12, background: tokens.text.primary, color: tokens.bg.app, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900 }}>L</div>
+            <div>
+              <Button tokens={tokens} variant="outline" size="sm">Upload New Logo</Button>
+              <div style={{ fontSize: 10, color: tokens.text.tertiary, marginTop: 4 }}>PNG, SVG · Max 1MB · 256×256 recommended</div>
+            </div>
           </div>
-          <div
-            style={{
-              fontSize: theme.fontSize.xs,
-              color: theme.colors.textSecondary,
-              marginTop: 2,
-            }}
-          >
-            {hint}
+        </div>
+        <Input tokens={tokens} label="Store Tagline" defaultValue="India's #1 Premium Sneaker Marketplace" />
+        <Input tokens={tokens} label="Store Description" defaultValue="Shop authentic Air Jordan, Yeezy, Adidas & Nike sneakers with 7-day returns." />
+        <Textarea tokens={tokens} label="Store Address" defaultValue="LNKICKS Pvt Ltd, Brigade Road, Bengaluru, Karnataka 560001, India" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="GST Number" defaultValue="29ABCDE1234F1Z5" />
+          <Input tokens={tokens} label="CIN" defaultValue="U74999KA2020PTC123456" />
+        </div>
+        <ToggleRow tokens={tokens} label="Show GST Invoice" desc="Allow customers to download GST invoices" checked={true} />
+        <ToggleRow tokens={tokens} label="Enable Guest Checkout" desc="Allow purchases without an account" checked={true} />
+      </div>
+    </Panel>
+  );
+}
+
+function PaymentsSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  const gateways = [
+    { name: 'Razorpay', icon: '💳', status: 'connected', desc: 'Indian payment gateway — UPI, cards, netbanking, wallets' },
+    { name: 'Stripe', icon: '💳', status: 'connected', desc: 'International cards, Apple Pay, Google Pay' },
+    { name: 'PayPal', icon: '🅿️', status: 'disconnected', desc: 'International payments in 200+ countries' },
+    { name: 'Cash on Delivery (COD)', icon: '💵', status: 'connected', desc: 'Allow customers to pay on delivery' },
+    { name: 'PhonePe', icon: '📱', status: 'disconnected', desc: 'UPI payments via PhonePe' },
+  ];
+  return (
+    <Panel tokens={tokens} title="Payment Gateways" subtitle="Configure payment methods for customers">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {gateways.map(g => (
+          <div key={g.name} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 14px', borderRadius: 10, background: tokens.bg.surfaceAlt,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 9, background: tokens.bg.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{g.icon}</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>{g.name}</div>
+                <div style={{ fontSize: 11, color: tokens.text.secondary, marginTop: 1 }}>{g.desc}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <StatusPill tokens={tokens} status={g.status === 'connected' ? 'Active' : 'Inactive'} />
+              <Button tokens={tokens} variant={g.status === 'connected' ? 'outline' : 'primary'} size="sm"
+                onClick={() => pushToast({ tone: g.status === 'connected' ? 'info' : 'success', title: g.status === 'connected' ? 'Configure' : 'Connecting', message: g.name })}
+              >{g.status === 'connected' ? 'Configure' : 'Connect'}</Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function ShippingSection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  const carriers = [
+    { name: 'BlueDart', status: 'Active' },
+    { name: 'Delhivery', status: 'Active' },
+    { name: 'DTDC', status: 'Active' },
+    { name: 'Ekart', status: 'Inactive' },
+    { name: 'India Post', status: 'Inactive' },
+  ];
+  return (
+    <Panel tokens={tokens} title="Shipping Configuration" subtitle="Carriers, rates, and delivery zones">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="Flat Shipping Rate (₹)" type="number" defaultValue="99" />
+          <Input tokens={tokens} label="Free Shipping Threshold (₹)" type="number" defaultValue="2999" hint="Orders above this get free shipping" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="COD Charge (₹)" type="number" defaultValue="49" />
+          <Input tokens={tokens} label="Estimated Delivery (days)" type="number" defaultValue="3" />
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Courier Partners</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {carriers.map(c => (
+              <div key={c.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 8, background: tokens.bg.surfaceAlt }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary }}>{c.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <StatusPill tokens={tokens} status={c.status} />
+                  <Toggle tokens={tokens} checked={c.status === 'Active'} onChange={() => {}} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <ToggleRow tokens={tokens} label="Saturday Delivery" desc="Allow deliveries on Saturdays" checked={true} />
+        <ToggleRow tokens={tokens} label="Sunday Delivery" desc="Allow deliveries on Sundays" checked={false} />
+      </div>
+    </Panel>
+  );
+}
+
+function TaxSection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  return (
+    <Panel tokens={tokens} title="Tax Configuration" subtitle="GST and tax rules for India">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <ToggleRow tokens={tokens} label="Charge GST" desc="Apply GST to all orders" checked={true} />
+        <Input tokens={tokens} label="GST Number" defaultValue="29ABCDE1234F1Z5" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Select tokens={tokens} label="Default GST Rate"
+            options={[
+              { value: '0', label: '0% (Exempt)' },
+              { value: '5', label: '5% (Essential goods)' },
+              { value: '12', label: '12% (Standard)' },
+              { value: '18', label: '18% (Most goods)' },
+              { value: '28', label: '28% (Luxury goods)' },
+            ]}
+            defaultValue="18"
+          />
+          <Select tokens={tokens} label="Tax Inclusive Pricing"
+            options={[
+              { value: 'inclusive', label: 'Tax included in price' },
+              { value: 'exclusive', label: 'Tax added at checkout' },
+            ]}
+          />
+        </div>
+        <ToggleRow tokens={tokens} label="State-wise Tax Rules" desc="Apply different rates for different states" checked={true} />
+      </div>
+    </Panel>
+  );
+}
+
+function AuthSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  return (
+    <Panel tokens={tokens} title="Authentication" subtitle="Customer and admin login methods">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Customer Login Methods</div>
+          <ToggleRow tokens={tokens} label="Email + Password" desc="Traditional email/password login" checked={true} />
+          <ToggleRow tokens={tokens} label="Google OAuth" desc="Sign in with Google account" checked={true} />
+          <ToggleRow tokens={tokens} label="Mobile OTP" desc="Login with phone number + OTP" checked={true} />
+          <ToggleRow tokens={tokens} label="Apple Sign In" desc="Sign in with Apple ID" checked={false} />
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Admin Security</div>
+          <ToggleRow tokens={tokens} label="Force 2FA for all admins" desc="Require two-factor authentication" checked={false} />
+          <ToggleRow tokens={tokens} label="IP Whitelist" desc="Only allow login from specific IPs" checked={false} />
+          <ToggleRow tokens={tokens} label="Session timeout after 8 hours" desc="Auto logout inactive sessions" checked={true} />
+        </div>
+        <Button tokens={tokens} variant="outline" size="md" onClick={() => pushToast({ tone: 'info', title: '2FA setup', message: 'Configure TOTP app' })}>
+          Configure 2FA
+        </Button>
+      </div>
+    </Panel>
+  );
+}
+
+function EmailSection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  return (
+    <Panel tokens={tokens} title="Email Configuration" subtitle="SMTP and transactional email">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Select tokens={tokens} label="Email Provider"
+          options={[
+            { value: 'smtp', label: 'Custom SMTP' },
+            { value: 'sendgrid', label: 'SendGrid' },
+            { value: 'ses', label: 'Amazon SES' },
+            { value: 'mailgun', label: 'Mailgun' },
+            { value: 'postmark', label: 'Postmark' },
+          ]}
+          defaultValue="sendgrid"
+        />
+        <Input tokens={tokens} label="SMTP Host" defaultValue="smtp.sendgrid.net" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="Port" type="number" defaultValue="587" />
+          <Select tokens={tokens} label="Encryption"
+            options={[
+              { value: 'tls', label: 'TLS' },
+              { value: 'ssl', label: 'SSL' },
+              { value: 'none', label: 'None' },
+            ]}
+          />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="Username" defaultValue="apikey" />
+          <Input tokens={tokens} label="Password / API Key" type="password" defaultValue="••••••••••••" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="From Name" defaultValue="LNKICKS" />
+          <Input tokens={tokens} label="From Email" defaultValue="noreply@lnkicks.com" />
+        </div>
+        <Button tokens={tokens} variant="outline" size="md">Send Test Email</Button>
+      </div>
+    </Panel>
+  );
+}
+
+function SMSSection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  return (
+    <Panel tokens={tokens} title="SMS Configuration" subtitle="OTP and notification SMS">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Select tokens={tokens} label="SMS Provider"
+          options={[
+            { value: 'twilio', label: 'Twilio' },
+            { value: 'msg91', label: 'MSG91' },
+            { value: 'textlocal', label: 'TextLocal' },
+            { value: 'gupshup', label: 'Gupshup' },
+          ]}
+          defaultValue="msg91"
+        />
+        <Input tokens={tokens} label="Sender ID" defaultValue="LNKICKS" hint="6-character alphanumeric sender ID" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="API Key" type="password" defaultValue="••••••••••••" />
+          <Input tokens={tokens} label="OTP Length" type="number" defaultValue="6" />
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>SMS Templates</div>
+          {['Order Confirmation', 'Order Shipped', 'Out for Delivery', 'Order Delivered', 'OTP Verification'].map(t => (
+            <div key={t} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 6, background: tokens.bg.surfaceAlt, marginBottom: 4 }}>
+              <span style={{ fontSize: 12, color: tokens.text.primary }}>{t}</span>
+              <Button tokens={tokens} variant="ghost" size="sm">Edit</Button>
+            </div>
+          ))}
+        </div>
+        <Button tokens={tokens} variant="outline" size="md">Send Test SMS</Button>
+      </div>
+    </Panel>
+  );
+}
+
+function IntegrationsSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  const integrations = [
+    { name: 'Google Analytics 4', status: 'connected' },
+    { name: 'Google Search Console', status: 'connected' },
+    { name: 'Facebook Pixel', status: 'connected' },
+    { name: 'Microsoft Clarity', status: 'connected' },
+    { name: 'Google Merchant Center', status: 'disconnected' },
+    { name: 'WhatsApp Business API', status: 'disconnected' },
+    { name: 'Razorpay X (Payouts)', status: 'disconnected' },
+    { name: 'Shiprocket', status: 'connected' },
+  ];
+  return (
+    <Panel tokens={tokens} title="Integrations" subtitle="Third-party services and tools">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+        {integrations.map(int => (
+          <div key={int.name} style={{ padding: 12, borderRadius: 10, background: tokens.bg.surfaceAlt }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: tokens.text.primary, marginBottom: 4 }}>{int.name}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+              <StatusPill tokens={tokens} status={int.status === 'connected' ? 'Active' : 'Inactive'} />
+              <Button tokens={tokens} variant={int.status === 'connected' ? 'outline' : 'primary'} size="sm"
+                onClick={() => pushToast({ tone: int.status === 'connected' ? 'info' : 'success', title: int.status === 'connected' ? 'Configure' : 'Connecting', message: int.name })}
+              >{int.status === 'connected' ? 'Configure' : 'Connect'}</Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function ApiKeysSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  const keys = [
+    { name: 'Production API Key', key: 'lnk_live_sk_9876543210abcdef', created: '2026-01-15', lastUsed: '2 hours ago' },
+    { name: 'Test API Key', key: 'lnk_test_sk_1234567890abcdef', created: '2026-01-15', lastUsed: '5 days ago' },
+    { name: 'Webhook Secret', key: 'whsec_••••••••••••••••', created: '2026-02-01', lastUsed: '1 hour ago' },
+  ];
+  return (
+    <Panel tokens={tokens} title="API Keys" subtitle="Manage API access for integrations"
+      action={<Button tokens={tokens} variant="primary" size="sm" onClick={() => pushToast({ tone: 'success', title: 'API key created' })}>Generate New Key</Button>}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {keys.map(k => (
+          <div key={k.name} style={{ padding: 12, borderRadius: 10, background: tokens.bg.surfaceAlt }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: tokens.text.primary }}>{k.name}</span>
+              <Button tokens={tokens} variant="ghost" size="sm" onClick={() => pushToast({ tone: 'info', title: 'Copied to clipboard' })}>Copy</Button>
+            </div>
+            <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: tokens.text.secondary, background: tokens.bg.surface, padding: '6px 8px', borderRadius: 6, wordBreak: 'break-all' }}>{k.key}</div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 10, color: tokens.text.tertiary }}>
+              <span>Created: {k.created}</span>
+              <span>Last used: {k.lastUsed}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function SecuritySection({ tokens }: { tokens: ReturnType<typeof useAdminTheme>['tokens'] }) {
+  return (
+    <Panel tokens={tokens} title="Security Settings" subtitle="Protect your admin panel">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <ToggleRow tokens={tokens} label="Force HTTPS" desc="Redirect all HTTP to HTTPS" checked={true} />
+        <ToggleRow tokens={tokens} label="Two-Factor Authentication" desc="Require TOTP code on login" checked={false} />
+        <ToggleRow tokens={tokens} label="IP Whitelist" desc="Only allow admin login from specified IPs" checked={false} />
+        <Input tokens={tokens} label="Allowed IPs (comma separated)" placeholder="192.168.1.1, 10.0.0.1" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Input tokens={tokens} label="Session Timeout (hours)" type="number" defaultValue="8" />
+          <Input tokens={tokens} label="Max Login Attempts" type="number" defaultValue="5" />
+        </div>
+        <ToggleRow tokens={tokens} label="Activity Logging" desc="Log all admin actions to audit trail" checked={true} />
+        <ToggleRow tokens={tokens} label="Failed Login Alerts" desc="Email admins on repeated failed logins" checked={true} />
+      </div>
+    </Panel>
+  );
+}
+
+function RolesSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  const users = listAdminUsers();
+  return (
+    <Panel tokens={tokens} title="Roles & Permissions" subtitle="Manage admin team members"
+      action={<Button tokens={tokens} variant="primary" size="sm" onClick={() => pushToast({ tone: 'info', title: 'Invite admin', message: 'Send invite email' })}>+ Invite Admin</Button>}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {users.map(u => (
+          <div key={u.uid} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 14px', borderRadius: 10, background: tokens.bg.surfaceAlt,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Avatar tokens={tokens} name={u.name} size={36} color={u.avatarColor} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>{u.name}</div>
+                <div style={{ fontSize: 11, color: tokens.text.secondary, marginTop: 1 }}>{u.email}</div>
+                <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                  <Badge tokens={tokens} tone="neutral" size="sm">{u.role}</Badge>
+                  {u.twoFactorEnabled && <Badge tokens={tokens} tone="success" size="sm" dot>2FA</Badge>}
+                  <StatusPill tokens={tokens} status={u.isActive ? 'Active' : 'Disabled'} />
+                </div>
+              </div>
+            </div>
+            <Button tokens={tokens} variant="outline" size="sm">Edit Role</Button>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function BackupSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  const backups = [
+    { name: 'Automatic daily backup', date: 'Today, 03:00 AM', size: '24.8 MB', type: 'auto' },
+    { name: 'Manual backup before product update', date: 'Yesterday, 5:42 PM', size: '24.5 MB', type: 'manual' },
+    { name: 'Automatic daily backup', date: '2 days ago, 03:00 AM', size: '24.2 MB', type: 'auto' },
+  ];
+  return (
+    <Panel tokens={tokens} title="Backup & Restore" subtitle="Database and file backups"
+      action={<Button tokens={tokens} variant="primary" size="sm" onClick={() => pushToast({ tone: 'success', title: 'Backup started', message: 'Will complete in 2-3 minutes.' })}>Create Backup</Button>}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <ToggleRow tokens={tokens} label="Automatic Daily Backups" desc="Backup database every day at 3 AM" checked={true} />
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Recent Backups</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {backups.map((b, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 8, background: tokens.bg.surfaceAlt }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary }}>{b.name}</div>
+                  <div style={{ fontSize: 10, color: tokens.text.tertiary, marginTop: 1 }}>{b.date} · {b.size}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <Button tokens={tokens} variant="ghost" size="sm" onClick={() => pushToast({ tone: 'info', title: 'Restore started', message: 'This will take 5-10 minutes.' })}>Restore</Button>
+                  <Button tokens={tokens} variant="ghost" size="sm" onClick={() => pushToast({ tone: 'success', title: 'Download started' })}>Download</Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-      <svg
-        viewBox="0 0 24 24"
-        width="18"
-        height="18"
-        fill="none"
-        stroke={theme.colors.textSecondary}
-        strokeWidth="2"
-        aria-hidden
-        style={{ flexShrink: 0 }}
-      >
-        <polyline
-          points="9 6 15 12 9 18"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
+    </Panel>
+  );
+}
+
+function LogsSection({ tokens, pushToast }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; pushToast: (t: any) => void }) {
+  const logTypes = ['Application Logs', 'Error Logs', 'Access Logs', 'Email Logs', 'SMS Logs', 'Webhook Logs', 'Cron Jobs'];
+  return (
+    <Panel tokens={tokens} title="System Logs" subtitle="View application and system logs">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {logTypes.map((log, i) => (
+          <div key={log} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 14px', borderRadius: 10, background: tokens.bg.surfaceAlt,
+          }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>{log}</div>
+              <div style={{ fontSize: 11, color: tokens.text.secondary, marginTop: 1 }}>
+                {`${100 + i * 50} entries · Last updated ${i + 1} hour${i === 0 ? '' : 's'} ago`}
+              </div>
+            </div>
+            <Button tokens={tokens} variant="outline" size="sm" onClick={() => pushToast({ tone: 'info', title: 'Opening log', message: log })}>View</Button>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function ToggleRow({ tokens, label, desc, checked }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; label: string; desc: string; checked: boolean }) {
+  const [enabled, setEnabled] = useState(checked);
+  return (
+    <label style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '10px 12px', borderRadius: 8, background: tokens.bg.surfaceAlt,
+      cursor: 'pointer',
+    }}>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary }}>{label}</div>
+        <div style={{ fontSize: 11, color: tokens.text.secondary, marginTop: 1 }}>{desc}</div>
+      </div>
+      <Toggle tokens={tokens} checked={enabled} onChange={setEnabled} />
+    </label>
   );
 }

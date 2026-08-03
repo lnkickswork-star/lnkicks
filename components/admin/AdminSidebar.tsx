@@ -1,23 +1,27 @@
 /**
- * AdminSidebar — collapsible enterprise navigation.
+ * AdminSidebar — premium enterprise navigation.
  *
- * Structure:
- *  - Logo / brand block (LNKICKS / ADMIN)
- *  - Nav sections grouped by domain (Overview / Catalog / Sales / Customers / Marketing / Insights / System)
- *  - Each item has icon + label + optional badge (counts)
- *  - Collapsible to icon-only rail (72px) — preference persisted
- *  - Mobile: off-canvas drawer triggered from topbar
- *
- * Role-aware: items requiring permissions the user lacks are hidden.
+ * Features:
+ *  - Searchable (filter items by typing)
+ *  - Collapsible to icon rail (preference persisted)
+ *  - Recent pages (auto-tracked via localStorage)
+ *  - Favorites (star toggle on hover)
+ *  - Keyboard shortcuts (Cmd/Ctrl+B to toggle, Cmd+K for command palette)
+ *  - Grouped sections with role-aware visibility
+ *  - Active page highlight with left accent bar
+ *  - Badge counts on items (orders pending, stock alerts, reviews pending)
+ *  - Mobile: off-canvas drawer with overlay
+ *  - Smooth collapse animation
  */
 
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { AdminThemeTokens, AdminRole, Permission } from '@/lib/admin/types';
 import { can } from '@/lib/admin/types';
+import { SearchInput, Badge } from './ui';
 
 export interface NavItem {
   href: string;
@@ -26,6 +30,7 @@ export interface NavItem {
   badge?: string | number;
   badgeTone?: 'info' | 'warning' | 'critical' | 'success';
   permission?: Permission;
+  shortcut?: string;
 }
 
 export interface NavSection {
@@ -37,24 +42,24 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { href: '/dashboard', label: 'Dashboard', icon: 'grid', permission: 'dashboard.view' },
-      { href: '/reports-analytics', label: 'Reports & Analytics', icon: 'chart', permission: 'report.view' },
+      { href: '/dashboard', label: 'Dashboard', icon: 'grid', permission: 'dashboard.view', shortcut: 'G D' },
+      { href: '/reports-analytics', label: 'Reports & Analytics', icon: 'chart', permission: 'report.view', shortcut: 'G R' },
     ],
   },
   {
     title: 'Catalog',
     items: [
-      { href: '/products-management', label: 'Products', icon: 'box', permission: 'product.edit' },
-      { href: '/add-product', label: 'Add Product', icon: 'plus-circle', permission: 'product.create' },
+      { href: '/products-management', label: 'Products', icon: 'box', permission: 'product.edit', shortcut: 'G P' },
+      { href: '/add-product', label: 'Add Product', icon: 'plus-circle', permission: 'product.create', shortcut: 'N P' },
       { href: '/flash-sale-settings', label: 'Flash Sale', icon: 'flame', permission: 'product.edit' },
     ],
   },
   {
     title: 'Sales',
     items: [
-      { href: '/orders-management', label: 'Orders', icon: 'cart', badge: '87', badgeTone: 'warning', permission: 'order.view' },
+      { href: '/orders-management', label: 'Orders', icon: 'cart', badge: '87', badgeTone: 'warning', permission: 'order.view', shortcut: 'G O' },
       { href: '/track-order', label: 'Track Order', icon: 'truck', permission: 'order.view' },
-      { href: '/customers-management', label: 'Customers', icon: 'users', permission: 'customer.view' },
+      { href: '/customers-management', label: 'Customers', icon: 'users', permission: 'customer.view', shortcut: 'G C' },
     ],
   },
   {
@@ -62,7 +67,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/admin/banners', label: 'Banners', icon: 'image', permission: 'banner.manage' },
       { href: '/admin/coupons', label: 'Coupons', icon: 'ticket', permission: 'coupon.create' },
-      { href: '/admin/seo', label: 'SEO Center', icon: 'search', permission: 'seo.manage' },
+      { href: '/admin/seo', label: 'SEO Center', icon: 'search', permission: 'seo.manage', shortcut: 'G S' },
       { href: '/admin/reviews', label: 'Reviews', icon: 'star', badge: '12', badgeTone: 'info', permission: 'review.moderate' },
       { href: '/admin/notifications', label: 'Notifications', icon: 'bell', permission: 'notification.send' },
     ],
@@ -77,7 +82,7 @@ const SECTIONS: NavSection[] = [
   {
     title: 'System',
     items: [
-      { href: '/settings-panel', label: 'Settings', icon: 'settings', permission: 'settings.manage' },
+      { href: '/settings-panel', label: 'Settings', icon: 'settings', permission: 'settings.manage', shortcut: 'G ,' },
       { href: '/admin/audit', label: 'Audit Log', icon: 'shield', permission: 'audit.view' },
     ],
   },
@@ -119,20 +124,65 @@ interface Props {
   onCloseMobile: () => void;
 }
 
+const RECENT_KEY = 'lnk_admin_recent_pages';
+const FAV_KEY = 'lnk_admin_favorites';
+
 export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobile }: Props) {
   const pathname = usePathname();
   const [internalCollapsed, setInternalCollapsed] = useState(collapsed);
+  const [query, setQuery] = useState('');
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [recent, setRecent] = useState<string[]>([]);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  // Persist collapse preference
+  // Load persisted state
   useEffect(() => {
     try {
-      localStorage.setItem('lnk_admin_sidebar_collapsed', String(internalCollapsed));
+      const c = localStorage.getItem('lnk_admin_sidebar_collapsed');
+      if (c !== null) setInternalCollapsed(c === 'true');
+      const f = localStorage.getItem(FAV_KEY);
+      if (f) setFavorites(new Set(JSON.parse(f)));
+      const r = localStorage.getItem(RECENT_KEY);
+      if (r) setRecent(JSON.parse(r));
     } catch { /* noop */ }
+  }, []);
+
+  // Persist collapse
+  useEffect(() => {
+    try { localStorage.setItem('lnk_admin_sidebar_collapsed', String(internalCollapsed)); } catch { /* noop */ }
   }, [internalCollapsed]);
 
+  // Track recent pages
   useEffect(() => {
-    const stored = localStorage.getItem('lnk_admin_sidebar_collapsed');
-    if (stored !== null) setInternalCollapsed(stored === 'true');
+    if (!pathname) return;
+    setRecent(prev => {
+      const next = [pathname, ...prev.filter(p => p !== pathname)].slice(0, 5);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  }, [pathname]);
+
+  // Persist favorites
+  useEffect(() => {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favorites))); } catch { /* noop */ }
+  }, [favorites]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      // Cmd/Ctrl+B → toggle collapse (desktop)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b' && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setInternalCollapsed(v => !v);
+      }
+      // Cmd/Ctrl+/ → focus sidebar search
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, []);
 
   const isCollapsed = internalCollapsed && !mobileOpen;
@@ -142,6 +192,37 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
     return pathname === href || pathname.startsWith(href + '/');
   }
 
+  function toggleFavorite(href: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(href)) next.delete(href); else next.add(href);
+      return next;
+    });
+  }
+
+  // Build filtered list
+  const allItems = useMemo(() => SECTIONS.flatMap(s => s.items), []);
+  const favoriteItems = useMemo(() => allItems.filter(i => favorites.has(i.href)), [allItems, favorites]);
+  const recentItems = useMemo(() =>
+    recent.map(href => allItems.find(i => i.href === href)).filter(Boolean) as typeof allItems,
+    [recent, allItems]);
+
+  const filteredSections = useMemo(() => {
+    if (!query.trim()) return SECTIONS;
+    const q = query.toLowerCase();
+    return SECTIONS.map(s => ({
+      ...s,
+      items: s.items.filter(i =>
+        i.label.toLowerCase().includes(q) || i.href.toLowerCase().includes(q)
+      ),
+    })).filter(s => s.items.length > 0);
+  }, [query]);
+
+  // Reset focus when query changes
+  useEffect(() => { /* placeholder for future focus management */ }, [query]);
+
   const badgeColors = (tone?: string) => {
     switch (tone) {
       case 'warning': return { bg: tokens.status.warningBg, fg: tokens.status.warning };
@@ -150,6 +231,90 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
       default: return { bg: tokens.status.infoBg, fg: tokens.status.info };
     }
   };
+
+  function renderItem(item: NavItem, withStar = true) {
+    const active = isActive(item.href);
+    const isFav = favorites.has(item.href);
+    const bc = badgeColors(item.badgeTone);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            onCloseMobile();
+          }
+        }}
+        title={isCollapsed ? item.label : undefined}
+        className="nav-item"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: isCollapsed ? '9px 0' : '7px 10px',
+          justifyContent: isCollapsed ? 'center' : 'flex-start',
+          borderRadius: 8,
+          background: active ? tokens.bg.hover : 'transparent',
+          color: active ? tokens.text.primary : tokens.text.secondary,
+          textDecoration: 'none',
+          fontWeight: active ? 600 : 500,
+          fontSize: 13,
+          fontFamily: 'Inter, system-ui, sans-serif',
+          transition: 'background 120ms ease, color 120ms ease',
+          position: 'relative',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = tokens.bg.hover; }}
+        onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+      >
+        {active && !isCollapsed && (
+          <span style={{
+            position: 'absolute', left: 0, top: '50%',
+            transform: 'translateY(-50%)',
+            width: 3, height: 18, borderRadius: 2,
+            background: tokens.text.primary,
+          }} />
+        )}
+        <Icon name={item.icon} color={active ? tokens.text.primary : tokens.text.secondary} size={18} />
+        {!isCollapsed && (
+          <>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {item.label}
+            </span>
+            {item.badge && (
+              <Badge tokens={tokens} tone={item.badgeTone ?? 'info'} size="sm">{item.badge}</Badge>
+            )}
+            {withStar && (
+              <button
+                onClick={(e) => toggleFavorite(item.href, e)}
+                aria-label={isFav ? 'Remove favorite' : 'Add favorite'}
+                title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: isFav ? tokens.status.warning : tokens.text.tertiary,
+                  padding: 0, display: 'flex',
+                  opacity: isFav ? 1 : 0,
+                  transition: 'opacity 140ms ease',
+                }}
+                className="nav-star"
+              >
+                <svg width={12} height={12} viewBox="0 0 24 24" fill={isFav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" />
+                </svg>
+              </button>
+            )}
+          </>
+        )}
+        {item.badge && isCollapsed && (
+          <span style={{
+            position: 'absolute', top: 4, right: 4,
+            width: 6, height: 6, borderRadius: '50%',
+            background: bc.fg,
+          }} />
+        )}
+      </Link>
+    );
+  }
 
   return (
     <>
@@ -162,36 +327,31 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
             background: tokens.bg.overlay,
             zIndex: 100,
             backdropFilter: 'blur(2px)',
+            animation: 'admin-fade-in 160ms ease',
           }}
         />
       )}
 
       <aside
+        className="admin-sidebar"
+        data-collapsed={isCollapsed}
+        data-mobile-open={mobileOpen}
         style={{
-          width: isCollapsed ? 72 : 248,
+          width: isCollapsed ? 72 : 256,
           background: tokens.bg.sidebar,
           borderRight: `1px solid ${tokens.border.subtle}`,
           display: 'flex',
           flexDirection: 'column',
-          transition: 'width 200ms cubic-bezier(0.16,1,0.3,1)',
+          transition: 'width 200ms cubic-bezier(0.16,1,0.3,1), transform 220ms cubic-bezier(0.16,1,0.3,1)',
           zIndex: 110,
           flexShrink: 0,
           overflow: 'hidden',
-          ...(mobileOpen
-            ? {
-                position: 'fixed',
-                left: 0,
-                top: 0,
-                height: '100vh',
-                boxShadow: tokens.shadow.lg,
-              }
-            : {
-                position: 'sticky',
-                top: 0,
-                height: '100vh',
-              }),
+          position: mobileOpen ? 'fixed' : 'sticky',
+          left: mobileOpen ? 0 : 'auto',
+          top: mobileOpen ? 0 : 'auto',
+          height: '100vh',
+          boxShadow: mobileOpen ? tokens.shadow.lg : 'none',
         }}
-        className="admin-sidebar"
       >
         {/* Brand */}
         <div
@@ -199,42 +359,58 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            padding: '20px 18px',
+            padding: '16px 16px',
             borderBottom: `1px solid ${tokens.border.subtle}`,
             minHeight: 64,
+            flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: tokens.text.primary,
-              color: tokens.bg.app,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 900, fontSize: 14, fontFamily: 'Inter, sans-serif',
-              flexShrink: 0,
-              letterSpacing: '-0.05em',
-            }}
-          >
-            L
-          </div>
-          {!isCollapsed && (
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{
-                fontSize: 14, fontWeight: 800, color: tokens.text.primary,
-                fontFamily: 'Inter, sans-serif', letterSpacing: '-0.02em',
-                lineHeight: 1,
-              }}>
-                LNKICKS
-              </div>
-              <div style={{
-                fontSize: 10, fontWeight: 600, color: tokens.text.tertiary,
-                letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 3,
-              }}>
-                Admin Suite
-              </div>
+          <Link href="/dashboard" aria-label="Dashboard home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <div
+              style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: tokens.text.primary,
+                color: tokens.bg.app,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 900, fontSize: 14, fontFamily: 'Inter, sans-serif',
+                flexShrink: 0,
+                letterSpacing: '-0.05em',
+              }}
+            >
+              L
             </div>
-          )}
+            {!isCollapsed && (
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{
+                  fontSize: 14, fontWeight: 800, color: tokens.text.primary,
+                  fontFamily: 'Inter, sans-serif', letterSpacing: '-0.02em',
+                  lineHeight: 1,
+                }}>
+                  LNKICKS
+                </div>
+                <div style={{
+                  fontSize: 10, fontWeight: 600, color: tokens.text.tertiary,
+                  letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 3,
+                }}>
+                  Admin Suite
+                </div>
+              </div>
+            )}
+          </Link>
         </div>
+
+        {/* Search */}
+        {!isCollapsed && (
+          <div style={{ padding: '12px 14px 8px', flexShrink: 0 }}>
+            <SearchInput
+              tokens={tokens}
+              value={query}
+              onChange={setQuery}
+              placeholder="Search menu…  ⌘/"
+              style={{ width: '100%' }}
+            />
+          </div>
+        )}
 
         {/* Nav */}
         <nav
@@ -243,15 +419,51 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
             flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
-            padding: '12px 8px',
+            padding: '8px 8px 12px',
             scrollbarWidth: 'thin',
           }}
+          className="admin-nav-scroll"
         >
-          {SECTIONS.map(section => {
+          {/* Favorites */}
+          {!isCollapsed && !query && favoriteItems.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, color: tokens.text.tertiary,
+                textTransform: 'uppercase', letterSpacing: 1.2,
+                padding: '4px 10px 6px',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <svg width={9} height={9} viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" /></svg>
+                Favorites
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {favoriteItems.map(item => renderItem(item))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent */}
+          {!isCollapsed && !query && recentItems.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, color: tokens.text.tertiary,
+                textTransform: 'uppercase', letterSpacing: 1.2,
+                padding: '4px 10px 6px',
+              }}>
+                Recent
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {recentItems.map(item => renderItem(item, false))}
+              </div>
+            </div>
+          )}
+
+          {/* Sections */}
+          {filteredSections.map(section => {
             const visibleItems = section.items.filter(item => !item.permission || can(role, item.permission));
             if (visibleItems.length === 0) return null;
             return (
-              <div key={section.title} style={{ marginBottom: 18 }}>
+              <div key={section.title} style={{ marginBottom: 14 }}>
                 {!isCollapsed && (
                   <div style={{
                     fontSize: 10, fontWeight: 700, color: tokens.text.tertiary,
@@ -262,89 +474,26 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
                     {section.title}
                   </div>
                 )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {visibleItems.map(item => {
-                    const active = isActive(item.href);
-                    const bc = badgeColors(item.badgeTone);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => {
-                          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                            onCloseMobile();
-                          }
-                        }}
-                        title={isCollapsed ? item.label : undefined}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 10,
-                          padding: isCollapsed ? '9px 0' : '8px 10px',
-                          justifyContent: isCollapsed ? 'center' : 'flex-start',
-                          borderRadius: 8,
-                          background: active ? tokens.bg.hover : 'transparent',
-                          color: active ? tokens.text.primary : tokens.text.secondary,
-                          textDecoration: 'none',
-                          fontWeight: active ? 600 : 500,
-                          fontSize: 13,
-                          fontFamily: 'Inter, system-ui, sans-serif',
-                          transition: 'background 120ms ease, color 120ms ease',
-                          position: 'relative',
-                          whiteSpace: 'nowrap',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!active) e.currentTarget.style.background = tokens.bg.hover;
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!active) e.currentTarget.style.background = 'transparent';
-                        }}
-                      >
-                        {active && !isCollapsed && (
-                          <span style={{
-                            position: 'absolute', left: 0, top: '50%',
-                            transform: 'translateY(-50%)',
-                            width: 3, height: 18, borderRadius: 2,
-                            background: tokens.text.primary,
-                          }} />
-                        )}
-                        <Icon name={item.icon} color={active ? tokens.text.primary : tokens.text.secondary} size={18} />
-                        {!isCollapsed && (
-                          <>
-                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {item.label}
-                            </span>
-                            {item.badge && (
-                              <span style={{
-                                fontSize: 10, fontWeight: 700,
-                                background: bc.bg, color: bc.fg,
-                                padding: '1px 6px', borderRadius: 6,
-                                minWidth: 18, textAlign: 'center',
-                              }}>
-                                {item.badge}
-                              </span>
-                            )}
-                          </>
-                        )}
-                        {item.badge && isCollapsed && (
-                          <span style={{
-                            position: 'absolute', top: 4, right: 4,
-                            width: 6, height: 6, borderRadius: '50%',
-                            background: bc.fg,
-                          }} />
-                        )}
-                      </Link>
-                    );
-                  })}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {visibleItems.map(item => renderItem(item))}
                 </div>
               </div>
             );
           })}
+
+          {/* No results */}
+          {!isCollapsed && query && filteredSections.length === 0 && (
+            <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: tokens.text.tertiary }}>
+              No matches for "{query}"
+            </div>
+          )}
         </nav>
 
         {/* Collapse toggle (desktop only) */}
         <button
           onClick={() => setInternalCollapsed(v => !v)}
+          aria-label={internalCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={`${internalCollapsed ? 'Expand' : 'Collapse'} (Ctrl+B)`}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: 8,
@@ -354,35 +503,46 @@ export function AdminSidebar({ tokens, role, collapsed, mobileOpen, onCloseMobil
             borderTop: `1px solid ${tokens.border.subtle}`,
             color: tokens.text.secondary,
             cursor: 'pointer',
-            fontSize: 12, fontWeight: 600,
+            fontSize: 11, fontWeight: 600,
             fontFamily: 'Inter, sans-serif',
           }}
           className="admin-collapse-toggle"
         >
           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-            style={{ transform: isCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }}>
+            style={{ transform: internalCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }}>
             <path d="M15 18l-6-6 6-6" />
           </svg>
-          {!isCollapsed && <span>Collapse</span>}
+          {!internalCollapsed && <span>Collapse</span>}
         </button>
-
-        <style jsx>{`
-          @media (max-width: 1023px) {
-            :global(.admin-sidebar) {
-              position: fixed !important;
-              left: 0;
-              top: 0;
-              height: 100vh;
-              transform: translateX(${mobileOpen ? '0' : '-100%'});
-              transition: transform 220ms cubic-bezier(0.16,1,0.3,1);
-              box-shadow: ${tokens.shadow.lg};
-            }
-            :global(.admin-collapse-toggle) {
-              display: none !important;
-            }
-          }
-        `}</style>
       </aside>
+
+      <style jsx>{`
+        .nav-item:hover .nav-star { opacity: 1 !important; }
+      `}</style>
+      <style jsx global>{`
+        .admin-nav-scroll::-webkit-scrollbar { width: 6px; }
+        .admin-nav-scroll::-webkit-scrollbar-track { background: transparent; }
+        .admin-nav-scroll::-webkit-scrollbar-thumb { background: ${tokens.border.subtle}; border-radius: 3px; }
+        .admin-nav-scroll::-webkit-scrollbar-thumb:hover { background: ${tokens.border.strong}; }
+        @keyframes admin-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 1023px) {
+          .admin-sidebar[data-mobile-open="false"] {
+            position: fixed !important;
+            left: 0; top: 0;
+            height: 100vh;
+            transform: translateX(-100%);
+            box-shadow: ${tokens.shadow.lg};
+          }
+          .admin-sidebar[data-mobile-open="true"] {
+            position: fixed !important;
+            left: 0; top: 0;
+            height: 100vh;
+            transform: translateX(0);
+            box-shadow: ${tokens.shadow.lg};
+          }
+          .admin-collapse-toggle { display: none !important; }
+        }
+      `}</style>
     </>
   );
 }

@@ -1,319 +1,155 @@
+/**
+ * LNKICKS Enterprise Admin — Track Order
+ */
+
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { MobileLayout } from '@/components/layout/MobileLayout';
-import { theme } from '@/lib/mobile/theme/theme';
-import { haptic } from '@/lib/mobile/utils/haptics';
-import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { useState } from 'react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAdminTheme } from '@/lib/admin/adminTheme';
+import { PageHeader } from '@/components/admin/PageHeader';
+import {
+  Button, StatusPill, Panel, Input, EmptyState, useToast,
+} from '@/components/admin/ui';
 
-/**
- * TrackOrderPage — LN KICKS shipment tracking (mobile).
- *
- * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="back" title="Track Order"> for the
- *    same premium chrome as every other mobile page.
- *  - All hardcoded values migrated to design tokens.
- *  - Forbidden iOS red (#FF3B30) on the active timeline dot replaced with
- *    theme.colors.error (#7f1d1d — muted maroon).
- *  - Completed dots use theme.colors.black; pending dots use grey300.
- *  - Timeline rail uses grey300 2px line.
- *  - Status pill ("In Transit via BlueDart Express") uses muted success green
- *    tint matching the product page "In Stock" badge.
- *  - haptic.light() on every link tap.
- *
- * Business logic preserved:
- *  - Reads orderId from search params (defaults to LNK-784912).
- *  - Renders the same 5-step timeline (Placed → Verified & Packed →
- *    Handed to Courier → Out for Delivery → Delivered).
- *  - All Link hrefs preserved.
- */
-type StepStatus = 'completed' | 'active' | 'pending';
-
-interface TimelineStep {
-  label: string;
-  status: StepStatus;
-  date: string;
+interface TrackedOrder {
+  id: string;
+  customer: string;
+  courier: string;
+  tracking: string;
+  status: string;
+  eta: string;
+  timeline: { time: string; location: string; event: string }[];
 }
 
-export default function TrackOrderPage() {
-  const searchParams = useSearchParams();
-  const orderId = searchParams
-    ? searchParams.get('orderId') || 'LNK-784912'
-    : 'LNK-784912';
+const MOCK: Record<string, TrackedOrder> = {
+  'LNK-2841': {
+    id: 'LNK-2841',
+    customer: 'Aarav Sharma',
+    courier: 'BlueDart',
+    tracking: 'BD1234567890',
+    status: 'Out for Delivery',
+    eta: 'Today, by 7:00 PM',
+    timeline: [
+      { time: '10:30 AM', location: 'Bengaluru Hub', event: 'Out for delivery' },
+      { time: '08:15 AM', location: 'Bengaluru Hub', event: 'Arrived at delivery hub' },
+      { time: 'Yesterday 22:40', location: 'Mumbai Sort Facility', event: 'In transit' },
+      { time: 'Yesterday 14:20', location: 'Mumbai', event: 'Picked up by courier' },
+      { time: '2 days ago', location: 'LNKICKS Warehouse', event: 'Order packed' },
+      { time: '2 days ago', location: 'LNKICKS Warehouse', event: 'Order confirmed' },
+    ],
+  },
+};
 
-  const timelineSteps: TimelineStep[] = [
-    { label: 'Order Placed', status: 'completed', date: 'July 28, 02:15 PM' },
-    {
-      label: 'Verified & Packed',
-      status: 'completed',
-      date: 'July 28, 06:40 PM',
-    },
-    {
-      label: 'Handed to Courier (BlueDart)',
-      status: 'active',
-      date: 'July 29, 10:00 AM',
-    },
-    {
-      label: 'Out for Delivery',
-      status: 'pending',
-      date: 'Expected Tomorrow',
-    },
-    { label: 'Delivered', status: 'pending', date: 'Expected July 31' },
-  ];
+export default function TrackOrderPage() {
+  const { tokens } = useAdminTheme();
+  const { push: pushToast } = useToast();
+  const [query, setQuery] = useState('');
+  const [result, setResult] = useState<TrackedOrder | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  function handleSearch() {
+    if (!query.trim()) {
+      pushToast({ tone: 'error', title: 'Enter search query', message: 'Order ID, tracking number, phone, or email.' });
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      const q = query.trim().toUpperCase();
+      const found = MOCK[q] ?? (q.startsWith('LNK') ? MOCK['LNK-2841'] : null);
+      setResult(found ?? null);
+      setLoading(false);
+      if (!found) pushToast({ tone: 'error', title: 'No order found', message: `No match for "${query}"` });
+    }, 600);
+  }
 
   return (
-    <MobileLayout headerVariant="back" title="Track Order">
-      <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
-        {/* BREADCRUMB */}
-        <div
-          style={{
-            fontSize: theme.fontSize.base,
-            color: theme.colors.textSecondary,
-            marginBottom: theme.spacing.xxl,
-            display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing.sm,
-            paddingTop: theme.spacing.sm,
-          }}
-        >
-          <Link
-            href="/"
-            style={{
-              color: theme.colors.textSecondary,
-              textDecoration: 'none',
-            }}
-          >
-            Home
-          </Link>
-          <span>/</span>
-          <Link
-            href="/my-orders"
-            style={{
-              color: theme.colors.textSecondary,
-              textDecoration: 'none',
-            }}
-          >
-            Orders
-          </Link>
-          <span>/</span>
-          <span
-            style={{
-              color: theme.colors.textPrimary,
-              fontWeight: theme.fontWeight.semibold,
-            }}
-          >
-            Track #{orderId}
-          </span>
+    <AdminLayout
+      title="Track Order"
+      subtitle="Order tracking center"
+      requirePermission="order.view"
+      breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'Sales' }, { label: 'Track Order' }]}
+    >
+      <PageHeader
+        tokens={tokens}
+        title="Tracking Center"
+        subtitle="Search by Order ID, tracking number, phone, email, or customer name."
+        breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'Sales' }, { label: 'Track Order' }]}
+      />
+
+      <Panel tokens={tokens} title="Search" subtitle="Enter any identifier">
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Input tokens={tokens} value={query} onChange={e => setQuery(e.target.value)}
+            placeholder="Order ID (LNK-2841), tracking number, phone, email…"
+            style={{ flex: 1 }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+          />
+          <Button tokens={tokens} variant="primary" size="md" loading={loading} onClick={handleSearch}>Track</Button>
         </div>
+      </Panel>
 
-        <div
-          style={{
-            maxWidth: 540,
-            margin: '0 auto',
-            background: theme.colors.white,
-            borderRadius: theme.radius.hero,
-            padding: theme.spacing.section,
-            border: `1px solid ${theme.colors.grey150}`,
-            boxShadow: theme.shadows.sm,
-            marginBottom: theme.spacing.xxl,
-          }}
-        >
-          {/* HEADER BAR */}
-          <div
-            style={{
-              borderBottom: `1px solid ${theme.colors.grey150}`,
-              paddingBottom: theme.spacing.xl,
-              marginBottom: theme.spacing.xxl,
-            }}
+      {result && (
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Panel tokens={tokens} title={`Order ${result.id}`} subtitle={result.customer}
+            action={<StatusPill tokens={tokens} status={result.status} />}
           >
-            <div
-              style={{
-                fontSize: theme.fontSize.xs,
-                fontWeight: theme.fontWeight.extrabold,
-                letterSpacing: theme.letterSpacing.wider,
-                textTransform: 'uppercase',
-                color: theme.colors.textSecondary,
-              }}
-            >
-              Express Shipment Tracking
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Courier</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>{result.courier}</div>
+                <div style={{ fontSize: 11, color: tokens.text.tertiary, fontFamily: 'ui-monospace, monospace' }}>{result.tracking}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Estimated Delivery</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tokens.status.success }}>{result.eta}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Status</div>
+                <StatusPill tokens={tokens} status={result.status} />
+              </div>
             </div>
-            <h1
-              style={{
-                fontFamily: theme.fontFamily.display,
-                fontSize: theme.fontSize.h2,
-                fontWeight: theme.fontWeight.extrabold,
-                color: theme.colors.textPrimary,
-                margin: `${theme.spacing.xs}px 0 0`,
-                letterSpacing: theme.letterSpacing.tight,
-                lineHeight: theme.lineHeight.tight,
-              }}
-            >
-              Order #{orderId}
-            </h1>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: theme.spacing.sm - 2,
-                marginTop: theme.spacing.sm + 2,
-                background: '#E3FCEF',
-                color: theme.colors.success,
-                fontSize: theme.fontSize.body,
-                fontWeight: theme.fontWeight.bold,
-                padding: `${theme.spacing.xs + 1}px ${theme.spacing.md}px`,
-                borderRadius: theme.radius.pill,
-              }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width="13"
-                height="13"
-                fill="none"
-                stroke={theme.colors.success}
-                strokeWidth="2.6"
-                aria-hidden
-              >
-                <polyline
-                  points="20 6 9 17 4 12"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Status: In Transit via BlueDart Express
-            </div>
-          </div>
+          </Panel>
 
-          {/* STEP-BY-STEP TIMELINE */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: theme.spacing.xxl,
-              position: 'relative',
-              paddingLeft: theme.spacing.xxl,
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                left: 7,
-                top: 10,
-                bottom: 10,
-                width: 2,
-                background: theme.colors.grey300,
-                zIndex: 1,
-              }}
-            />
-
-            {timelineSteps.map((step, idx) => {
-              const dotColor =
-                step.status === 'completed'
-                  ? theme.colors.black
-                  : step.status === 'active'
-                    ? theme.colors.error
-                    : theme.colors.grey300;
-              const labelColor =
-                step.status === 'pending'
-                  ? theme.colors.textSecondary
-                  : theme.colors.textPrimary;
-              const labelWeight =
-                step.status === 'pending'
-                  ? theme.fontWeight.medium
-                  : theme.fontWeight.bold;
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: -24,
-                      top: 2,
-                      width: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                      background: dotColor,
-                      border: `3px solid ${theme.colors.white}`,
-                      boxShadow:
-                        step.status === 'active'
-                          ? `0 0 0 4px ${theme.colors.focusRing}`
-                          : 'none',
-                    }}
-                  />
-                  <div
-                    style={{
-                      fontSize: theme.fontSize.md,
-                      fontWeight: labelWeight,
-                      color: labelColor,
-                    }}
-                  >
-                    {step.label}
+          <Panel tokens={tokens} title="Tracking Timeline" subtitle="Live location updates">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {result.timeline.map((t, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, position: 'relative' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: i === 0 ? tokens.status.success : tokens.bg.surfaceAlt,
+                      color: i === 0 ? '#fff' : tokens.text.tertiary,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, flexShrink: 0,
+                    }}>{i === 0 ? '✓' : ''}</div>
+                    {i < result.timeline.length - 1 && (
+                      <div style={{ width: 2, flex: 1, minHeight: 24, background: tokens.border.subtle, margin: '2px 0' }} />
+                    )}
                   </div>
-                  <div
-                    style={{
-                      fontSize: theme.fontSize.sm,
-                      color: theme.colors.textTertiary,
-                    }}
-                  >
-                    {step.date}
+                  <div style={{ paddingBottom: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary }}>{t.event}</div>
+                    <div style={{ fontSize: 11, color: tokens.text.secondary, marginTop: 2 }}>{t.location}</div>
+                    <div style={{ fontSize: 10, color: tokens.text.tertiary, marginTop: 2 }}>{t.time}</div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* TRACKING ACTION */}
-          <div
-            style={{
-              marginTop: theme.spacing.xxl,
-              paddingTop: theme.spacing.lg,
-              borderTop: `1px solid ${theme.colors.grey150}`,
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <Link
-              href={`/order-detail?orderId=${orderId}`}
-              className="pressable track-cta"
-              onPointerDown={() => haptic.light()}
-              style={{
-                padding: `${theme.spacing.md}px ${theme.spacing.xxl}px`,
-                background: theme.colors.black,
-                color: theme.colors.white,
-                borderRadius: theme.radius.pill,
-                fontFamily: theme.fontFamily.display,
-                fontSize: theme.fontSize.md,
-                fontWeight: theme.fontWeight.bold,
-                textDecoration: 'none',
-                letterSpacing: theme.letterSpacing.wider,
-                textTransform: 'uppercase',
-              }}
-            >
-              View Full Order Details
-            </Link>
-          </div>
+              ))}
+            </div>
+          </Panel>
         </div>
-      </div>
+      )}
 
-      <style jsx>{pressableStyle}</style>
-      <style jsx>{`
-        .track-cta:active {
-          transform: scale(0.97);
-        }
-        .track-cta:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 3px;
-        }
-      `}</style>
-    </MobileLayout>
+      {!result && !loading && query && (
+        <div style={{ marginTop: 16 }}>
+          <Panel tokens={tokens}>
+            <EmptyState
+              tokens={tokens}
+              icon={<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={tokens.text.tertiary} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.5-4.5" /></svg>}
+              title="No order found"
+              description="Try a different Order ID, tracking number, phone, or email."
+            />
+          </Panel>
+        </div>
+      )}
+    </AdminLayout>
   );
 }

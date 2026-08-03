@@ -1,12 +1,14 @@
 /**
  * LNKICKS Enterprise Admin — Dashboard Home
  * ------------------------------------------------------------
- * 12 KPI cards · Sales trend (30d) · Order status donut ·
- * Top 10 products bar · Traffic sources · Trending/Best-seller/
- * Low-stock/Out-of-stock tables · Live real-time counters.
- *
- * All data comes from lib/admin/adminData.ts (mock, deterministic).
- * Swap with real API calls without touching the UI.
+ * Premium executive overview with:
+ *  - 12 KPI cards (responsive grid, hover detail, sparklines)
+ *  - Sales trend line chart (7d/30d/90d toggle, comparison, export)
+ *  - Order status donut + Top products bar + Traffic sources
+ *  - 4 data tables: Trending / Best Sellers / Low Stock / Out of Stock
+ *  - Live real-time counters updating every 8s
+ *  - Quick action bar
+ *  - Page header with breadcrumb
  */
 
 'use client';
@@ -18,6 +20,8 @@ import { KPICard } from '@/components/admin/widgets/KPICard';
 import { LineChart } from '@/components/admin/charts/LineChart';
 import { BarChart } from '@/components/admin/charts/BarChart';
 import { DonutChart } from '@/components/admin/charts/DonutChart';
+import { PageHeader } from '@/components/admin/PageHeader';
+import { Panel, Badge, Button, Tabs, EmptyState, useToast } from '@/components/admin/ui';
 import {
   getKPIs, getSalesTrend, getOrderStatusBreakdown,
   getTopProducts, getStockAlerts, getTrafficSources, getLiveDelta,
@@ -26,6 +30,7 @@ import Link from 'next/link';
 
 export default function EnterpriseDashboardPage() {
   const { tokens } = useAdminTheme();
+  const { push: pushToast } = useToast();
   const [kpis, setKpis] = useState(() => getKPIs());
   const [trend] = useState(() => getSalesTrend(30));
   const [statusBreakdown] = useState(() => getOrderStatusBreakdown());
@@ -36,6 +41,7 @@ export default function EnterpriseDashboardPage() {
   const [liveOrders, setLiveOrders] = useState(0);
   const [liveUsers, setLiveUsers] = useState(0);
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [compare, setCompare] = useState(false);
 
   // Live updates — every 8s apply a small delta
   useEffect(() => {
@@ -44,13 +50,11 @@ export default function EnterpriseDashboardPage() {
       setLiveSales(v => v + d.sales);
       setLiveOrders(v => v + d.orders);
       setLiveUsers(v => v + d.users);
-      // nudge Today's Sales KPI
       setKpis(prev => prev.map(k => {
         if (k.key === 'today_sales') {
           const newValue = k.value + d.sales;
           return {
-            ...k,
-            value: newValue,
+            ...k, value: newValue,
             formattedValue: `₹${newValue.toLocaleString('en-IN')}`,
             trend: [...k.trend.slice(1), Math.round(newValue / 14)],
           };
@@ -74,9 +78,11 @@ export default function EnterpriseDashboardPage() {
     const slice = range === '7d' ? trend.slice(-7) : range === '90d' ? trend : trend.slice(-30);
     return slice.map(p => ({
       label: p.label,
-      values: [p.revenue, p.orders * 4500], // revenue + approximate order value
+      values: compare
+        ? [p.revenue, p.orders * 4500, p.visitors * 8]
+        : [p.revenue, p.orders * 4500],
     }));
-  }, [trend, range]);
+  }, [trend, range, compare]);
 
   const topProductsBar = useMemo(() =>
     topProducts.slice(0, 6).map(p => ({
@@ -93,15 +99,40 @@ export default function EnterpriseDashboardPage() {
   const formatINR = (v: number) => `₹${(v / 1000).toFixed(0)}k`;
   const formatINRFull = (v: number) => `₹${v.toLocaleString('en-IN')}`;
 
+  function handleExport() {
+    pushToast({ tone: 'success', title: 'Export started', message: 'Dashboard data export will be ready in ~30s.' });
+  }
+
   return (
     <AdminLayout
       title="Dashboard"
-      subtitle="Executive overview · Real-time analytics"
+      subtitle="Real-time executive overview"
       requirePermission="dashboard.view"
+      breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'Dashboard' }]}
     >
+      <PageHeader
+        tokens={tokens}
+        title="Executive Overview"
+        subtitle="Monitor sales, orders, customers, and inventory in real time across your entire marketplace."
+        breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'Dashboard' }]}
+        meta={<Badge tokens={tokens} tone="success" dot>Live</Badge>}
+        actions={
+          <>
+            <Button tokens={tokens} variant="outline" size="md" onClick={handleExport}
+              icon={<svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>}
+            >Export</Button>
+            <Link href="/reports-analytics">
+              <Button tokens={tokens} variant="primary" size="md"
+                iconRight={<svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7" /></svg>}
+              >Full Reports</Button>
+            </Link>
+          </>
+        }
+      />
+
       {/* LIVE TICKER */}
       <div style={{
-        display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap',
+        display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap',
       }}>
         <LiveBadge tokens={tokens} label="Today's Revenue" value={formatINRFull(78250 + liveSales)} tone="success" pulse />
         <LiveBadge tokens={tokens} label="Live Orders" value={`${1420 + liveOrders}`} tone="info" pulse />
@@ -126,33 +157,43 @@ export default function EnterpriseDashboardPage() {
         gap: 16,
         marginBottom: 24,
       }} className="admin-chart-row-1">
-        <Panel tokens={tokens} title="Sales Trend" subtitle="Revenue vs Order Value (last 30 days)" action={
-          <div style={{ display: 'flex', gap: 4, background: tokens.bg.surfaceAlt, borderRadius: 7, padding: 2 }}>
-            {(['7d', '30d', '90d'] as const).map(r => (
-              <button
-                key={r}
-                onClick={() => setRange(r)}
-                style={{
-                  padding: '4px 10px', borderRadius: 5, border: 'none',
-                  background: range === r ? tokens.bg.surface : 'transparent',
-                  color: range === r ? tokens.text.primary : tokens.text.secondary,
-                  fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif',
-                  boxShadow: range === r ? tokens.shadow.sm : 'none',
-                  transition: 'all 120ms ease',
-                }}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        }>
+        <Panel
+          tokens={tokens}
+          title="Sales Trend"
+          subtitle="Revenue vs Order Value"
+          action={
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <Tabs
+                tokens={tokens}
+                size="sm"
+                tabs={[
+                  { key: '7d', label: '7D' },
+                  { key: '30d', label: '30D' },
+                  { key: '90d', label: '90D' },
+                ]}
+                active={range}
+                onChange={(k) => setRange(k as typeof range)}
+              />
+              <Button tokens={tokens} variant="ghost" size="sm"
+                onClick={() => setCompare(v => !v)}
+                icon={<svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>}
+              >{compare ? 'Hide' : 'Compare'}</Button>
+            </div>
+          }
+        >
           <LineChart
             data={trendData}
-            series={[
-              { name: 'Revenue', color: tokens.chart.series[0] },
-              { name: 'Order Value', color: tokens.chart.series[1] },
-            ]}
+            series={compare
+              ? [
+                  { name: 'Revenue', color: tokens.chart.series[0] },
+                  { name: 'Order Value', color: tokens.chart.series[1] },
+                  { name: 'Visitors×8', color: tokens.chart.series[2] },
+                ]
+              : [
+                  { name: 'Revenue', color: tokens.chart.series[0] },
+                  { name: 'Order Value', color: tokens.chart.series[1] },
+                ]
+            }
             tokens={tokens}
             height={280}
             formatValue={formatINR}
@@ -229,25 +270,25 @@ export default function EnterpriseDashboardPage() {
         gap: 16,
         marginBottom: 24,
       }}>
-        <Panel tokens={tokens} title="Trending Products" subtitle="Highest momentum this week" compact>
+        <Panel tokens={tokens} title="Trending Products" subtitle="Highest momentum this week" padding="none">
           <ProductMiniTable tokens={tokens} rows={trendingProducts} />
         </Panel>
 
-        <Panel tokens={tokens} title="Best Sellers" subtitle="Top units sold (all-time)" compact>
+        <Panel tokens={tokens} title="Best Sellers" subtitle="Top units sold (all-time)" padding="none">
           <ProductMiniTable tokens={tokens} rows={bestSellers} />
         </Panel>
 
-        <Panel tokens={tokens} title="Low Stock" subtitle="Restock soon (≤5 units)" compact accent="warning">
+        <Panel tokens={tokens} title="Low Stock" subtitle="Restock soon (≤5 units)" padding="none" accent="warning">
           {lowStock.length === 0 ? (
-            <EmptyState tokens={tokens} text="All products well stocked" />
+            <EmptyState tokens={tokens} title="All products well stocked" description="No items below threshold." />
           ) : (
             <StockTable tokens={tokens} rows={lowStock} />
           )}
         </Panel>
 
-        <Panel tokens={tokens} title="Out of Stock" subtitle="0 units — restock urgently" compact accent="critical">
+        <Panel tokens={tokens} title="Out of Stock" subtitle="0 units — restock urgently" padding="none" accent="critical">
           {outOfStock.length === 0 ? (
-            <EmptyState tokens={tokens} text="No out-of-stock items" />
+            <EmptyState tokens={tokens} title="No out-of-stock items" description="Inventory is healthy." />
           ) : (
             <StockTable tokens={tokens} rows={outOfStock} />
           )}
@@ -263,6 +304,7 @@ export default function EnterpriseDashboardPage() {
         <QuickLink href="/orders-management" label="View Orders" tokens={tokens} />
         <QuickLink href="/admin/seo" label="SEO Center" tokens={tokens} />
         <QuickLink href="/admin/banners" label="Manage Banners" tokens={tokens} />
+        <QuickLink href="/admin/coupons" label="Create Coupon" tokens={tokens} />
         <QuickLink href="/reports-analytics" label="Full Reports" tokens={tokens} />
       </div>
 
@@ -280,64 +322,6 @@ export default function EnterpriseDashboardPage() {
 /* ------------------------------------------------------------------ */
 /* Sub-components                                                      */
 /* ------------------------------------------------------------------ */
-
-function Panel({
-  tokens, title, subtitle, children, action, compact, accent,
-}: {
-  tokens: ReturnType<typeof useAdminTheme>['tokens'];
-  title: string; subtitle?: string; children: React.ReactNode;
-  action?: React.ReactNode; compact?: boolean;
-  accent?: 'warning' | 'critical' | 'success';
-}) {
-  const accentColor = accent === 'warning' ? tokens.status.warning
-    : accent === 'critical' ? tokens.status.error
-    : accent === 'success' ? tokens.status.success
-    : null;
-
-  return (
-    <section style={{
-      background: tokens.bg.surface,
-      border: `1px solid ${tokens.border.subtle}`,
-      borderRadius: 14,
-      boxShadow: tokens.shadow.sm,
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: compact ? '12px 16px' : '16px 20px',
-        borderBottom: `1px solid ${tokens.border.subtle}`,
-        gap: 12,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          {accentColor && (
-            <span style={{ width: 6, height: 24, borderRadius: 3, background: accentColor, flexShrink: 0 }} />
-          )}
-          <div style={{ minWidth: 0 }}>
-            <h3 style={{
-              margin: 0, fontSize: 14, fontWeight: 700, color: tokens.text.primary,
-              fontFamily: 'Inter, sans-serif', letterSpacing: '-0.01em',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
-              {title}
-            </h3>
-            {subtitle && (
-              <p style={{
-                margin: '2px 0 0 0', fontSize: 11, color: tokens.text.secondary,
-                fontFamily: 'Inter, sans-serif', lineHeight: 1.3,
-              }}>
-                {subtitle}
-              </p>
-            )}
-          </div>
-        </div>
-        {action}
-      </div>
-      <div style={{ padding: compact ? '8px 12px 12px' : '16px 20px 20px' }}>
-        {children}
-      </div>
-    </section>
-  );
-}
 
 function LiveBadge({
   tokens, label, value, tone, pulse,
@@ -368,19 +352,17 @@ function LiveBadge({
     }}>
       <span style={{
         width: 8, height: 8, borderRadius: '50%', background: color,
-        boxShadow: pulse ? `0 0 0 0 ${color}` : 'none',
-        animation: pulse ? 'pulse-ring 2s ease-out infinite' : 'none',
       }} />
       <span style={{ color: tokens.text.secondary, fontWeight: 600 }}>{label}:</span>
       <span style={{ color: tokens.text.primary, fontWeight: 700 }}>{value}</span>
-
-      <style jsx>{`
+      {pulse && <style jsx>{`
+        span:first-child { animation: pulse-ring 2s ease-out infinite; }
         @keyframes pulse-ring {
           0% { box-shadow: 0 0 0 0 ${color}80; }
           70% { box-shadow: 0 0 0 6px ${color}00; }
           100% { box-shadow: 0 0 0 0 ${color}00; }
         }
-      `}</style>
+      `}</style>}
     </div>
   );
 }
@@ -466,14 +448,9 @@ function StockTable({
               </Td>
               <Td tokens={tokens} align="right" bold>{p.stock}</Td>
               <Td tokens={tokens} align="center">
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
-                  background: p.status === 'out' ? tokens.status.errorBg : tokens.status.warningBg,
-                  color: p.status === 'out' ? tokens.status.error : tokens.status.warning,
-                  textTransform: 'uppercase', letterSpacing: 0.5,
-                }}>
+                <Badge tokens={tokens} tone={p.status === 'out' ? 'critical' : 'warning'} size="sm" dot>
                   {p.status === 'out' ? 'Out' : 'Low'}
-                </span>
+                </Badge>
               </Td>
             </tr>
           ))}
@@ -490,12 +467,10 @@ function Th({ tokens, align, children }: {
 }) {
   return (
     <th style={{
-      textAlign: align, padding: '6px 8px',
+      textAlign: align, padding: '10px 14px',
       fontSize: 10, fontWeight: 700, color: tokens.text.tertiary,
       textTransform: 'uppercase', letterSpacing: 0.8,
-    }}>
-      {children}
-    </th>
+    }}>{children}</th>
   );
 }
 
@@ -508,13 +483,11 @@ function Td({
 }) {
   return (
     <td style={{
-      textAlign: align, padding: '8px',
+      textAlign: align, padding: '10px 14px',
       color: muted ? tokens.text.tertiary : bold ? tokens.text.primary : tokens.text.secondary,
       fontWeight: bold ? 700 : 400,
       verticalAlign: 'middle',
-    }}>
-      {children}
-    </td>
+    }}>{children}</td>
   );
 }
 
@@ -527,21 +500,7 @@ function TrendChip({ tokens, trend }: { tokens: ReturnType<typeof useAdminTheme>
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       width: 22, height: 22, borderRadius: 5,
       background: bg, color, fontSize: 11, fontWeight: 700,
-    }}>
-      {icon}
-    </span>
-  );
-}
-
-function EmptyState({ tokens, text }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; text: string }) {
-  return (
-    <div style={{
-      padding: '24px 12px', textAlign: 'center',
-      color: tokens.text.secondary, fontSize: 12,
-      fontFamily: 'Inter, sans-serif',
-    }}>
-      {text}
-    </div>
+    }}>{icon}</span>
   );
 }
 

@@ -1,483 +1,542 @@
+/**
+ * LNKICKS Enterprise Admin — Orders Management
+ * ------------------------------------------------------------
+ * Premium order management with:
+ *  - Status tabs (All / Pending / Confirmed / Shipped / Delivered / Cancelled / Returned)
+ *  - Enterprise DataTable with status badges
+ *  - Bulk actions (Print labels, Update status, Export)
+ *  - Advanced filters (search, status, courier, date range)
+ *  - Order detail drawer with timeline, notes, courier, tracking, invoices, refunds
+ *  - Quick status update
+ */
+
 'use client';
 
-import React, { useState } from 'react';
-import { MobileLayout } from '@/components/layout/MobileLayout';
-import { useApp } from '@/components/context/AppContext';
-import { theme } from '@/lib/mobile/theme/theme';
-import { haptic } from '@/lib/mobile/utils/haptics';
-import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { useState, useMemo } from 'react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAdminTheme } from '@/lib/admin/adminTheme';
+import { PageHeader } from '@/components/admin/PageHeader';
+import { EnterpriseDataTable, type Column } from '@/components/admin/EnterpriseDataTable';
+import {
+  Button, Badge, StatusPill, Select, SearchInput, Drawer, Tabs, useToast,
+  IconButton, Dropdown, MenuItem, MenuDivider, KeyValue, Avatar,
+} from '@/components/admin/ui';
 
-/**
- * OrdersManagementPage — Admin Orders list + filtering.
- *
- * Stage 4g (admin) — Pattern C FULL REWRITE.
- * The original file used undefined Tailwind utility classes
- * (`bg-surface`, `text-headline-lg-mobile`, `font-headline-lg-mobile`,
- * `material-symbols-outlined`, `rounded-xl`, `bg-surface-container-lowest`,
- * `bg-secondary-container`, `text-on-secondary-container`, etc.) and
- * Material Symbols font icons — it rendered unstyled in production. This
- * rewrite rebuilds the page from scratch with MobileLayout + token-driven
- * inline styles + inline SVG icons.
- *
- * Layout:
- *  - `<MobileLayout headerVariant="back" title="Orders" hideBottomNav>`.
- *  - Page title + search bar + status filter chips.
- *  - Stats grid (2-col): Today's Revenue + Active Orders.
- *  - Recent Orders header row + Export CSV link.
- *  - Order cards: orderId + customer name + status badge + date + items
- *    count + total.
- *
- * Token usage:
- *  - Order cards: theme.radius.lg + 1px solid theme.colors.grey150 +
- *    theme.shadows.xs on theme.colors.white.
- *  - Status badges: theme.radius.pill; Processing → warning amber tint
- *    (#FEF3C7 + warning #78350f), Shipped → black bg + white text,
- *    Delivered → success green tint (#E3FCEF + success #14532d).
- *  - Filter chips: theme.radius.pill; active → black bg + white text;
- *    inactive → grey100 bg. haptic.selection() on tap.
- *  - Search input: theme.radius.lg + grey100 bg + 1.5px solid grey300
- *    border, focus → black border.
- *  - Export CSV link: textSecondary underline + haptic.light() on tap.
- *
- * All 4 order records (Marcus Thorne / Elena Rodriguez / James Henderson /
- * Sophia Chen — with orderId, status, date, items count, total) preserved
- * verbatim from the original.
- */
+interface AdminOrder {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  product: string;
+  brand: string;
+  size: string;
+  qty: number;
+  amount: number;
+  status: 'Pending' | 'Confirmed' | 'Packed' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Returned' | 'Refunded';
+  courier: string;
+  trackingNumber?: string;
+  placedAt: number;
+  paymentMethod: string;
+  paymentStatus: 'Paid' | 'Pending' | 'Refunded' | 'Failed';
+  shippingAddress: string;
+}
+
+const COURIERS = ['BlueDart', 'Delhivery', 'DTDC', 'Ekart', 'India Post'];
+const PRODUCTS = [
+  { name: 'Air Jordan 1 Low Powder Blue', brand: 'NIKE', price: 8899 },
+  { name: 'Samba OG Cloud White', brand: 'ADIDAS', price: 9499 },
+  { name: 'Nike Dunk Low Panda', brand: 'NIKE', price: 11499 },
+  { name: 'Yeezy Boost 350 V2 Zebra', brand: 'YEEZY', price: 22999 },
+  { name: 'New Balance 530 Steel Grey', brand: 'NEW BALANCE', price: 12999 },
+  { name: 'Jordan 4 Bred', brand: 'JORDAN', price: 18999 },
+  { name: 'Adidas Ultraboost 1.0 DNA', brand: 'ADIDAS', price: 14999 },
+  { name: 'Travis Scott x Jordan 1 Low Mocha', brand: 'JORDAN', price: 24999 },
+];
+const CUSTOMER_NAMES = [
+  'Aarav Sharma', 'Vivaan Patel', 'Aditya Singh', 'Arjun Reddy', 'Sai Kumar',
+  'Rohan Gupta', 'Karthik Iyer', 'Dev Malhotra', 'Kabir Nair', 'Ishaan Mehta',
+];
+
+const STATUSES: AdminOrder['status'][] = [
+  'Pending', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded',
+];
+
+function generateOrders(): AdminOrder[] {
+  const out: AdminOrder[] = [];
+  const now = Date.now();
+  for (let i = 0; i < 60; i++) {
+    const p = PRODUCTS[i % PRODUCTS.length];
+    const c = CUSTOMER_NAMES[i % CUSTOMER_NAMES.length];
+    const statusIdx = (i * 7) % STATUSES.length;
+    const status = STATUSES[statusIdx];
+    const courier = COURIERS[i % COURIERS.length];
+    out.push({
+      id: `LNK-${2841 - i}`,
+      customerName: c,
+      customerEmail: c.toLowerCase().replace(' ', '.') + '@gmail.com',
+      customerPhone: `+91 9${String(800000000 + i * 1234567).slice(0, 9)}`,
+      product: p.name,
+      brand: p.brand,
+      size: `UK ${(7 + (i % 5))}`,
+      qty: 1 + (i % 3),
+      amount: p.price * (1 + (i % 3)),
+      status,
+      courier,
+      trackingNumber: ['Shipped', 'Out for Delivery', 'Delivered'].includes(status) ? `${courier.substring(0, 2).toUpperCase()}${1000000 + i * 137}` : undefined,
+      placedAt: now - i * 3600_000 * 6,
+      paymentMethod: i % 3 === 0 ? 'UPI' : i % 3 === 1 ? 'Card' : 'COD',
+      paymentStatus: status === 'Cancelled' ? 'Failed' : status === 'Refunded' ? 'Refunded' : i % 8 === 0 ? 'Pending' : 'Paid',
+      shippingAddress: `${i + 12}, Brigade Road, Bengaluru, Karnataka 560001`,
+    });
+  }
+  return out;
+}
+
+const ALL_ORDERS = generateOrders();
+
 export default function OrdersManagementPage() {
-  const { showToast } = useApp();
+  const { tokens } = useAdminTheme();
+  const { push: pushToast } = useToast();
+  const [orders, setOrders] = useState<AdminOrder[]>(ALL_ORDERS);
+  const [search, setSearch] = useState('');
+  const [statusTab, setStatusTab] = useState('all');
+  const [courierFilter, setCourierFilter] = useState('All');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [detailOrder, setDetailOrder] = useState<AdminOrder | null>(null);
 
-  const filters = ['All Orders', 'Processing', 'Shipped', 'Delivered'] as const;
-  const [activeFilter, setActiveFilter] =
-    useState<(typeof filters)[number]>('All Orders');
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: orders.length };
+    STATUSES.forEach(s => { c[s.toLowerCase().replace(/\s/g, '')] = orders.filter(o => o.status === s).length; });
+    return c;
+  }, [orders]);
 
-  const orders = [
+  const filtered = useMemo(() => {
+    return orders.filter(o => {
+      if (search) {
+        const q = search.toLowerCase();
+        if (!o.id.toLowerCase().includes(q) && !o.customerName.toLowerCase().includes(q) && !o.trackingNumber?.toLowerCase().includes(q) && !o.customerPhone.includes(q)) return false;
+      }
+      if (statusTab !== 'all') {
+        const matchStatus = o.status.toLowerCase().replace(/\s/g, '') === statusTab;
+        if (!matchStatus) return false;
+      }
+      if (courierFilter !== 'All' && o.courier !== courierFilter) return false;
+      return true;
+    });
+  }, [orders, search, statusTab, courierFilter]);
+
+  function updateStatus(id: string, status: AdminOrder['status']) {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    setDetailOrder(prev => prev?.id === id ? { ...prev, status } : prev);
+    pushToast({ tone: 'success', title: 'Status updated', message: `Order ${id} → ${status}` });
+  }
+
+  function bulkUpdateStatus(status: AdminOrder['status']) {
+    setOrders(prev => prev.map(o => selected.includes(o.id) ? { ...o, status } : o));
+    pushToast({ tone: 'success', title: `${selected.length} orders → ${status}` });
+    setSelected([]);
+  }
+
+  function bulkPrint() {
+    pushToast({ tone: 'info', title: 'Generating labels', message: `${selected.length} shipping labels sent to printer.` });
+  }
+
+  function bulkExport() {
+    pushToast({ tone: 'success', title: 'Export started', message: `${filtered.length} orders exporting to CSV.` });
+  }
+
+  const columns: Column<AdminOrder>[] = [
     {
-      id: '#ORD-28491',
-      customer: 'Marcus Thorne',
-      status: 'Processing' as const,
-      date: 'Oct 24, 2023',
-      items: 2,
-      total: '$890.00',
-      dimmed: false,
+      key: 'id',
+      header: 'Order ID',
+      sortable: true,
+      sortValue: o => o.id,
+      width: 110,
+      render: o => (
+        <div>
+          <div style={{ fontWeight: 700, color: tokens.text.primary, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>{o.id}</div>
+          <div style={{ fontSize: 10, color: tokens.text.tertiary, marginTop: 1 }}>
+            {new Date(o.placedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+          </div>
+        </div>
+      ),
     },
     {
-      id: '#ORD-28488',
-      customer: 'Elena Rodriguez',
-      status: 'Shipped' as const,
-      date: 'Oct 23, 2023',
-      items: 1,
-      total: '$1,250.00',
-      dimmed: false,
+      key: 'customer',
+      header: 'Customer',
+      sortable: true,
+      sortValue: o => o.customerName,
+      render: o => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Avatar tokens={tokens} name={o.customerName} size={28} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 600, color: tokens.text.primary, fontSize: 12.5 }}>{o.customerName}</div>
+            <div style={{ fontSize: 10, color: tokens.text.tertiary }}>{o.customerPhone}</div>
+          </div>
+        </div>
+      ),
     },
     {
-      id: '#ORD-28485',
-      customer: 'James Henderson',
-      status: 'Delivered' as const,
-      date: 'Oct 23, 2023',
-      items: 4,
-      total: '$340.00',
-      dimmed: false,
+      key: 'product',
+      header: 'Product',
+      render: o => (
+        <div style={{ maxWidth: 220 }}>
+          <div style={{ fontWeight: 500, color: tokens.text.primary, fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {o.product}
+          </div>
+          <div style={{ fontSize: 10, color: tokens.text.tertiary, marginTop: 1 }}>
+            {o.brand} · {o.size} · Qty {o.qty}
+          </div>
+        </div>
+      ),
     },
     {
-      id: '#ORD-28482',
-      customer: 'Sophia Chen',
-      status: 'Delivered' as const,
-      date: 'Oct 22, 2023',
-      items: 1,
-      total: '$560.00',
-      dimmed: true,
+      key: 'amount',
+      header: 'Amount',
+      align: 'right',
+      sortable: true,
+      sortValue: o => o.amount,
+      render: o => (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <span style={{ fontWeight: 700, color: tokens.text.primary }}>₹{o.amount.toLocaleString('en-IN')}</span>
+          <span style={{ fontSize: 10, color: tokens.text.tertiary }}>{o.paymentMethod}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'payment',
+      header: 'Payment',
+      align: 'center',
+      sortable: true,
+      sortValue: o => o.paymentStatus,
+      render: o => <StatusPill tokens={tokens} status={o.paymentStatus} />,
+    },
+    {
+      key: 'courier',
+      header: 'Courier',
+      render: o => o.trackingNumber ? (
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: tokens.text.primary }}>{o.courier}</div>
+          <div style={{ fontSize: 10, color: tokens.text.tertiary, fontFamily: 'ui-monospace, monospace' }}>{o.trackingNumber}</div>
+        </div>
+      ) : <span style={{ fontSize: 11, color: tokens.text.tertiary }}>—</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      sortable: true,
+      sortValue: o => o.status,
+      render: o => <StatusPill tokens={tokens} status={o.status} />,
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      sortable: false,
+      render: o => (
+        <div onClick={e => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+          <Button tokens={tokens} variant="ghost" size="sm" onClick={() => setDetailOrder(o)}>View</Button>
+          <Dropdown
+            tokens={tokens}
+            align="right"
+            width={180}
+            trigger={<IconButton tokens={tokens} icon={<svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>} label="More" size={28} />}
+          >
+            <MenuItem tokens={tokens} onClick={() => setDetailOrder(o)}>View Details</MenuItem>
+            <MenuItem tokens={tokens} onClick={() => pushToast({ tone: 'info', title: 'Invoice generated', message: o.id })}>Download Invoice</MenuItem>
+            <MenuItem tokens={tokens} onClick={() => pushToast({ tone: 'info', title: 'Label printing', message: o.id })}>Print Label</MenuItem>
+            <MenuDivider tokens={tokens} />
+            <div style={{ padding: '4px 10px', fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase' }}>Update Status</div>
+            {STATUSES.map(s => (
+              <MenuItem key={s} tokens={tokens} active={o.status === s} onClick={() => updateStatus(o.id, s)}>{s}</MenuItem>
+            ))}
+          </Dropdown>
+        </div>
+      ),
     },
   ];
 
-  const handleFilterTap = (f: (typeof filters)[number]) => {
-    haptic.selection();
-    setActiveFilter(f);
-  };
-
-  const handleExport = () => {
-    haptic.light();
-    showToast('Exporting orders CSV');
-  };
-
-  const handleOrderTap = (orderId: string) => {
-    haptic.light();
-    showToast(`Open ${orderId}`);
-  };
-
   return (
-    <MobileLayout headerVariant="back" title="Orders" hideBottomNav>
-      <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
-        {/* TITLE */}
-        <h1
-          style={{
-            fontFamily: theme.fontFamily.display,
-            fontSize: theme.fontSize.h2,
-            fontWeight: theme.fontWeight.extrabold,
-            color: theme.colors.textPrimary,
-            margin: `${theme.spacing.sm}px 0 ${theme.spacing.md}px 0`,
-            letterSpacing: theme.letterSpacing.tight,
-            lineHeight: theme.lineHeight.tight,
-          }}
-        >
-          Order Management
-        </h1>
+    <AdminLayout
+      title="Orders"
+      subtitle="Fulfillment & tracking"
+      requirePermission="order.view"
+      breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'Sales' }, { label: 'Orders' }]}
+    >
+      <PageHeader
+        tokens={tokens}
+        title="Order Management"
+        subtitle="Process customer orders, update courier tracking, manage returns & refunds, and generate invoices."
+        breadcrumb={[{ label: 'Admin', href: '/dashboard' }, { label: 'Sales' }, { label: 'Orders' }]}
+        meta={<Badge tokens={tokens} tone="warning">{counts.pending} pending</Badge>}
+        actions={
+          <>
+            <Button tokens={tokens} variant="outline" size="md" onClick={bulkExport}
+              icon={<DownloadIcon color={tokens.text.secondary} />}
+            >Export</Button>
+            <Button tokens={tokens} variant="primary" size="md" onClick={() => pushToast({ tone: 'info', title: 'Bulk invoice print', message: 'Generating PDFs…' })}
+              icon={<PrinterIcon color={tokens.bg.app} />}
+            >Print All Invoices</Button>
+          </>
+        }
+      />
 
-        {/* SEARCH */}
-        <div style={{ position: 'relative', marginBottom: theme.spacing.md }}>
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            fill="none"
-            stroke={theme.colors.textSecondary}
-            strokeWidth="2"
-            aria-hidden
-            style={{
-              position: 'absolute',
-              left: theme.spacing.lg,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              pointerEvents: 'none',
-            }}
-          >
-            <circle cx="11" cy="11" r="7" />
-            <line x1="16.5" y1="16.5" x2="21" y2="21" strokeLinecap="round" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search orders..."
-            aria-label="Search orders"
-            className="om-search"
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              background: theme.colors.grey100,
-              border: `1.5px solid ${theme.colors.grey300}`,
-              borderRadius: theme.radius.lg,
-              padding: `${theme.spacing.md}px ${theme.spacing.md}px ${
-                theme.spacing.md
-              }px ${theme.spacing.xxl + theme.spacing.lg}px`,
-              fontSize: theme.fontSize.md,
-              fontFamily: theme.fontFamily.body,
-              color: theme.colors.textPrimary,
-              transition: 'border-color 180ms cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        </div>
-
-        {/* FILTER CHIPS — horizontally scrollable */}
-        <div
-          style={{
-            display: 'flex',
-            gap: theme.spacing.sm,
-            overflowX: 'auto',
-            paddingBottom: theme.spacing.xs,
-            marginBottom: theme.spacing.xxl,
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {filters.map((f) => {
-            const active = activeFilter === f;
-            return (
-              <button
-                key={f}
-                type="button"
-                onClick={() => handleFilterTap(f)}
-                aria-pressed={active}
-                className="pressable om-chip"
-                style={{
-                  background: active
-                    ? theme.colors.black
-                    : theme.colors.grey100,
-                  color: active
-                    ? theme.colors.white
-                    : theme.colors.textPrimary,
-                  padding: `${theme.spacing.sm}px ${theme.spacing.lg}px`,
-                  borderRadius: theme.radius.pill,
-                  border: 'none',
-                  fontSize: theme.fontSize.body,
-                  fontWeight: theme.fontWeight.bold,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  letterSpacing: theme.letterSpacing.wider,
-                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-              >
-                {f}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* STATS */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: theme.spacing.md,
-            marginBottom: theme.spacing.xxl,
-          }}
-        >
-          <StatCard label="Today's Revenue" value="$4,280" />
-          <StatCard label="Active Orders" value="24" />
-        </div>
-
-        {/* RECENT ORDERS HEADER */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: theme.spacing.md,
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.lg,
-              fontWeight: theme.fontWeight.extrabold,
-              color: theme.colors.textPrimary,
-              margin: 0,
-              letterSpacing: theme.letterSpacing.tight,
-            }}
-          >
-            Recent Orders
-          </h2>
-          <button
-            type="button"
-            onClick={handleExport}
-            className="pressable om-export"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: theme.colors.textSecondary,
-              fontSize: theme.fontSize.body,
-              fontWeight: theme.fontWeight.bold,
-              cursor: 'pointer',
-              fontFamily: theme.fontFamily.body,
-            }}
-          >
-            Export CSV
-          </button>
-        </div>
-
-        {/* ORDER CARDS */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: theme.spacing.md,
-            paddingBottom: theme.spacing.giant,
-          }}
-        >
-          {orders.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              onClick={() => handleOrderTap(o.id)}
-              className="pressable om-order"
-              style={{
-                textAlign: 'left',
-                background: theme.colors.white,
-                padding: theme.spacing.lg,
-                borderRadius: theme.radius.lg,
-                border: `1px solid ${theme.colors.grey150}`,
-                boxShadow: theme.shadows.xs,
-                cursor: 'pointer',
-                opacity: o.dimmed ? 0.6 : 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: theme.spacing.sm,
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
-            >
-              {/* Header row */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: theme.spacing.md,
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: theme.fontSize.xs,
-                      color: theme.colors.textSecondary,
-                      fontFamily: theme.fontFamily.display,
-                      fontWeight: theme.fontWeight.bold,
-                      letterSpacing: theme.letterSpacing.wider,
-                    }}
-                  >
-                    {o.id}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: theme.fontFamily.display,
-                      fontSize: theme.fontSize.lg,
-                      fontWeight: theme.fontWeight.extrabold,
-                      color: theme.colors.textPrimary,
-                      marginTop: theme.spacing.xs,
-                      letterSpacing: theme.letterSpacing.tight,
-                      lineHeight: theme.lineHeight.snug,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {o.customer}
-                  </div>
-                </div>
-                <StatusBadge status={o.status} />
-              </div>
-
-              {/* Footer row */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-end',
-                  marginTop: theme.spacing.xs,
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span
-                    style={{
-                      fontSize: theme.fontSize.body,
-                      color: theme.colors.textSecondary,
-                    }}
-                  >
-                    {o.date}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: theme.fontSize.xs,
-                      color: theme.colors.textSecondary,
-                      marginTop: 2,
-                      letterSpacing: theme.letterSpacing.wider,
-                      textTransform: 'uppercase',
-                      fontWeight: theme.fontWeight.bold,
-                    }}
-                  >
-                    {o.items} {o.items === 1 ? 'Item' : 'Items'}
-                  </span>
-                </div>
-                <span
-                  style={{
-                    fontFamily: theme.fontFamily.display,
-                    fontSize: theme.fontSize.h2,
-                    fontWeight: theme.fontWeight.extrabold,
-                    color: theme.colors.price,
-                    letterSpacing: theme.letterSpacing.tight,
-                    lineHeight: 1,
-                  }}
-                >
-                  {o.total}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+      {/* STATUS TABS + FILTERS */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Tabs
+          tokens={tokens}
+          size="sm"
+          tabs={[
+            { key: 'all', label: 'All', badge: counts.all },
+            { key: 'pending', label: 'Pending', badge: counts.pending },
+            { key: 'confirmed', label: 'Confirmed', badge: counts.confirmed },
+            { key: 'shipped', label: 'Shipped', badge: counts.shipped },
+            { key: 'outfordelivery', label: 'Out for Delivery', badge: counts.outfordelivery },
+            { key: 'delivered', label: 'Delivered', badge: counts.delivered },
+            { key: 'cancelled', label: 'Cancelled', badge: counts.cancelled },
+            { key: 'returned', label: 'Returned', badge: counts.returned },
+          ]}
+          active={statusTab}
+          onChange={setStatusTab}
+        />
       </div>
 
-      <style jsx>{pressableStyle}</style>
-      <style jsx>{`
-        .om-search:focus {
-          outline: none;
-          border-color: ${theme.colors.black};
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div style={{ width: 260 }}>
+          <SearchInput tokens={tokens} value={search} onChange={setSearch} placeholder="Search order ID, customer, phone, tracking…" />
+        </div>
+        <Select
+          tokens={tokens}
+          value={courierFilter}
+          onChange={e => setCourierFilter(e.target.value)}
+          options={['All', ...COURIERS].map(c => ({ value: c, label: c === 'All' ? 'All Couriers' : c }))}
+          style={{ height: 34, width: 150 }}
+        />
+        <Select
+          tokens={tokens}
+          value=""
+          onChange={() => {}}
+          options={[
+            { value: '', label: 'All Dates' },
+            { value: 'today', label: 'Today' },
+            { value: '7d', label: 'Last 7 days' },
+            { value: '30d', label: 'Last 30 days' },
+          ]}
+          style={{ height: 34, width: 140 }}
+        />
+      </div>
+
+      <EnterpriseDataTable<AdminOrder>
+        tokens={tokens}
+        columns={columns}
+        rows={filtered}
+        getRowId={o => o.id}
+        selectable
+        onSelectionChange={setSelected}
+        pageSize={12}
+        onRowClick={o => setDetailOrder(o)}
+        bulkActions={() => (
+          <>
+            <Button tokens={tokens} variant="ghost" size="sm" onClick={bulkPrint}>Print Labels</Button>
+            <Button tokens={tokens} variant="ghost" size="sm" onClick={() => bulkUpdateStatus('Confirmed')}>Mark Confirmed</Button>
+            <Button tokens={tokens} variant="ghost" size="sm" onClick={() => bulkUpdateStatus('Shipped')}>Mark Shipped</Button>
+            <Button tokens={tokens} variant="ghost" size="sm" onClick={() => bulkUpdateStatus('Delivered')}>Mark Delivered</Button>
+            <Button tokens={tokens} variant="danger" size="sm" onClick={() => bulkUpdateStatus('Cancelled')}>Cancel</Button>
+          </>
+        )}
+      />
+
+      {/* ORDER DETAIL DRAWER */}
+      <Drawer
+        tokens={tokens}
+        open={Boolean(detailOrder)}
+        onClose={() => setDetailOrder(null)}
+        title={detailOrder ? `Order ${detailOrder.id}` : ''}
+        subtitle={detailOrder ? detailOrder.customerName : ''}
+        width={520}
+        footer={
+          detailOrder && (
+            <>
+              <Button tokens={tokens} variant="ghost" onClick={() => pushToast({ tone: 'info', title: 'Invoice downloaded', message: detailOrder.id })}>Invoice</Button>
+              <Button tokens={tokens} variant="outline" onClick={() => pushToast({ tone: 'info', title: 'Label printing', message: detailOrder.id })}>Print Label</Button>
+              <Button tokens={tokens} variant="primary" onClick={() => pushToast({ tone: 'success', title: 'Email sent', message: 'Customer notified.' })}>Notify Customer</Button>
+            </>
+          )
         }
-        .om-chip:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 2px;
-        }
-        .om-export:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 2px;
-        }
-        .om-order:focus-visible {
-          outline: 2px solid ${theme.colors.black};
-          outline-offset: 2px;
-        }
-      `}</style>
-    </MobileLayout>
+      >
+        {detailOrder && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Status + amount */}
+            <div style={{
+              background: tokens.bg.surfaceAlt, borderRadius: 10, padding: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Status</div>
+                <StatusPill tokens={tokens} status={detailOrder.status} />
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: tokens.text.tertiary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Total</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: tokens.text.primary }}>₹{detailOrder.amount.toLocaleString('en-IN')}</div>
+              </div>
+            </div>
+
+            {/* Quick status update */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Update Status</div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {STATUSES.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => updateStatus(detailOrder.id, s)}
+                    style={{
+                      padding: '4px 9px', borderRadius: 6, border: 'none',
+                      background: detailOrder.status === s ? tokens.text.primary : tokens.bg.surfaceAlt,
+                      color: detailOrder.status === s ? tokens.bg.app : tokens.text.secondary,
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                      transition: 'all 120ms ease',
+                    }}
+                  >{s}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Timeline</div>
+              <OrderTimeline tokens={tokens} order={detailOrder} />
+            </div>
+
+            {/* Customer info */}
+            <div style={{
+              background: tokens.bg.surfaceAlt, borderRadius: 10, padding: 14,
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+            }}>
+              <KeyValue tokens={tokens} label="Customer" value={detailOrder.customerName} />
+              <KeyValue tokens={tokens} label="Phone" value={detailOrder.customerPhone} />
+              <KeyValue tokens={tokens} label="Email" value={detailOrder.customerEmail} />
+              <KeyValue tokens={tokens} label="Payment" value={`${detailOrder.paymentMethod} · ${detailOrder.paymentStatus}`} />
+            </div>
+
+            {/* Product */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Items</div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: tokens.bg.surfaceAlt, borderRadius: 10, padding: 12,
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 8, background: tokens.bg.surface,
+                  border: `1px solid ${tokens.border.subtle}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18,
+                }}>👟</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary }}>{detailOrder.product}</div>
+                  <div style={{ fontSize: 10, color: tokens.text.tertiary, marginTop: 1 }}>
+                    {detailOrder.brand} · Size {detailOrder.size} · Qty {detailOrder.qty}
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tokens.text.primary }}>
+                  ₹{detailOrder.amount.toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+
+            {/* Shipping + Courier */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Courier</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: tokens.text.primary }}>{detailOrder.courier}</div>
+                {detailOrder.trackingNumber && (
+                  <div style={{ fontSize: 11, color: tokens.text.tertiary, fontFamily: 'ui-monospace, monospace', marginTop: 2 }}>
+                    {detailOrder.trackingNumber}
+                  </div>
+                )}
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Shipping Address</div>
+                <div style={{ fontSize: 11, color: tokens.text.secondary, lineHeight: 1.5 }}>
+                  {detailOrder.shippingAddress}
+                </div>
+              </div>
+            </div>
+
+            {/* Order notes */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.text.secondary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Order Notes</div>
+              <textarea
+                placeholder="Add internal note (visible only to admins)…"
+                style={{
+                  width: '100%', minHeight: 60, padding: 10, borderRadius: 8,
+                  border: `1px solid ${tokens.border.subtle}`,
+                  background: tokens.bg.surface, color: tokens.text.primary,
+                  fontSize: 12, fontFamily: 'Inter, sans-serif', outline: 'none',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </Drawer>
+    </AdminLayout>
   );
 }
 
-/* ──────────────────────────────────────────────────────────────────
- * StatCard — admin order-management KPI card
- * ────────────────────────────────────────────────────────────────── */
-function StatCard({ label, value }: { label: string; value: string }) {
+function OrderTimeline({ tokens, order }: { tokens: ReturnType<typeof useAdminTheme>['tokens']; order: AdminOrder }) {
+  const stages: { label: string; status: 'done' | 'current' | 'pending' }[] = [
+    { label: 'Order Placed', status: 'done' },
+    { label: 'Confirmed', status: ['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'].includes(order.status) ? 'done' : order.status === 'Pending' ? 'current' : 'pending' },
+    { label: 'Packed', status: ['Packed', 'Shipped', 'Out for Delivery', 'Delivered'].includes(order.status) ? 'done' : order.status === 'Confirmed' ? 'current' : 'pending' },
+    { label: 'Shipped', status: ['Shipped', 'Out for Delivery', 'Delivered'].includes(order.status) ? 'done' : order.status === 'Packed' ? 'current' : 'pending' },
+    { label: 'Out for Delivery', status: ['Out for Delivery', 'Delivered'].includes(order.status) ? 'done' : order.status === 'Shipped' ? 'current' : 'pending' },
+    { label: 'Delivered', status: order.status === 'Delivered' ? 'done' : order.status === 'Out for Delivery' ? 'current' : 'pending' },
+  ];
+
   return (
-    <div
-      style={{
-        background: theme.colors.white,
-        padding: theme.spacing.lg,
-        borderRadius: theme.radius.lg,
-        border: `1px solid ${theme.colors.grey150}`,
-        boxShadow: theme.shadows.xs,
-      }}
-    >
-      <div
-        style={{
-          fontSize: theme.fontSize.xs,
-          color: theme.colors.textSecondary,
-          letterSpacing: theme.letterSpacing.wider,
-          textTransform: 'uppercase',
-          fontWeight: theme.fontWeight.bold,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontFamily: theme.fontFamily.display,
-          fontSize: theme.fontSize.h2,
-          fontWeight: theme.fontWeight.extrabold,
-          color: theme.colors.textPrimary,
-          marginTop: theme.spacing.xs,
-          letterSpacing: theme.letterSpacing.tight,
-          lineHeight: theme.lineHeight.tight,
-        }}
-      >
-        {value}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {stages.map((stage, i) => (
+        <div key={stage.label} style={{ display: 'flex', gap: 12, position: 'relative' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%',
+              background: stage.status === 'done' ? tokens.status.success
+                : stage.status === 'current' ? tokens.status.info
+                : tokens.bg.surfaceAlt,
+              color: stage.status === 'done' || stage.status === 'current' ? '#fff' : tokens.text.tertiary,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, fontWeight: 700, flexShrink: 0,
+              border: stage.status === 'current' ? `2px solid ${tokens.status.info}40` : 'none',
+            }}>
+              {stage.status === 'done' ? '✓' : i + 1}
+            </div>
+            {i < stages.length - 1 && (
+              <div style={{
+                width: 2, flex: 1, minHeight: 16,
+                background: stage.status === 'done' ? tokens.status.success : tokens.border.subtle,
+                margin: '2px 0',
+              }} />
+            )}
+          </div>
+          <div style={{ paddingBottom: 12 }}>
+            <div style={{
+              fontSize: 12, fontWeight: 600,
+              color: stage.status === 'pending' ? tokens.text.tertiary : tokens.text.primary,
+            }}>{stage.label}</div>
+            {stage.status === 'current' && (
+              <div style={{ fontSize: 10, color: tokens.status.info, marginTop: 1 }}>In progress</div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-/* ──────────────────────────────────────────────────────────────────
- * StatusBadge — order status pill
- *  - Processing → warning amber tint
- *  - Shipped → inverted black
- *  - Delivered → success green tint
- * ────────────────────────────────────────────────────────────────── */
-function StatusBadge({ status }: { status: 'Processing' | 'Shipped' | 'Delivered' }) {
-  const palette =
-    status === 'Processing'
-      ? { bg: '#FEF3C7', fg: theme.colors.warning }
-      : status === 'Shipped'
-        ? { bg: theme.colors.black, fg: theme.colors.white }
-        : { bg: '#E3FCEF', fg: theme.colors.success };
-
-  return (
-    <span
-      style={{
-        background: palette.bg,
-        color: palette.fg,
-        padding: `${theme.spacing.xs + 1}px ${theme.spacing.md}px`,
-        borderRadius: theme.radius.pill,
-        fontSize: theme.fontSize.xs,
-        fontWeight: theme.fontWeight.bold,
-        letterSpacing: theme.letterSpacing.wider,
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-      }}
-    >
-      {status}
-    </span>
-  );
+function DownloadIcon({ color }: { color: string }) {
+  return <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>;
+}
+function PrinterIcon({ color }: { color: string }) {
+  return <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" /></svg>;
 }
