@@ -3577,3 +3577,41 @@ Stage Summary:
 - Subtle dark red accent (#7F1D1D) on eyebrow chip, discount badge, and CTA hover — luxury feel preserved.
 - No layout clipping, full HH:MM:SS visible.
 - Mobile-only — desktop homepage untouched.
+
+---
+Task ID: phase-26
+Agent: Main (Super Z)
+Task: Phase 26 — Premium mobile-only Rewards Banner (3-step timeline) placed above MobileNewsletter.
+
+Work Log:
+- Analyzed reference image (WhatsApp Image 2026-08-03 at 12.25.01.jpeg) with VLM — 3-step milestone timeline with circles, connecting lines, active/locked states, reward badges.
+- Built MobileRewardsBanner.tsx matching LN KICKS mobile theme (white card, 24px radius, soft shadow, subtle green accent #14532D = theme.colors.success).
+- Design:
+  * Premium white card (#FFFFFF) with 24px radius + soft editorial shadow + 1px grey150 border.
+  * "🎁 Unlock Your Rewards" 22px bold centered headline + progress label ("0 of 3 rewards unlocked" / "1 of 3 rewards unlocked").
+  * 3-step horizontal timeline with connecting gradient line (green→grey):
+    - Step 1: ₹50 Sign Up — active (logged out) or completed ✓ (logged in)
+    - Step 2: 👥 First Referral — locked with lock icon (logged out) or active with "Pending" badge (logged in)
+    - Step 3: 🛒 First Order — locked with lock icon
+  * Active step: dark circle (#0A0A0A) + green "Claim Now" badge + sparkle twinkle (3s rotate/scale animation) + subtle pulsing glow (2.4s box-shadow animation).
+  * Completed step: green circle (#14532D) with ✓ checkmark.
+  * Locked steps: offWhite circle + grey200 border + small lock icon badge top-right.
+  * Reward summary card (offWhite bg) with 3 numbered bullet points (₹50 / ₹50 / ₹100).
+  * Full-width 52px CTA button with dark gradient (#111111 → #0A0A0A), 18px radius, soft shadow, inset highlight, press scale, hover lift.
+  * Auth-aware CTA: "Create Account" (logged out) → /login; "Invite Friends" (logged in) → /profile.
+  * 3 terms bullet points below CTA (prepaid orders, referral unlock, 90-day validity).
+- Auth detection: reads localStorage 'lnk_user' (written by /profile page). Re-checks on window focus + storage events. SSR-safe (mounted guard prevents hydration mismatch).
+- Animations: 60fps transforms/opacity-only. Apple easing cubic-bezier(0.16,1,0.3,1). Container fade-in (420ms). Active circle pulse (2.4s). Badge glow (2.4s). Sparkle twinkle (3s).
+- Mounted in MobileHome.tsx ABOVE MobileNewsletter per user spec ("yeh meri theme se match krna chaiye aur niche ja sign up now wala banner hai usse upar ana chaiye").
+- Lazy-loaded via React.lazy + Suspense with SectionSkeleton fallback.
+- Type-checked: fixed unused var (i in map). No remaining errors.
+- Committed: 13787a4.
+- Pushed to GitHub: 2768e0f..13787a4.
+- Verified Vercel deployment: lazy chunk 1024.1cb23d0b77305847.js contains "Unlock Your Rewards", "mrb-card", "Claim Now", "Invite Friends", "First Referral" — confirmed live.
+
+Stage Summary:
+- Rewards Banner live on mobile homepage, placed above MobileNewsletter (Sign up now banner).
+- Premium white card design with 3-step timeline (Sign Up ₹50 → First Referral ₹50 → First Order ₹100).
+- Auth-aware: shows "Create Account" + Step 1 active when logged out; "Invite Friends" + Step 1 completed + Step 2 active when logged in.
+- Subtle green accent (#14532D) on completed step, active badge, connecting line — luxury muted, not flashy.
+- Mobile-only — desktop homepage completely untouched.
