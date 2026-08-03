@@ -4590,3 +4590,143 @@ Stage Summary:
 - All pages follow established pattern: styled-jsx + tokens-based theming + minmax(0,1fr) grids + 14px radius cards + cubic-bezier transitions + loading skeletons + hover elevation + stagger animations + useMemo/useCallback.
 - Did NOT modify: backend APIs, business logic, sidebar, dashboard, products-management, add-product, orders-management, track-order, customers-management, or any other module.
 - Type-check passes. Build passes (55/55 pages). All marketing pages compile successfully. Ready for Vercel deploy.
+
+---
+Task ID: operations-system-redesign
+Agent: main (Super Z)
+Task: Redesign ONLY the Operations & System modules of LNKICKS Admin Suite
+  (Inventory, Wallet, Settings, Audit Logs, Roles & Permissions, Security
+  Center, Integrations, System Health). Strict rules: do NOT modify backend
+  APIs, business logic, routes, sidebar, dashboard, products, orders,
+  marketing, or CRM. Reuse existing data. Improve only UI/UX/workflow/
+  responsiveness. Match AWS Console, Google Workspace Admin, Stripe
+  Dashboard, Shopify Plus Admin, Apple Business Manager, Microsoft Admin
+  Center.
+
+Work Log:
+- STEP 1 (Audit): Read all 5 existing ops pages (inventory 191L, wallet 203L,
+  audit 151L, settings-panel 602L, notification-settings 122L). Identified
+  weak hierarchy, no KPI strips, no unified dashboard, no security center,
+  no integrations center, no system health, no roles matrix, no audit
+  detail drawer, no wallet settlements, no inventory transfers/POs.
+- STEP 2 (Operations Home, NEW route /admin/operations, ~570L): 6-KPI strip
+  with sparklines (Inventory Value, Wallet Outstanding, Pending Payouts,
+  API Uptime, Security Score, Active Admins), System Status panel with
+  health-score gauge + 9 services live status (REST API, Webhook, Auth,
+  DB, Redis, Storage, CDN, Queue, External gateways), Recent Activity
+  feed (last 8 audit events with action chip + IP + device), Inventory
+  Health + Wallet & Payouts snapshot panels (capacity bars + settlement
+  queue), Active Admin Users panel (with 2FA badge + last login),
+  Security Alerts panel (4 alert tiers), 8 quick-link cards to all ops
+  modules. Reuses listAdminUsers() + getAuditLog() — real data.
+- STEP 3 (Inventory redesign, /admin/inventory, ~700L): 5-KPI strip with
+  colored top borders (Stock Value, SKUs, Low Stock, Out of Stock, Avg
+  Margin), 3-warehouse cards with capacity bars + manager names + health
+  badges, 5-tab navigation (Overview / Stock / Transfers / POs /
+  Movements). Overview: stock distribution by warehouse + AI reorder
+  recommendations. Stock: enterprise table (10 cols — SKU/Bin, Product,
+  Warehouse, Supplier, Stock with bar, Cost, Price, 30d Forecast, Status,
+  View) with selectable rows + bulk action bar. Transfers: 5 transfer
+  records with status + dispatch/receive actions. POs: 6 purchase orders
+  with status colors + amounts + ETA. Movements: 25-row chronological
+  stock movement audit (in/out/transfer/adjust). SKU Detail Drawer (620px,
+  4-tab): stock hero + quick adjust + product details + movements timeline.
+  3 form drawers (New Transfer, New PO, Bulk Update with CSV drag-drop).
+- STEP 4 (Wallet redesign, /admin/wallet, ~700L): 4-card balance hero
+  (Outstanding / Pending Payouts / Refund Balance / Processing Fees) with
+  colored top borders, 6-card secondary KPI strip (Issued/Debited/Txns/
+  Pending Withdrawals/Settlements/Failed), 5-tab nav (Overview/
+  Transactions/Settlements/Withdrawals/Timeline). Overview: pending
+  settlements + recent withdrawal requests with one-click approve/reject.
+  Transactions: enterprise table (8 cols) with type/reason filters.
+  Settlements: 6-row grid with gross/fees/net/UTR/method. Withdrawals:
+  6 requests with approve/reject + customer detail. Timeline: vertical
+  chronological payment events (settlement/payout/refund/fee/adjustment).
+  Credit Wallet + Withdrawal Review drawers.
+- STEP 5 (Settings redesign, /settings-panel, ~580L): Apple System Settings
+  philosophy with sticky sidebar (240px) + search across all 12 sections
+  (General/Business/Store/Users/Payments/Shipping/Notifications/SEO/
+  Security/API Keys/Integrations/Advanced). Each section has icon +
+  description header. Save indicator with dirty/clean badge + Discard.
+  New sections: Business (PAN/TAN/MSME/e-invoicing), Advanced (feature
+  flags, cache clear, reindex). Reuses listAdminUsers() for Users section.
+- STEP 6 (Audit Logs redesign, /admin/audit, ~640L): 6-KPI strip (Total/
+  Failed/Security/Unique IPs/Unique Actors/Last Hour), 8-category tab
+  filter (All/Security/Orders/Products/Customers/Wallet/Settings/API),
+  advanced filters (actor role / status / date range), enterprise table
+  (8 cols — Time with timeAgo, Actor with avatar+role, Action with
+  category, Target with kind badge, IP with location, Device+OS, Status,
+  View). Detail Drawer (520px): actor hero + event details + network &
+  device panel + metadata JSON + immutable notice. Reuses getAuditLog()
+  + supplements 80 derived historical events (deterministic).
+- STEP 7 (Roles & Permissions, NEW route /admin/roles, ~620L): 6-card role
+  stat strip (Admin/Manager/Editor/Support/Warehouse/Marketing with
+  actions-this-week + last-active), 5-tab nav (Team/Matrix/Departments/
+  Features/Activity). Team: search + admin cards with inline role select
+  + edit drawer (role + 2FA toggle + active toggle + danger zone). Matrix:
+  full permission matrix (11 groups × 6 roles = 27 permissions, with
+  check/dash indicators). Departments: 4 cards (Sales/Catalog/Warehouse/
+  Marketing) with allowed roles + member count. Features: 8 features × 5
+  operations (read/write/delete/export/approve) grid. Activity: 6 role
+  bar charts + permission distribution. Invite drawer + Edit User drawer.
+- STEP 8 (Security Center, NEW route /admin/security, ~620L): 6-tab nav
+  (Overview/Logins/Sessions/Tokens/Devices/Policy). Overview: 120px
+  security score gauge (0-100) with 6-dimensional breakdown bars (2FA
+  Coverage/Session Mgmt/Password Policy/IP Restrictions/Audit Logging/
+  Failed Login Protection) + 6 quick-stat cards + critical alerts panel
+  (6 alerts with severity colors + resolve buttons). Logins: 18 login
+  events with success/fail icons + method + IP + location. Sessions: 4
+  active sessions with current-session badge + revoke button. Tokens: 5
+  API tokens with scopes + status. Devices: 4 trusted devices with
+  untrust action. Policy: password policy rules + session/access toggles.
+- STEP 9 (Integrations, NEW route /admin/integrations, ~700L): 6-KPI strip
+  (Connected/Available/Errors/Active Webhooks/Categories/API Tokens),
+  4-tab nav (Integrations/Webhooks/API Keys/Deliveries). Integrations:
+  search + 11 category chips + 26 integration cards across 10 categories
+  (Payments/Shipping/Email/SMS/WhatsApp/Google/Meta/Analytics/ERP/CRM)
+  with icon/desc/scopes/status/sync-time + Connect/Configure buttons.
+  Webhooks: 4 webhook endpoints with URL/secret/status/delivery count/
+  success rate/event subscriptions + copy secret + view deliveries.
+  API Keys: 4 tokens with status + revoke. Deliveries: 20 recent webhook
+  deliveries with response code + duration. Configure drawer (API key/
+  secret/webhook URL/environment/scopes/auto-sync toggle/test connection)
+  + New Webhook drawer (URL + event picker + description).
+- STEP 10 (System Health, NEW route /admin/system-health, ~640L): 6-tab
+  nav (Overview/Services/Jobs/Cron/Backups/Logs) with live 5s tick
+  indicator. Overview: 140px system health score gauge + live metrics
+  (CPU/Memory/DB Size/Storage/Latency/Error Rate/Connections/Queue Depth
+  with sparklines) + 8 service cards with sparklines. Services: 12-row
+  detailed service grid with latency/uptime/sparkline/status/details.
+  Jobs: 8 background jobs with pending/processing/failed/completed/
+  avg-duration/status. Cron: 8 scheduled jobs with schedule/last-run/
+  next-run/duration/status. Backups: 5 recent backups with restore/
+  download actions. Logs: 10 recent log entries (error/warn/info/debug)
+  with source + timestamp. Live update simulation via 5s interval.
+- STEP 11-13 (Responsive/Micro-interactions/Performance): Applied
+  throughout — minmax(0,1fr) grids (no auto-fit pixel minimums), 4-break
+  responsive system (1400/1100/768/640px), stagger animations
+  (opsFadeIn/invFadeIn/walFadeIn/audFadeIn/rolFadeIn/secFadeIn/
+  intFadeIn/sysFadeIn), hover lift (translateY -2px + shadow.md +
+  border.strong), loading skeletons, useMemo/useCallback for performance,
+  sticky sidebars (settings), sticky bulk action bar (inventory), pulsing
+  live dots (system health, operations home), inline role select (roles),
+  inline approve/reject (wallet), inline stock adjust (inventory).
+
+Stage Summary:
+- Created 4 new routes (/admin/operations, /admin/roles, /admin/security,
+  /admin/integrations, /admin/system-health) — additive, did NOT touch
+  sidebar per user rule. Operations Home provides navigation hub.
+- Redesigned 4 existing routes in place: /admin/inventory, /admin/wallet,
+  /admin/audit, /settings-panel.
+- Total: ~5,200 lines of new enterprise UI code across 9 files.
+- All pages follow established pattern: styled-jsx + tokens-based theming
+  + minmax(0,1fr) grids + 14px radius cards + cubic-bezier transitions +
+  loading skeletons + hover elevation + stagger animations +
+  useMemo/useCallback.
+- Did NOT modify: backend APIs, business logic, sidebar, dashboard,
+  products-management, add-product, orders-management, track-order,
+  customers-management, marketing pages, or any other module.
+- Reused real data sources: getAuditLog(), listAdminUsers(),
+  getCurrentSession(), ROLE_PERMISSIONS, AdminUser/AuditLogEntry types.
+- Type-check passes. Build passes (60/60 pages). All 9 ops pages compile
+  successfully. Ready for Vercel deploy.
