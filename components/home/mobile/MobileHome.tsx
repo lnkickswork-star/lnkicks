@@ -29,6 +29,7 @@ import { safeArea } from '@/lib/mobile/utils/safeArea';
 //     Categories are still reachable via /categories route + bottom nav.
 const MobileRecommended = lazy(() => import('@/components/mobile/MobileRecommended'));
 const MobileRewardsBanner = lazy(() => import('@/components/mobile/MobileRewardsBanner'));
+const MobileSwipeDiscovery = lazy(() => import('@/components/mobile/MobileSwipeDiscovery'));
 const MobileNewsletter = lazy(() => import('@/components/mobile/MobileNewsletter'));
 const MobileTrustBanner = lazy(() => import('@/components/mobile/MobileTrustBanner'));
 const MobileEngagementPopup = lazy(() => import('@/components/mobile/MobileEngagementPopup'));
@@ -264,6 +265,16 @@ export default function MobileHome() {
               — desktop homepage untouched. */}
           <Suspense fallback={<SectionSkeleton height={460} />}>
             <MobileRewardsBanner />
+          </Suspense>
+
+          {/* Phase 27: MobileSwipeDiscovery — Tinder-style swipeable product
+              cards. 5 premium shoes stacked, drag left/right to discover.
+              Alternating Black → Grey → Black → Grey → Black gradient cards.
+              Card shows ONLY shoe image + name + Buy Now / Wishlist CTAs.
+              Infinite loop after 5th card. Mobile-only. Placed directly below
+              MobileRewardsBanner per user spec. */}
+          <Suspense fallback={<SectionSkeleton height={560} />}>
+            <MobileSwipeDiscovery />
           </Suspense>
 
           {/* Phase 19: MobileNewsletter — 'Sign up and save 10%' CTA banner
