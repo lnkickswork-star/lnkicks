@@ -3544,3 +3544,36 @@ Stage Summary:
 - Admin page at /flash-sale-settings controls all config (enable, schedule, product, prices, images).
 - Mobile-only — desktop homepage completely untouched.
 - Default config activates section immediately with Air Jordan 1 Low as featured product, 3-day countdown.
+
+---
+Task ID: phase-25-rev-2
+Agent: Main (Super Z)
+Task: Phase 25 rev 2 — Fix Flash Sale layout (text & countdown not organized) + add dark red accent per user feedback.
+
+Work Log:
+- User reported (with screenshot Screenshot (655).png): text and countdown not organized on mobile view, requested dark red accent where possible.
+- VLM analysis of screenshot confirmed: timer was clipped on right edge (HH:MM:SS cut off), left-heavy layout with all text crammed left, timer labels too small, no breathing room.
+- Redesigned MobileFlashSale header:
+  * Changed from 2-column (left text + right timer) to STACKED + CENTERED vertical layout.
+  * Timer moved below the headline, centered — full HH:MM:SS always visible on 360px viewports.
+  * Eyebrow "Limited Time Offer" now a centered pill chip with subtle dark-red accent (rgba(127,29,29,0.18) bg + #FCA5A5 soft red-300 text + rgba(127,29,29,0.45) border).
+  * Headline centered, 26px bold, balanced line-height 1.15.
+  * Subtext centered with maxWidth 280px for clean wrap.
+- Timer block refinements:
+  * minWidth 60px (was 56) — more breathing room.
+  * Label font 10px (was 9) — better readability.
+  * Colon separator marginTop 16 (was 18) — better visual alignment with blocks.
+- Dark red accent (#7F1D1D = theme.colors.error) applied to:
+  * Eyebrow chip border/text/bg.
+  * Discount badge bg/border/text.
+  * Buy Now button hover state (bg shifts to #7F1D1D with red glow shadow).
+  * All accents kept muted/luxury — no bright red, no neon, no gradients.
+- Committed: 2768e0f.
+- Pushed to GitHub: 206ee65..2768e0f.
+- Verified Vercel deployment: page chunk page-d98ee33c880773cb.js contains "127, 29, 29", "FCA5A5", "Limited Time Offer", "mfs-card" — confirmed live.
+
+Stage Summary:
+- Flash Sale section now properly organized on mobile: stacked centered header, centered countdown below, then product showcase, then product info, then Buy Now button.
+- Subtle dark red accent (#7F1D1D) on eyebrow chip, discount badge, and CTA hover — luxury feel preserved.
+- No layout clipping, full HH:MM:SS visible.
+- Mobile-only — desktop homepage untouched.
