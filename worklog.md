@@ -3498,3 +3498,49 @@ Stage Summary:
 - Phase 24 change: grid split 50/50 → 45/55 (image gets more space, matching Adobe Express).
 - Change committed locally (a205c08) but NOT pushed — awaiting GitHub PAT from user.
 - Desktop homepage untouched (mobile-only change).
+
+---
+Task ID: phase-25
+Agent: Main (Super Z)
+Task: Phase 25 — Premium Countdown Flash Sale section on mobile homepage (above Popular Shoes) + admin settings page.
+
+Work Log:
+- Read theme tokens (colors, spacing, radius, shadows, typography, motion) to match LN KICKS design language exactly.
+- Read MobilePopularShoes.tsx, MobileNewArrivals.tsx, MobileHome.tsx to understand existing patterns.
+- Checked Prisma — NOT installed in this project (no schema, no @prisma/client in package.json). App uses localStorage for all state (cart, wishlist via AppContext). Used same pattern for Flash Sale config.
+- Created components/mobile/MobileFlashSale.tsx — premium dark card section with:
+  * Matte black (#0A0A0A) bg, 28px radius (theme.radius.largeCard), editorial shadow.
+  * ⚡ Limited Time Offer eyebrow + "Flash Sale" 28px bold headline + grey subtext.
+  * Glass-style countdown timer blocks (Hours:Minutes:Seconds) with frosted-glass bg (rgba(255,255,255,0.08) + backdrop-blur), 22px tabular-nums, labels under each block.
+  * 1-second interval tick; auto-hides (sets collapsed=true) when timer hits 0.
+  * Featured product showcase: main image (16/11 aspect, no layout shift) + 3-4 thumbnail gallery. Tap thumbnail to switch main image with smooth opacity fade (multiple <img> layers, opacity-toggled).
+  * Product info: brand eyebrow, 18px bold name, strikethrough original price → 22px bold sale price → subtle discount pill.
+  * Full-width "Buy Now →" button: 52px height, 16px radius, white bg, black text, subtle shadow + press scale.
+  * Container fade-in animation (420ms ease-out). All transitions use Apple easing cubic-bezier(0.16,1,0.3,1). 60fps transforms/opacity only.
+  * Lazy-loaded images. No flashing, no neon, no gradients.
+  * Config persisted to localStorage key `lnk_flash_sale_config`.
+  * Default seed config: Air Jordan 1 Low, Rs.18,999 → Rs.8,899, 53% OFF, 3-day window from first visit.
+- Created app/flash-sale-settings/{layout,page}.tsx — admin page with:
+  * MobileLayout (admin chrome, hideBottomNav).
+  * Enable/Disable toggle (44×24 pill).
+  * Start/End datetime-local inputs.
+  * Product brand/name/original price/sale price/discount badge/button link fields.
+  * Main image URL + gallery slots (up to 4) with add/remove.
+  * Image preview for main image.
+  * Sticky bottom Save bar + "✓ Saved" confirmation state.
+  * Reset to defaults button.
+- Mounted <MobileFlashSale /> in MobileHome.tsx between MobileHeroBanner and MobilePopularShoes (per spec: "immediately above the Most Wanted Popular Shoes section").
+- Type-checked with `npx tsc --noEmit` — fixed one unused var (currentImage). No remaining errors for new files.
+- Committed: 206ee65.
+- Pushed to GitHub via PAT: d4ad7f2..206ee65.
+- Verified Vercel deployment:
+  * Homepage page chunk (_next/static/chunks/app/page-3ba2b29f878878ec.js) contains: "Flash Sale", "Limited Time Offer", "lnk_flash_sale_config", "mfs-card" — confirmed live.
+  * /flash-sale-settings returns HTTP 200 and contains "Flash Sale Settings" + "Save Changes" text.
+
+Stage Summary:
+- MobileFlashSale section live on mobile homepage, placed above MobilePopularShoes.
+- Premium dark card design matching LN KICKS hero card aesthetic (matte black, 28px radius, editorial shadow).
+- Countdown timer auto-hides section when expired (no blank space, smooth collapse).
+- Admin page at /flash-sale-settings controls all config (enable, schedule, product, prices, images).
+- Mobile-only — desktop homepage completely untouched.
+- Default config activates section immediately with Air Jordan 1 Low as featured product, 3-day countdown.
