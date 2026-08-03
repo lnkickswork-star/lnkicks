@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { MobileLayout } from '@/components/layout/MobileLayout';
 import { ResponsiveProductCard } from '@/components/ResponsiveProductCard';
@@ -12,13 +11,16 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * CategorySlugPage — single category view (/category/[slug]).
  *
- * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="back" title={categoryName}> so the
- *    page inherits the premium glass header + floating bottom nav + safe-area
- *    handling from the universal mobile shell.
- *  - All hardcoded colors / sizes / radii migrated to mobile design tokens.
- *  - Category summary card uses theme.radius.xxl + hairline border +
- *    theme.shadows.xs elevation.
+ * Phase 29 (Mobile UI Refinement):
+ *  - Breadcrumb REMOVED (back header already shows the category name).
+ *  - Duplicate category H1 title card REMOVED (back header subtitle
+ *    already displays the same name in uppercase).
+ *  - Product grid now sits flush below the header — no empty space,
+ *    no duplicate labels.
+ *
+ * Phase 4 (Universal Polish) — preserved:
+ *  - Mounts <MobileLayout headerVariant="back" title={categoryName}>
+ *  - All colors/sizes/radii use mobile design tokens.
  *
  * Desktop rendering preserved — MobileLayout detects UA + viewport width
  * and renders children untouched on desktop.
@@ -32,87 +34,25 @@ export default function CategorySlugPage() {
   return (
     <MobileLayout headerVariant="back" title={categoryName}>
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
-        {/* BREADCRUMB */}
-        <div
+        {/* ── ADAPTIVE PRODUCT GRID ─────────────────────────────────────
+            Phase 29: breadcrumb + duplicate H1 title card removed.
+            Grid now sits flush below the header (MobileLayout main
+            already has spacing.lg top padding). */}
+
+        {/* Optional small category summary — kept compact, single line,
+            so the grid can start closer to the header. Hidden if you
+            want a truly bare grid; for now shown as a subtle eyebrow. */}
+        <p
           style={{
-            fontSize: theme.fontSize.base,
+            fontSize: theme.fontSize.body,
             color: theme.colors.textSecondary,
-            marginBottom: theme.spacing.xxl,
-            display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing.sm,
-            paddingTop: theme.spacing.sm,
+            margin: `0 0 ${theme.spacing.xl}px 0`,
+            lineHeight: theme.lineHeight.relaxed,
           }}
         >
-          <Link
-            href="/"
-            style={{
-              color: theme.colors.textSecondary,
-              textDecoration: 'none',
-            }}
-          >
-            Home
-          </Link>
-          <span>/</span>
-          <Link
-            href="/categories"
-            style={{
-              color: theme.colors.textSecondary,
-              textDecoration: 'none',
-            }}
-          >
-            Categories
-          </Link>
-          <span>/</span>
-          <span
-            style={{
-              color: theme.colors.textPrimary,
-              fontWeight: theme.fontWeight.semibold,
-            }}
-          >
-            {categoryName}
-          </span>
-        </div>
+          Showing authentic luxury items in {categoryName}.
+        </p>
 
-        {/* CATEGORY TITLE & SUMMARY */}
-        <div
-          style={{
-            background: theme.colors.white,
-            borderRadius: theme.radius.xxl,
-            padding: theme.spacing.huge,
-            border: `1px solid ${theme.colors.border}`,
-            marginBottom: theme.spacing.xxxl,
-            boxShadow: theme.shadows.xs,
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: theme.fontFamily.display,
-              fontSize: theme.fontSize.h1,
-              fontWeight: theme.fontWeight.extrabold,
-              textTransform: 'uppercase',
-              color: theme.colors.textPrimary,
-              margin: 0,
-              lineHeight: theme.lineHeight.tight,
-              letterSpacing: theme.letterSpacing.tight,
-            }}
-          >
-            {categoryName}
-          </h1>
-          <p
-            style={{
-              fontSize: theme.fontSize.body,
-              color: theme.colors.textSecondary,
-              marginTop: theme.spacing.xs + 2,
-              marginBottom: 0,
-              lineHeight: theme.lineHeight.relaxed,
-            }}
-          >
-            Showing authentic luxury items in {categoryName}.
-          </p>
-        </div>
-
-        {/* ADAPTIVE PRODUCT GRID */}
         <div
           style={{
             display: 'grid',

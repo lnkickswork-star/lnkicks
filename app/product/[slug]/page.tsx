@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
@@ -15,27 +15,128 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 /**
  * ProductDetailPage — flagship mobile product page.
  *
- * Phase 4 (Universal Polish) refactor:
- *  - Mounts <MobileLayout headerVariant="back" title={product.name}> so the
- *    page gets the same premium chrome (glass header, floating bottom nav
- *    with Cart FAB, menu drawer, safe-area) as the mobile homepage.
- *  - All hardcoded colors / sizes / radii migrated to mobile design tokens.
- *  - Add-to-Cart + Buy Now buttons are now FUNCTIONAL — wired to
- *    useApp().addToCart with the selected size + color, haptic feedback,
- *    and an explicit toast.
- *  - Banned iOS red #FF3B30 removed — price is BLACK (theme.colors.price),
- *    "IN STOCK" badge uses muted success green (theme.colors.success +
- *    a soft green-tint background — no harsh greens).
- *  - Image gallery: token-driven radius/padding, smaller height (320 vs
- *    380), drop-shadow.lg, black "AUTHENTIC" badge (not red).
- *  - Thumbnails: 72x72 with radius.lg + drop-shadow.xs, haptic on tap.
- *  - Size selector: radius.lg, haptic.selection on tap, focus-visible ring.
- *  - Color selector: radius.lg, haptic.selection on tap.
- *  - Trust badges: ✓ SVG icons in a grey50 card (no emoji).
+ * Phase 29 (Mobile Product Page UI Refinement):
+ *  - Breadcrumbs REMOVED. Page starts cleanly with the image gallery
+ *    directly under the header (no empty space).
+ *  - SIZE SELECTOR now shows a subtle "Only N left" low-stock pill above
+ *    each size button. Counts are deterministic per product+size (1-3
+ *    range) so they stay stable across re-renders.
+ *  - COLOR SELECTOR redesigned: text buttons replaced with circular
+ *    swatches filled with the actual color hex. A `colorToHex` mapper
+ *    resolves any color name (Black, White, Powder Blue, Core Black,
+ *    Silver, Grey, Sea Salt, Gold, Red, Green, etc.) to a real color.
+ *    White swatch gets a subtle border for visibility. Selected swatch
+ *    shows a premium 2px ring with a 4px offset, animated with a 200ms
+ *    ease-out transition (no blinking, no oversized animation).
+ *  - "Selected Color: <name>" label below swatches keeps the visible
+ *    text label perfectly synchronized with the highlighted swatch.
+ *  - Spacing rebalanced: paddingTop on first child removed (MobileLayout
+ *    main already has spacing.lg top padding). Image gallery sits flush
+ *    below the header.
+ *
+ * Phase 4 (Universal Polish) — preserved:
+ *  - Mounts <MobileLayout headerVariant="back" title={product.brand}>
+ *  - Add-to-Cart + Buy Now buttons wired to useApp().addToCart with
+ *    haptic feedback and an explicit toast.
+ *  - Trust badges: SVG checkmarks in a grey50 card.
+ *  - All colors/sizes/radii use mobile design tokens.
  *
  * Desktop rendering preserved — MobileLayout detects UA + viewport width
  * and renders children untouched on desktop.
  */
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  COLOR NAME → HEX MAPPING
+ *  Resolves any product color name to a real hex value for swatch fill.
+ *  Keyword-based so "Core Black", "Matte Black", "Triple Black" all
+ *  resolve to black. Falls back to a neutral grey for unknowns.
+ * ──────────────────────────────────────────────────────────────────── */
+function colorToHex(name: string): string {
+  const n = name.toLowerCase().trim();
+
+  // ── Whites / off-whites (need a border, handled separately) ─────────
+  if (
+    n.includes('white') ||
+    n.includes('sea salt') ||
+    n.includes('bone') ||
+    n.includes('cream') ||
+    n.includes('off white') ||
+    n.includes('ivory') ||
+    n.includes('pearl')
+  ) {
+    return '#FFFFFF';
+  }
+
+  // ── Blacks ──────────────────────────────────────────────────────────
+  if (n.includes('black')) return '#0A0A0A';
+
+  // ── Greys / silvers ────────────────────────────────────────────────
+  if (n.includes('silver') || n.includes('metallic')) return '#C0C5CA';
+  if (n.includes('grey') || n.includes('gray') || n.includes('ash')) return '#9CA3AF';
+  if (n.includes('stone') || n.includes('graphite')) return '#52525B';
+
+  // ── Blues ──────────────────────────────────────────────────────────
+  if (n.includes('navy') || n.includes('midnight')) return '#1E293B';
+  if (n.includes('royal')) return '#1D4ED8';
+  if (n.includes('powder') || n.includes('sky')) return '#A5C9E0';
+  if (n.includes('baby blue')) return '#BFDBFE';
+  if (n.includes('blue')) return '#2563EB';
+
+  // ── Reds ───────────────────────────────────────────────────────────
+  if (n.includes('burgundy') || n.includes('wine')) return '#5B1A1A';
+  if (n.includes('crimson')) return '#B91C1C';
+  if (n.includes('red')) return '#DC2626';
+
+  // ── Greens ─────────────────────────────────────────────────────────
+  if (n.includes('olive')) return '#4D5B2A';
+  if (n.includes('mint')) return '#A7F3D0';
+  if (n.includes('forest')) return '#166534';
+  if (n.includes('green')) return '#16A34A';
+
+  // ── Yellows / golds ────────────────────────────────────────────────
+  if (n.includes('gold') || n.includes('champagne')) return '#D4AF37';
+  if (n.includes('yellow') || n.includes('amber')) return '#F59E0B';
+
+  // ── Pinks / purples ────────────────────────────────────────────────
+  if (n.includes('rose') || n.includes('pink') || n.includes('coral')) return '#EC4899';
+  if (n.includes('purple') || n.includes('violet') || n.includes('lavender')) return '#7C3AED';
+
+  // ── Oranges / browns ───────────────────────────────────────────────
+  if (n.includes('orange')) return '#EA580C';
+  if (n.includes('brown') || n.includes('tan') || n.includes('cognac')) return '#78350F';
+
+  // ── Fallback ───────────────────────────────────────────────────────
+  return '#9CA3AF';
+}
+
+/** Returns true for white/light colors that need a subtle border for visibility. */
+function isLightColor(name: string): boolean {
+  const hex = colorToHex(name);
+  // Parse hex → relative luminance
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const r = parseInt(m[1], 16) / 255;
+  const g = parseInt(m[2], 16) / 255;
+  const b = parseInt(m[3], 16) / 255;
+  // Standard relative luminance formula (per WCAG)
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 0.85;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  LOW-STOCK COUNT — deterministic per (productId, size)
+ *  Returns 1, 2, or 3 so it stays stable across re-renders but varies
+ *  across sizes within the same product.
+ * ──────────────────────────────────────────────────────────────────── */
+function getLowStockCount(productId: string, size: string): number {
+  let h = 0;
+  const s = `${productId}|${size}`;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return 1 + (h % 3); // 1, 2, or 3
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -45,11 +146,22 @@ export default function ProductDetailPage() {
   const product =
     PRODUCT_REGISTRY.find((p) => p.slug === slug) || PRODUCT_REGISTRY[0];
 
-  const [selectedSize, setSelectedSize] = useState<string>('UK 8');
+  const [selectedSize, setSelectedSize] = useState<string>(
+    product.availableSizes[0] || 'UK 8',
+  );
   const [selectedColor, setSelectedColor] = useState<string>(
     product.availableColors[0] || 'Default',
   );
   const [activeImg, setActiveImg] = useState<string>(product.primaryImage);
+
+  // ── Precompute low-stock counts per size (stable per product+size) ──
+  const stockBySize = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const sz of product.availableSizes) {
+      map[sz] = getLowStockCount(product.id, sz);
+    }
+    return map;
+  }, [product.id, product.availableSizes]);
 
   const handleAddToCart = useCallback(() => {
     haptic.medium();
@@ -75,13 +187,10 @@ export default function ProductDetailPage() {
     router.push('/checkout');
   }, [product, selectedSize, selectedColor, addToCart, router]);
 
-  const handleThumbTap = useCallback(
-    (img: string) => {
-      haptic.selection();
-      setActiveImg(img);
-    },
-    [],
-  );
+  const handleThumbTap = useCallback((img: string) => {
+    haptic.selection();
+    setActiveImg(img);
+  }, []);
 
   const handleSizeTap = useCallback((sz: string) => {
     haptic.selection();
@@ -96,38 +205,9 @@ export default function ProductDetailPage() {
   return (
     <MobileLayout headerVariant="back" title={product.brand}>
       <div style={{ padding: `0 ${theme.spacing.pad}px` }}>
-        {/* BREADCRUMB */}
-        <div
-          style={{
-            fontSize: theme.fontSize.sm,
-            color: theme.colors.textSecondary,
-            marginBottom: theme.spacing.lg,
-            display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing.sm,
-            paddingTop: theme.spacing.sm,
-          }}
-        >
-          <Link
-            href="/"
-            style={{ color: theme.colors.textSecondary, textDecoration: 'none' }}
-          >
-            Home
-          </Link>
-          <span>/</span>
-          <Link
-            href="/products"
-            style={{ color: theme.colors.textSecondary, textDecoration: 'none' }}
-          >
-            Products
-          </Link>
-          <span>/</span>
-          <span style={{ color: theme.colors.textPrimary, fontWeight: theme.fontWeight.semibold }}>
-            {product.name}
-          </span>
-        </div>
-
-        {/* IMAGE GALLERY */}
+        {/* ── IMAGE GALLERY ─────────────────────────────────────────────
+            Phase 29: breadcrumb removed. Gallery now sits flush below
+            the header (MobileLayout main already has spacing.lg top). */}
         <div
           style={{
             background: theme.colors.white,
@@ -310,7 +390,11 @@ export default function ProductDetailPage() {
           {product.shortDescription}
         </p>
 
-        {/* SIZE SELECTOR */}
+        {/* ── SIZE SELECTOR ─────────────────────────────────────────────
+            Phase 29: each size now has a "Only N left" low-stock pill
+            rendered above the size button. Layout = vertical column
+            per size (pill + button stacked). Counts are deterministic
+            per (productId, size), stable across re-renders. */}
         <div style={{ marginBottom: theme.spacing.xl }}>
           <div
             style={{
@@ -345,39 +429,76 @@ export default function ProductDetailPage() {
               display: 'flex',
               gap: theme.spacing.sm + 2,
               flexWrap: 'wrap',
+              alignItems: 'flex-end', // pill+button columns align at the bottom
             }}
           >
             {product.availableSizes.map((sz) => {
               const active = selectedSize === sz;
+              const stock = stockBySize[sz] ?? 2;
               return (
-                <button
+                <div
                   key={sz}
-                  type="button"
-                  onClick={() => handleSizeTap(sz)}
-                  aria-pressed={active}
-                  className="pressable pdp-size"
                   style={{
-                    padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
-                    borderRadius: theme.radius.lg,
-                    border: active
-                      ? `2px solid ${theme.colors.black}`
-                      : `1px solid ${theme.colors.grey300}`,
-                    background: active ? theme.colors.black : theme.colors.white,
-                    color: active ? theme.colors.white : theme.colors.textPrimary,
-                    fontSize: theme.fontSize.body,
-                    fontWeight: theme.fontWeight.bold,
-                    cursor: 'pointer',
-                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
                   }}
                 >
-                  {sz}
-                </button>
+                  {/* Low-stock pill */}
+                  <span
+                    aria-label={`Only ${stock} left in ${sz}`}
+                    style={{
+                      display: 'inline-block',
+                      fontSize: 11,
+                      fontWeight: theme.fontWeight.medium,
+                      letterSpacing: 0.2,
+                      color: theme.colors.warning,
+                      background: '#FEF6E7',
+                      padding: '2px 8px',
+                      borderRadius: theme.radius.pill,
+                      lineHeight: 1.4,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Only {stock} left
+                  </span>
+
+                  {/* Size button */}
+                  <button
+                    type="button"
+                    onClick={() => handleSizeTap(sz)}
+                    aria-pressed={active}
+                    className="pressable pdp-size"
+                    style={{
+                      padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
+                      borderRadius: theme.radius.lg,
+                      border: active
+                        ? `2px solid ${theme.colors.black}`
+                        : `1px solid ${theme.colors.grey300}`,
+                      background: active ? theme.colors.black : theme.colors.white,
+                      color: active ? theme.colors.white : theme.colors.textPrimary,
+                      fontSize: theme.fontSize.body,
+                      fontWeight: theme.fontWeight.bold,
+                      cursor: 'pointer',
+                      transition: 'all 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  >
+                    {sz}
+                  </button>
+                </div>
               );
             })}
           </div>
         </div>
 
-        {/* COLOR SELECTOR */}
+        {/* ── COLOR SELECTOR ────────────────────────────────────────────
+            Phase 29 redesign: text buttons replaced with circular
+            swatches filled with the actual color hex. Selected swatch
+            shows a premium 2px ring offset 3px from the swatch, with a
+            200ms ease-out transition (no blinking). A "Selected Color:
+            <name>" label below keeps the text label synchronized with
+            the highlighted swatch. */}
         <div style={{ marginBottom: theme.spacing.xxl }}>
           <div
             style={{
@@ -391,34 +512,94 @@ export default function ProductDetailPage() {
           >
             Select Color
           </div>
-          <div style={{ display: 'flex', gap: theme.spacing.sm + 2, flexWrap: 'wrap' }}>
+
+          {/* Swatch row */}
+          <div
+            style={{
+              display: 'flex',
+              gap: theme.spacing.md,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
             {product.availableColors.map((c) => {
               const active = selectedColor === c;
+              const hex = colorToHex(c);
+              const needsBorder = isLightColor(c);
               return (
                 <button
                   key={c}
                   type="button"
                   onClick={() => handleColorTap(c)}
                   aria-pressed={active}
+                  aria-label={`Color: ${c}${active ? ' (selected)' : ''}`}
                   className="pressable pdp-color"
                   style={{
-                    padding: `${theme.spacing.sm + 2}px ${theme.spacing.md}px`,
-                    borderRadius: theme.radius.lg,
-                    border: active
-                      ? `2px solid ${theme.colors.black}`
-                      : `1px solid ${theme.colors.grey300}`,
-                    background: active ? theme.colors.grey100 : theme.colors.white,
-                    color: theme.colors.textPrimary,
-                    fontSize: theme.fontSize.sm,
-                    fontWeight: theme.fontWeight.semibold,
+                    // Outer button = the ring + offset container
+                    width: 44,
+                    height: 44,
+                    padding: 0,
+                    border: 'none',
+                    background: 'transparent',
                     cursor: 'pointer',
-                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    borderRadius: '50%',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    // 200ms transition on the ring (premium, subtle)
+                    transition:
+                      'box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    // The ring is a box-shadow so it animates smoothly
+                    boxShadow: active
+                      ? `0 0 0 2px ${theme.colors.white}, 0 0 0 4px ${theme.colors.black}`
+                      : 'none',
                   }}
                 >
-                  {c}
+                  {/* Inner swatch — actual color fill */}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: 'block',
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      background: hex,
+                      // White / off-white gets a subtle border for visibility
+                      border: needsBorder
+                        ? `1px solid ${theme.colors.grey300}`
+                        : 'none',
+                      boxShadow: active
+                        ? '0 1px 2px rgba(17,17,17,0.10)'
+                        : '0 1px 2px rgba(17,17,17,0.08)',
+                      transition:
+                        'box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  />
                 </button>
               );
             })}
+          </div>
+
+          {/* Selected Color label — syncs perfectly with the active swatch */}
+          <div
+            aria-live="polite"
+            style={{
+              marginTop: theme.spacing.md,
+              fontSize: theme.fontSize.body,
+              color: theme.colors.textSecondary,
+              fontWeight: theme.fontWeight.regular,
+            }}
+          >
+            Selected Color:{' '}
+            <span
+              style={{
+                color: theme.colors.textPrimary,
+                fontWeight: theme.fontWeight.semibold,
+              }}
+            >
+              {selectedColor}
+            </span>
           </div>
         </div>
 
@@ -572,11 +753,12 @@ export default function ProductDetailPage() {
           outline-offset: 2px;
         }
         .pdp-color:active {
-          transform: scale(0.96);
+          transform: scale(0.94);
         }
         .pdp-color:focus-visible {
           outline: 2px solid ${theme.colors.black};
-          outline-offset: 2px;
+          outline-offset: 3px;
+          border-radius: 50%;
         }
         .pdp-cta:active {
           transform: scale(0.97);
