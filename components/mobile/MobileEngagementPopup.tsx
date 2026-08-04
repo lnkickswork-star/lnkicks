@@ -19,9 +19,8 @@
  *   ┌──────────────────────────────────────────────┐
  *   │  [✕]                                            │  ← top banner (dark gradient)
  *   │                                                │
- *   │   Looking for your       [premium 3D shoe]    │
- *   │   perfect pair?          [✨ sparkles ✨]      │
- *   │   Discover premium sneakers…                  │
+ *   │   Looking for your perfect pair?               │  ← full-width text
+ *   │   Discover premium sneakers…                   │     (shoe image removed)
  *   │                                                │
  *   ├──────────────────────────────────────────────┤
  *   │  Unlock Exclusive Offers                       │  ← bottom card (white)
@@ -96,14 +95,6 @@ const LK_USER = 'lnk_user';
 
 /** Mobile-only viewport cap. Above this width the popup never shows. */
 const MOBILE_MAX_WIDTH = 768;
-
-/**
- * Air Jordan 1 Low "Powder Blue" — the hero sneaker image used across
- * the existing mobile homepage. Same CDN URL reused here for visual
- * consistency (no random external image).
- */
-const SHOE_IMAGE_URL =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw';
 
 // ── Component ─────────────────────────────────────────────────────────
 
@@ -498,12 +489,12 @@ function MobileEngagementPopupImpl() {
             </svg>
           </button>
 
-          {/* ── Left-side text ─────────────────────────────────────── */}
+          {/* ── Full-width text (shoe image removed per user request) ── */}
           <div
             style={{
               position: 'relative',
               zIndex: 2,
-              maxWidth: '62%',
+              maxWidth: '100%',
             }}
           >
             <h2
@@ -537,34 +528,6 @@ function MobileEngagementPopupImpl() {
             </p>
           </div>
 
-          {/* ── Premium 3D shoe image — right side ─────────────────── */}
-          <img
-            src={SHOE_IMAGE_URL}
-            alt="Air Jordan 1 Low Powder Blue sneaker"
-            className="lnep-shoe"
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            style={{
-              position: 'absolute',
-              right: -20,
-              bottom: -10,
-              width: 165,
-              height: 'auto',
-              objectFit: 'contain',
-              filter:
-                'drop-shadow(0 18px 28px rgba(0,0,0,0.45))',
-              zIndex: 3,
-              userSelect: 'none',
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* ── Sparkle elements — floating premium accents ────────── */}
-          <Sparkle top={22} right={42} size={4} delay={0} />
-          <Sparkle top={62} right={148} size={3} delay={0.8} />
-          <Sparkle top={108} right={36} size={5} delay={1.4} />
-          <Sparkle top={130} right={120} size={3} delay={0.4} />
         </div>
 
         {/* ── Bottom section — white card ────────────────────────────── */}
@@ -799,18 +762,6 @@ function MobileEngagementPopupImpl() {
           outline-offset: 2px;
         }
 
-        /* ── Shoe image float-in (subtle scale + fade on visible) ──── */
-        .lnep-shoe {
-          opacity: 0;
-          transform: translateX(20px) scale(0.95);
-          transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1) 120ms,
-            transform 600ms cubic-bezier(0.16, 1, 0.3, 1) 120ms;
-        }
-        .lnep-sheet--visible .lnep-shoe {
-          opacity: 1;
-          transform: translateX(0) scale(1);
-        }
-
         /* ── Form label ─────────────────────────────────────────────── */
         .lnep-label {
           display: block;
@@ -907,61 +858,8 @@ function MobileEngagementPopupImpl() {
           color: ${theme.colors.textPrimary};
         }
 
-        /* ── Sparkle animation keyframes ────────────────────────────── */
-        @keyframes lnep-sparkle {
-          0%,
-          100% {
-            opacity: 0;
-            transform: scale(0.6) rotate(0deg);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1) rotate(45deg);
-          }
-        }
       `}</style>
     </div>
-  );
-}
-
-// ── Sparkle sub-component ──────────────────────────────────────────────
-/**
- * Sparkle — a small 4-point star that pulses on a loop, giving the
- * premium "floating sparkle" effect around the shoe image. Pure CSS
- * animation (no JS), GPU-accelerated, doesn't trigger layout.
- */
-function Sparkle({
-  top,
-  right,
-  size,
-  delay,
-}: {
-  top: number;
-  right: number;
-  size: number;
-  delay: number;
-}) {
-  return (
-    <svg
-      aria-hidden
-      width={size + 4}
-      height={size + 4}
-      viewBox="0 0 24 24"
-      style={{
-        position: 'absolute',
-        top,
-        right,
-        zIndex: 4,
-        pointerEvents: 'none',
-        animation: `lnep-sparkle 2.6s ease-in-out ${delay}s infinite`,
-        willChange: 'transform, opacity',
-      }}
-    >
-      <path
-        d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z"
-        fill="rgba(255,255,255,0.85)"
-      />
-    </svg>
   );
 }
 
