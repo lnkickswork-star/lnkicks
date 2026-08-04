@@ -451,8 +451,6 @@ export default function DesignerSneakersSection({
                           pointerEvents: 'none',
                         }}
                       />
-                      {/* Floating actions pill (Wishlist · Quick View · Add to Cart) */}
-                      <ProductCardActions product={product} layout="floating" variant="light" />
                     </div>
                   </Link>
 
@@ -532,9 +530,8 @@ export default function DesignerSneakersSection({
                       )}
                     </div>
                     {/* Card-style Add to Cart CTA below the price.
-                        Wishlist + Quick View live in the floating pill above
-                        the image; the text block keeps a single primary CTA
-                        for users who scroll past the image. */}
+                        Single primary CTA per user spec — the floating
+                        overlay pill above the image has been removed. */}
                     <div
                       onClick={(e) => e.stopPropagation()}
                       onMouseDown={(e) => e.stopPropagation()}

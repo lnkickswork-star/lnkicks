@@ -217,8 +217,6 @@ export default function LuxuryShoes() {
                       filter: 'saturate(0.95)',
                     }}
                   />
-                  {/* Floating actions pill (Wishlist · Quick View · Add to Cart) */}
-                  <ProductCardActions product={shoe} layout="floating" variant="light" />
                 </div>
               </Link>
               <div style={{ marginTop: '28px', textAlign: 'center' }}>
@@ -252,8 +250,8 @@ export default function LuxuryShoes() {
                   {shoe.price}
                 </p>
                 {/* Card-style Add to Cart CTA below the price.
-                    ProductCardActions stops event propagation so these
-                    clicks never trigger the parent Link navigation. */}
+                    Single primary CTA per user spec — the floating overlay
+                    pill above the image has been removed. */}
                 <div
                   style={{ display: 'flex', justifyContent: 'center' }}
                   onClick={(e) => e.stopPropagation()}

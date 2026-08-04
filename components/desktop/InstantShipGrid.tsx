@@ -181,24 +181,6 @@ export default function InstantShipGrid() {
                 }}
                 className="product-image-wrap"
               >
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: '14px',
-                    left: '14px',
-                    zIndex: 10,
-                    background: '#000',
-                    color: '#fff',
-                    fontSize: '8px',
-                    fontWeight: 700,
-                    padding: '6px 12px',
-                    borderRadius: '999px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.2em',
-                  }}
-                >
-                  {product.badge}
-                </span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={product.image}
