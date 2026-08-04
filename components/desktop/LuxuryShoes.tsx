@@ -2,13 +2,16 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import ProductCardActions from './ProductCardActions';
 
 /**
  * LuxuryShoes — filterable horizontal carousel of luxury sneaker cards.
  *
- * Refinements (Phase 1.5):
- *  - Replaces Luxury Handbags section entirely
- *  - Cards: Louis Vuitton / Gucci / Prada / Balenciaga / Dior sneakers
+ * Refinements (Phase 2):
+ *  - Whole card is a single <Link> (no dead click areas)
+ *  - Brand-theme price (black) — matches LN KICKS identity
+ *  - Per-card Wishlist + Quick View + Add to Cart actions
+ *    (uses shared ProductCardActions component)
  *  - Each card has tall editorial image with hover scale
  *  - Premium typography, ultra-luxury card treatment
  *  - Filter pills refined (active = black/white, hover = subtle bg)
@@ -19,6 +22,8 @@ interface Shoe {
   brand: string;
   name: string;
   price: string;
+  /** Numeric price used for cart line items (INR). */
+  priceValue: number;
   image: string;
   badge?: string;
   href: string;
@@ -30,6 +35,7 @@ const SHOES: Shoe[] = [
     brand: 'Louis Vuitton',
     name: 'LV Trainer Sneaker',
     price: 'Rs. 1,49,000',
+    priceValue: 149000,
     badge: 'New',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB2H2sQCPwnRw-SialSCGXn-ATjYSC03s-gKZxnS9tKGCOP0UH2nXfpcFc0-2L7HkXP_nl9cIYuBaCSgZJUCjVAYKnv5t4HeT5O7qq32pjqtScVMel8GuUMHwmv8USOKPypALNCN_NcLCPp4gW6Pc7_Nm6yHSuulGQZdEIMZkhs5JONuzXo946yBXmQdQTQyQg6qAxk_ratsG8DDnrnjKEFYxj68X-gtdg5Do-dEQTJd7SI4vbHvpzAQw',
@@ -40,6 +46,7 @@ const SHOES: Shoe[] = [
     brand: 'Gucci',
     name: 'Gucci Screener Sneaker',
     price: 'Rs. 88,999',
+    priceValue: 88999,
     badge: 'Monsoon Sale',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuAJE5C4VKoj2h80qfWMDwUx1GW6pYc1F4_Uectmiw-2WzLVSjlGgc-qdXf677UyetETAtMvKPa1kHCOQFUGrea8nKVhbz1ir8aMZQJbOr7jtryq6NiPCwPVdQj9zIk3iWY23kmyaGYF9gLDZrQESpO8FfFxOXZg_Ynz-mHhmbVnYIB-QgR0_qYA3WFCl7P0zKKMnaYhRwEoacj8NTonQtA-rkEdgpZjAYvnqvZ_frpgr9YdsfzEjJ6ddg',
@@ -50,6 +57,7 @@ const SHOES: Shoe[] = [
     brand: 'Prada',
     name: 'Prada America\'s Cup Sneaker',
     price: 'Rs. 1,12,000',
+    priceValue: 112000,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCB0xkKsnEs6tXbeN6ykf3LHxA6rAeJieitEfz_vZkBo-KwCLRHz0uAsDRyq4bMjuTB7EdEMrcf7GgtOFj6GmzcuianfIJ4IUmky0_mhFl2AcMZsHbsWsAjAw_3KypPeo0CzISpDUQvOmwEcg3jDb8yhVC3DtYHlbJdtQmonY13ba3kaTl2Gp3hs8bvLdLGkRNyIC3eCVdB_gTzu_pdqPTtjPVY83KAQR57Th7caAqCpqBVSRyvnysQIw',
     href: '/product/prada-americas-cup-sneaker',
@@ -59,6 +67,7 @@ const SHOES: Shoe[] = [
     brand: 'Balenciaga',
     name: 'Balenciaga Triple S Sneaker',
     price: 'Rs. 95,000',
+    priceValue: 95000,
     badge: 'New',
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy1zqlV3EVBiXx6CndhW4Uod-pFa2fG-_cPEfelTsFndJz-fEx1lsu-A1XSvHM9-i6Ada7WTAVt5jhebotTMjSp98LvV2NBo4xI1FlRWch2IOk6gFOs3PGJbPJGzOW7_EeYNyF-98n-tr4UfhW_J1ws1_Ez_CcGI4KgsDAwMhNA1ad0fjXksuwyvitp84wSjZRP-J3laTKpA1Yu4vvkeGHiL-YkACNIjlZXfc810QFnt_KF1zbBHwHw',
@@ -69,6 +78,7 @@ const SHOES: Shoe[] = [
     brand: 'Dior',
     name: 'Dior B23 High-Top Sneaker',
     price: 'Rs. 1,28,000',
+    priceValue: 128000,
     image:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBoeDHgD4sdEolj1Q6YY0dFBFam5YpICGBA2dZIy1CsoaOAyvFhphvbL7FSkNTAYouunPHoG9hNcKTvSWYd8ErjQY04V5XGIz8bL0hISKMtP5b4D4Qd5BnVZyOH32cafz8bJ5ecFNv5utNkkIW5w6gGyQftyHuDaBBRAkh9yHhMJ0E1VeGuDflsHiijdR0pef1sF8riPx9Jszb6CVCfz413_6TGPUGpuRbUCa5_hkXTubgyzvTrBsJ7mg',
     href: '/product/dior-b23-high-top-sneaker',
@@ -156,54 +166,61 @@ export default function LuxuryShoes() {
         >
           {visibleShoes.map((shoe) => (
             <div key={shoe.id} style={{ minWidth: '380px', flexShrink: 0 }} className="shoe-card">
-              <div
-                style={{
-                  background: '#f8f8f8',
-                  borderRadius: '24px',
-                  padding: '32px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  height: '440px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+              <Link
+                href={shoe.href}
+                style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
-                {shoe.badge && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '20px',
-                      left: '20px',
-                      background: '#000',
-                      color: '#fff',
-                      fontSize: '9px',
-                      fontWeight: 800,
-                      padding: '6px 14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.18em',
-                      borderRadius: '999px',
-                      zIndex: 10,
-                    }}
-                  >
-                    {shoe.badge}
-                  </span>
-                )}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={shoe.image}
-                  alt={shoe.name}
-                  className="shoe-img"
-                  loading="lazy"
+                <div
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1), filter 700ms ease',
-                    filter: 'saturate(0.95)',
+                    background: '#f8f8f8',
+                    borderRadius: '24px',
+                    padding: '32px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    height: '440px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
-                />
-              </div>
+                >
+                  {shoe.badge && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '20px',
+                        background: '#000',
+                        color: '#fff',
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        padding: '6px 14px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.18em',
+                        borderRadius: '999px',
+                        zIndex: 10,
+                      }}
+                    >
+                      {shoe.badge}
+                    </span>
+                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={shoe.image}
+                    alt={shoe.name}
+                    className="shoe-img"
+                    loading="lazy"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1), filter 700ms ease',
+                      filter: 'saturate(0.95)',
+                    }}
+                  />
+                  {/* Floating actions pill (Wishlist · Quick View · Add to Cart) */}
+                  <ProductCardActions product={shoe} layout="floating" variant="light" />
+                </div>
+              </Link>
               <div style={{ marginTop: '28px', textAlign: 'center' }}>
                 <p
                   style={{
@@ -231,9 +248,19 @@ export default function LuxuryShoes() {
                     {shoe.name}
                   </Link>
                 </h3>
-                <p style={{ marginTop: '0', color: '#000', fontWeight: 700, fontSize: '14px', margin: '0' }}>
+                <p style={{ marginTop: '0', color: '#000', fontWeight: 700, fontSize: '14px', margin: '0 0 14px 0' }}>
                   {shoe.price}
                 </p>
+                {/* Card-style Add to Cart CTA below the price.
+                    ProductCardActions stops event propagation so these
+                    clicks never trigger the parent Link navigation. */}
+                <div
+                  style={{ display: 'flex', justifyContent: 'center' }}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <ProductCardActions product={shoe} layout="card" variant="light" />
+                </div>
               </div>
             </div>
           ))}

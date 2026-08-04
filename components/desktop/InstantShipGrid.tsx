@@ -2,13 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
+import ProductCardActions from './ProductCardActions';
 
 /**
  * InstantShipGrid — 4-column premium sneaker grid.
  *
- * Refinements (Phase 1.5):
- *  - All cards now feature premium sneaker photography
- *    (Nike / Jordan / Adidas / New Balance / Yeezy)
+ * Refinements (Phase 2):
+ *  - Whole card is a single <Link> (no dead click areas)
+ *  - Brand-theme price (black, not red) — matches LN KICKS identity
+ *  - Per-card Wishlist + Quick View + Add to Cart actions
+ *    (uses shared ProductCardActions component)
  *  - "From" label uses luxury ice-blue (no more orange)
  *  - Card hover: image scale + subtle lift + shadow
  *  - Premium grayscale-to-color image transition on hover
@@ -20,6 +23,8 @@ interface Product {
   brand: string;
   name: string;
   price: string;
+  /** Numeric price used for cart line items (INR). */
+  priceValue: number;
   comparePrice: string;
   badge: string;
   image: string;
@@ -32,6 +37,7 @@ const PRODUCTS: Product[] = [
     brand: 'Air Jordan',
     name: 'Air Jordan 1 Low Black Dark Powder Blue',
     price: 'Rs. 8,899.00',
+    priceValue: 8899,
     comparePrice: 'Rs. 18,999.00',
     badge: 'Instant Ship',
     image:
@@ -43,6 +49,7 @@ const PRODUCTS: Product[] = [
     brand: 'Nike',
     name: "Nike Dunk Low 'Rose Whisper'",
     price: 'Rs. 7,399.00',
+    priceValue: 7399,
     comparePrice: 'Rs. 12,999.00',
     badge: 'Instant Ship',
     image:
@@ -54,6 +61,7 @@ const PRODUCTS: Product[] = [
     brand: 'Adidas Yeezy',
     name: "Adidas Yeezy Slide 'Onyx'",
     price: 'Rs. 10,499.00',
+    priceValue: 10499,
     comparePrice: 'Rs. 15,999.00',
     badge: 'Instant Ship',
     image:
@@ -65,6 +73,7 @@ const PRODUCTS: Product[] = [
     brand: 'New Balance',
     name: "New Balance 530 'Steel Grey'",
     price: 'Rs. 9,499.00',
+    priceValue: 9499,
     comparePrice: 'Rs. 20,499.00',
     badge: 'Instant Ship',
     image:
@@ -76,6 +85,7 @@ const PRODUCTS: Product[] = [
     brand: 'Nike',
     name: "Nike Dunk Low 'Court Purple'",
     price: 'Rs. 6,499.00',
+    priceValue: 6499,
     comparePrice: 'Rs. 14,999.00',
     badge: 'Instant Ship',
     image:
@@ -87,6 +97,7 @@ const PRODUCTS: Product[] = [
     brand: 'Adidas',
     name: "Adidas Samba OG 'Wonder Silver'",
     price: 'Rs. 6,199.00',
+    priceValue: 6199,
     comparePrice: 'Rs. 22,999.00',
     badge: 'Instant Ship',
     image:
@@ -98,6 +109,7 @@ const PRODUCTS: Product[] = [
     brand: 'Air Jordan',
     name: "Air Jordan 1 Low 'Panda'",
     price: 'Rs. 9,399.00',
+    priceValue: 9399,
     comparePrice: 'Rs. 21,999.00',
     badge: 'Instant Ship',
     image:
@@ -109,6 +121,7 @@ const PRODUCTS: Product[] = [
     brand: 'Yeezy',
     name: "Yeezy Foam Runner 'MX Cinder'",
     price: 'Rs. 9,299.00',
+    priceValue: 9299,
     comparePrice: 'Rs. 14,499.00',
     badge: 'Instant Ship',
     image:
@@ -250,11 +263,22 @@ export default function InstantShipGrid() {
                     >
                       From
                     </span>
-                    <span style={{ fontWeight: 800, fontSize: '18px' }}>{product.price}</span>
+                    {/* Brand-theme price (black) — replaces off-brand red */}
+                    <span style={{ fontWeight: 800, fontSize: '18px', color: '#0A0A0A' }}>{product.price}</span>
                   </div>
                   <span style={{ fontSize: '12px', color: '#d1d5db', textDecoration: 'line-through' }}>
                     {product.comparePrice}
                   </span>
+                </div>
+                {/* Per-card actions: Wishlist · Quick View · Add to Cart.
+                    ProductCardActions stops event propagation so these
+                    clicks never trigger the parent Link navigation. */}
+                <div
+                  style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <ProductCardActions product={product} layout="card" variant="light" />
                 </div>
               </div>
             </Link>
@@ -263,7 +287,8 @@ export default function InstantShipGrid() {
 
         {/* View All CTA */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '80px' }}>
-          <button
+          <Link
+            href="/products"
             className="view-all-cta"
             style={{
               background: '#000',
@@ -282,6 +307,7 @@ export default function InstantShipGrid() {
               gap: '14px',
               cursor: 'pointer',
               border: 'none',
+              textDecoration: 'none',
               transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
@@ -289,7 +315,7 @@ export default function InstantShipGrid() {
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="view-all-arrow">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
 

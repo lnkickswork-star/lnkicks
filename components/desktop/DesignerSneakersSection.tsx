@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useApp } from '@/components/context/AppContext';
+import ProductCardActions from './ProductCardActions';
 import { DESIGNER_SNEAKERS } from './sliderProducts';
 import type { SliderProduct } from './PremiumProductSlider';
 
@@ -56,8 +56,7 @@ export default function DesignerSneakersSection({
   products = DESIGNER_SNEAKERS,
   visibleCount = DEFAULT_VISIBLE,
 }: DesignerSneakersSectionProps) {
-  // ── Cart integration ──
-  const { addToCart, showToast } = useApp();
+  // Cart / wishlist are handled by ProductCardActions inside each cell.
 
   // ── Guard: not enough products ──
   const safeVisible = {
@@ -410,7 +409,7 @@ export default function DesignerSneakersSection({
                     pointerEvents: isDragging ? 'none' : 'auto',
                   }}
                 >
-                  {/* Image — floating on white, NO card */}
+                  {/* Image — floating on white, NO card. Actions overlay sits on top. */}
                   <Link
                     href={product.href}
                     aria-label={`${product.brand} ${product.name} — ${product.price}`}
@@ -452,6 +451,8 @@ export default function DesignerSneakersSection({
                           pointerEvents: 'none',
                         }}
                       />
+                      {/* Floating actions pill (Wishlist · Quick View · Add to Cart) */}
+                      <ProductCardActions product={product} layout="floating" variant="light" />
                     </div>
                   </Link>
 
@@ -507,9 +508,10 @@ export default function DesignerSneakersSection({
                         marginBottom: 16,
                       }}
                     >
+                      {/* Brand-theme price (black) — replaces off-brand red */}
                       <span
                         style={{
-                          color: '#DC2626',
+                          color: '#0A0A0A',
                           fontWeight: 700,
                           fontSize: 15,
                         }}
@@ -529,56 +531,17 @@ export default function DesignerSneakersSection({
                         </span>
                       )}
                     </div>
-                    {/* Single premium CTA — Add to Cart */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addToCart({
-                          id: product.id,
-                          name: product.name,
-                          price: product.priceValue,
-                          image: product.image,
-                          qty: 1,
-                        });
-                        showToast(`${product.name} added to cart`);
-                      }}
-                      className="ds-cta"
-                      style={{
-                        background: '#0A0A0A',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: 999,
-                        padding: '11px 24px',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.16em',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        transition:
-                          'background-color 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      }}
-                      aria-label={`Add ${product.name} to cart`}
+                    {/* Card-style Add to Cart CTA below the price.
+                        Wishlist + Quick View live in the floating pill above
+                        the image; the text block keeps a single primary CTA
+                        for users who scroll past the image. */}
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      Add to Cart
-                      <svg
-                        width="12"
-                        height="12"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.4}
-                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </button>
+                      <ProductCardActions product={product} layout="card" variant="light" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -634,14 +597,6 @@ export default function DesignerSneakersSection({
         .ds-product:hover .ds-product-img {
           transform: translateY(-10px);
           filter: drop-shadow(0 32px 42px rgba(0, 0, 0, 0.2));
-        }
-        .ds-cta:hover {
-          background-color: #1f1f1f !important;
-          transform: translateY(-1px);
-        }
-        .ds-cta:focus-visible {
-          outline: 2px solid #0a0a0a;
-          outline-offset: 3px;
         }
         @media (max-width: 1023px) {
           .ds-image-wrap {

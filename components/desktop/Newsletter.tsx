@@ -3,13 +3,16 @@
 import React, { useState } from 'react';
 
 /**
- * Newsletter — oversized "Sign up and save" email capture.
+ * Newsletter — oversized "Stay Ahead of Every Drop" email capture.
  *
- * Refinements (Phase 1.5):
- *  - Polished spacing & typography (consistent with new LN KICKS system)
- *  - Premium italic kicker + editorial wordmark treatment
- *  - Refined input: focus state shows full border, not just outline
- *  - Submit button: subtle scale on hover (no over-animation)
+ * Refinements (Phase 2):
+ *  - New heading: "Stay Ahead of Every Drop"
+ *  - New subtext: "Get exclusive early access, restock alerts, member-only
+ *    releases and offers."
+ *  - Submit button shows "Subscribe" label + arrow that slides on hover.
+ *  - Success animation: button morphs to a green-bordered check that
+ *    pops in (scale 0.4 → 1.15 → 1 over 480ms).
+ *  - Refined input: focus state shows full border, not just outline.
  */
 
 export default function Newsletter() {
@@ -23,7 +26,7 @@ export default function Newsletter() {
       setTimeout(() => {
         setSubmitted(false);
         setEmail('');
-      }, 3000);
+      }, 3600);
     }
   };
 
@@ -45,18 +48,18 @@ export default function Newsletter() {
         </p>
         <h2
           style={{
-            fontSize: '120px',
+            fontSize: 'clamp(48px, 9vw, 120px)',
             fontWeight: 800,
             letterSpacing: '-0.045em',
             marginBottom: '32px',
-            lineHeight: 0.85,
+            lineHeight: 0.9,
             textTransform: 'uppercase',
             margin: '0 0 32px 0',
           }}
         >
-          Sign up
+          Stay Ahead
           <br />
-          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>and</span> save
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>of every</span> drop
         </h2>
         <p
           style={{
@@ -71,26 +74,28 @@ export default function Newsletter() {
           }}
         >
           {submitted
-            ? 'Thank you — check your inbox for a welcome discount.'
-            : 'Be the first to know about Price Drops & Exclusive Releases.'}
+            ? "You're on the list — check your inbox for a welcome discount."
+            : 'Get exclusive early access, restock alerts, member-only releases and offers.'}
         </p>
         <form onSubmit={handleSubmit} style={{ position: 'relative', maxWidth: '672px', margin: '0 auto' }}>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            placeholder={submitted ? "✓  You're on the list — welcome." : 'Enter your email'}
             required
             aria-label="Email address"
             style={{
               width: '100%',
-              background: '#f9fafb',
-              border: '1.5px solid transparent',
+              background: submitted ? '#f0fdf4' : '#f9fafb',
+              border: submitted
+                ? '1.5px solid rgba(34,197,94,0.6)'
+                : '1.5px solid transparent',
               borderRadius: '999px',
               paddingTop: '28px',
               paddingBottom: '28px',
               paddingLeft: '44px',
-              paddingRight: '96px',
+              paddingRight: '160px',
               fontSize: '18px',
               fontWeight: 600,
               outline: 'none',
@@ -112,20 +117,50 @@ export default function Newsletter() {
               transform: 'translateY(-50%)',
               background: '#000',
               color: '#fff',
-              width: '60px',
               height: '60px',
+              paddingLeft: '24px',
+              paddingRight: '24px',
               borderRadius: '999px',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 10,
               border: 'none',
               cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
               transition: 'transform 350ms cubic-bezier(0.16, 1, 0.3, 1), background-color 350ms ease',
             }}
           >
-            <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="newsletter-arrow">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            {submitted ? (
+              <svg
+                width={24}
+                height={24}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3}
+                className="newsletter-check"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <>
+                Subscribe
+                <svg
+                  width={20}
+                  height={20}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  className="newsletter-arrow"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </>
+            )}
           </button>
         </form>
       </div>
@@ -140,7 +175,7 @@ export default function Newsletter() {
           background-color: #fff !important;
         }
         .newsletter-submit:hover {
-          transform: translateY(-50%) scale(1.05) !important;
+          transform: translateY(-50%) scale(1.03) !important;
           background-color: #1f2937 !important;
         }
         .newsletter-submit:hover .newsletter-arrow {
@@ -149,9 +184,21 @@ export default function Newsletter() {
         .newsletter-arrow {
           transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @media (max-width: 1280px) {
-          h2 {
-            font-size: 88px !important;
+        .newsletter-check {
+          animation: newsletter-check-pop 480ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes newsletter-check-pop {
+          0% {
+            transform: scale(0.4);
+            opacity: 0;
+          }
+          60% {
+            transform: scale(1.15);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
           }
         }
       `}</style>
