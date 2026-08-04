@@ -127,18 +127,28 @@ Set in **cPanel** (runtime only — secrets must never be in GitHub):
 
 ---
 
-### Database
+### Database — PostgreSQL (production DB for LN KICKS)
 
-Set in **cPanel** (runtime only):
+LN KICKS uses **PostgreSQL** in production. Recommended hosted providers:
+**Supabase**, **Neon**, **Railway**, **Render**, or a self-hosted Postgres instance.
+cPanel's bundled MySQL is **not** used — see "Legacy MySQL" below only if you
+explicitly switch away from Postgres.
 
-#### PostgreSQL (Supabase, Neon, etc.)
+Set in **cPanel** (runtime only — connection strings are server-side secrets
+and must never be in git or GitHub Secrets):
+
+#### PostgreSQL (required)
 
 | Variable | Example | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` | Primary connection string (with connection pooling) |
-| `DIRECT_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` | Direct connection (for migrations) |
+| `DATABASE_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` | Primary connection string (pooled — for app runtime queries) |
+| `DIRECT_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` | Direct connection (bypasses pooler — used by Prisma / migrations for DDL) |
 
-#### MySQL (cPanel's default DB)
+> **Always include `?sslmode=require`** for managed Postgres providers (Supabase, Neon, Render, Railway). Without it, the connection will be rejected.
+>
+> **Two URLs?** Supabase and Neon expose a pooled URL (port 6543, via PgBouncer / Supavisor) and a direct URL (port 5432). Use the pooled URL as `DATABASE_URL` for runtime queries, and the direct URL as `DIRECT_URL` for migrations. On providers without a pooler (Railway, Render), both can be the same value.
+
+#### Legacy MySQL (only if you switch away from Postgres)
 
 | Variable | Example | Purpose |
 |---|---|---|
@@ -147,7 +157,7 @@ Set in **cPanel** (runtime only):
 | `MYSQL_USER` | `aqualit1_lnkicks` | DB user (prefixed with cPanel username) |
 | `MYSQL_PASSWORD` | (strong password) | DB user password |
 
-> Create the MySQL DB in cPanel → **MySQL Databases**. The user must have ALL PRIVILEGES on the database.
+> Create the MySQL DB in cPanel → **MySQL Databases**. The user must have ALL PRIVILEGES on the database. **Not recommended** — Postgres is the chosen DB for LN KICKS.
 
 ---
 
@@ -302,7 +312,8 @@ Rotate these secrets periodically (every 6–12 months) or immediately if compro
 | `ADMIN_JWT_SECRET` | Same as above (all admin sessions invalidated) |
 | `STRIPE_SECRET_KEY` | Roll the key in Stripe Dashboard, update in cPanel |
 | `RAZORPAY_KEY_SECRET` | Reset in Razorpay Dashboard, update in cPanel |
-| `MYSQL_PASSWORD` | Change in cPanel → MySQL Databases, update DB user password, update env var |
+| `MYSQL_PASSWORD` | Legacy only. Change in cPanel → MySQL Databases, update DB user password, update env var |
+| `DATABASE_URL` / `DIRECT_URL` | Rotate the database password in your Postgres provider dashboard (Supabase / Neon / etc.), then update both URLs in cPanel and restart the app |
 | `SSH_PRIVATE_KEY` | Generate new keypair on server (`ssh-keygen`), update `~/.ssh/authorized_keys`, update GitHub Secret |
 
 ---

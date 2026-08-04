@@ -178,25 +178,28 @@ prompt_var "SESSION_SECRET" "Session cookie encryption secret" "$SESSION_DEFAULT
 echo ""
 
 # ─────────────────────────────────────────────────────────────────────
-# DATABASE — choose MySQL (cPanel default) or PostgreSQL (external).
+# DATABASE — PostgreSQL is the chosen DB for LN KICKS production.
+# Recommended hosted providers: Supabase, Neon, Railway, Render.
+# Connection strings MUST include ?sslmode=require for managed Postgres.
 # ─────────────────────────────────────────────────────────────────────
-echo "─── Database ───"
-if [[ -n "$ENV_FILE_ARG" && -f "$ENV_FILE_ARG" ]]; then
-  prompt_var "DATABASE_URL" "Database connection string (if using Postgres)"
-  prompt_var "MYSQL_HOST" "MySQL host" "localhost"
-  prompt_var "MYSQL_DATABASE" "MySQL database name"
-  prompt_var "MYSQL_USER" "MySQL username"
-  prompt_var "MYSQL_PASSWORD" "MySQL password"
-else
-  echo "  For MySQL (cPanel default), enter DB details. Leave blank if not using DB."
-  prompt_var "MYSQL_HOST" "MySQL host" "localhost"
-  prompt_var "MYSQL_DATABASE" "MySQL database name (e.g. aqualit1_lnkicks)"
-  prompt_var "MYSQL_USER" "MySQL username (e.g. aqualit1_lnkicks)"
-  prompt_var "MYSQL_PASSWORD" "MySQL password"
-  echo ""
-  echo "  For PostgreSQL (Supabase/Neon), enter connection string. Leave blank if using MySQL."
-  prompt_var "DATABASE_URL" "PostgreSQL connection URL (if using Postgres)"
-fi
+echo "─── Database (PostgreSQL) ───"
+echo "  Using PostgreSQL (Supabase / Neon / Railway / Render / self-hosted)."
+echo "  Get the connection string from your provider's dashboard."
+echo "  Format: postgresql://user:password@host:5432/dbname?sslmode=require"
+echo ""
+prompt_var "DATABASE_URL" "PostgreSQL connection URL (pooled — for app runtime)"
+prompt_var "DIRECT_URL" "PostgreSQL direct URL (for migrations — bypasses pooler)"
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# LEGACY MySQL — only used if you explicitly switch to cPanel's MySQL.
+# Skip both prompts by pressing Enter — they will be omitted from .env.
+# ─────────────────────────────────────────────────────────────────────
+echo "─── MySQL (legacy — skip if using PostgreSQL, press Enter on each) ───"
+prompt_var "MYSQL_HOST" "MySQL host (legacy)" "localhost"
+prompt_var "MYSQL_DATABASE" "MySQL database name (legacy)"
+prompt_var "MYSQL_USER" "MySQL username (legacy)"
+prompt_var "MYSQL_PASSWORD" "MySQL password (legacy)"
 echo ""
 
 # ─────────────────────────────────────────────────────────────────────

@@ -200,7 +200,7 @@ If you observe ANY of these, do NOT consider the deploy successful:
 - Any page returns 500 Internal Server Error
 - Error log shows `Cannot find module` or `SyntaxError`
 - Error log shows `EADDRINUSE` or `EACCES`
-- Database connection errors
+- Database connection errors (PostgreSQL — check `DATABASE_URL` is set, includes `?sslmode=require`, and that your provider's IP allowlist includes the cPanel server's IP)
 - Payment gateway returns 401 (auth failure — env vars wrong)
 - Users report being unable to log in
 - Users report being unable to checkout

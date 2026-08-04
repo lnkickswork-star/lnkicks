@@ -41,8 +41,17 @@ environment_variables:
   HOSTNAME: "0.0.0.0"
   NEXT_PUBLIC_SITE_URL: "https://lnkicks.example.com"   # REPLACE
   NEXT_PUBLIC_WHATSAPP_NUMBER: "918881286267"
+  # ── PostgreSQL (production DB) ──
+  # Get both URLs from your Postgres provider (Supabase / Neon / Railway / Render).
+  # MUST include ?sslmode=require for managed providers.
+  DATABASE_URL: "postgresql://user:pass@host:5432/db?sslmode=require"
+  DIRECT_URL: "postgresql://user:pass@host:5432/db?sslmode=require"
+  # ── Auth secrets (generate with: openssl rand -base64 48) ──
+  JWT_SECRET: "<random 48-char base64>"
+  ADMIN_JWT_SECRET: "<different random 48-char base64>"
+  SESSION_SECRET: "<different random 48-char base64>"
   # Add all NEXT_PUBLIC_* vars from .env.production.example
-  # Add all server-side vars (DB, payment gateway, auth secrets, etc.)
+  # Add all server-side vars (payment gateway, SMTP, etc.)
 
 # Passenger configuration — cPanel manages these automatically; do not edit.
 passenger:
