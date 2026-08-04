@@ -319,7 +319,11 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             }}
           />
 
-          {/* RIGHT shoe — anchored to center, mirrored +16deg */}
+          {/* RIGHT shoe — anchored to center, mirrored +16deg.
+              scaleX(-1) flips the image so the right shoe FACES the
+              left shoe, creating a true mirror-symmetric pair (like
+              a left/right shoe in a box). This eliminates the visual
+              rightward lean caused by same-direction shoes. */}
           <img
             src={RIGHT_SHOE_URL}
             alt=""
@@ -328,7 +332,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              transform: 'translate(-6%, -50%) rotate(16deg)',
+              transform: 'translate(-6%, -50%) rotate(16deg) scaleX(-1)',
               width: '44%',
               maxWidth: 165,
               height: 'auto',
@@ -517,7 +521,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
 
         .lnk-splash__shoe--right {
           opacity: 0;
-          transform: translate(18%, -50%) rotate(16deg);
+          transform: translate(18%, -50%) rotate(16deg) scaleX(-1);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 440ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 440ms;
@@ -525,7 +529,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--right {
           opacity: 1;
-          transform: translate(-6%, -50%) rotate(16deg);
+          transform: translate(-6%, -50%) rotate(16deg) scaleX(-1);
           animation: lnk-float-right 4.6s ease-in-out 1.6s infinite;
         }
 
@@ -541,10 +545,10 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         @keyframes lnk-float-right {
           0%, 100% {
-            transform: translate(-6%, -50%) rotate(16deg);
+            transform: translate(-6%, -50%) rotate(16deg) scaleX(-1);
           }
           50% {
-            transform: translate(-6%, calc(-50% - 8px)) rotate(16deg);
+            transform: translate(-6%, calc(-50% - 8px)) rotate(16deg) scaleX(-1);
           }
         }
 
@@ -588,7 +592,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             transform: translate(-94%, -50%) rotate(-16deg) !important;
           }
           .lnk-splash--in .lnk-splash__shoe--right {
-            transform: translate(-6%, -50%) rotate(16deg) !important;
+            transform: translate(-6%, -50%) rotate(16deg) scaleX(-1) !important;
           }
           .lnk-splash--in .lnk-splash__halo {
             transform: translate(-50%, -50%) scale(1) !important;
