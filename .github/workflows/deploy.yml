@@ -182,7 +182,16 @@ jobs:
   deploy:
     name: 🚀 Deploy to cPanel
     needs: quality-gate
-    if: github.event_name != 'workflow_dispatch' || inputs.force_rollback == false
+    # Skip deploy if user triggered rollback, OR if any required secret is missing.
+    # Checking secrets here means a push won't fail the workflow just because
+    # secrets aren't set up yet — it'll skip with a clear message instead.
+    if: |
+      (github.event_name != 'workflow_dispatch' || inputs.force_rollback == false)
+      && secrets.SSH_HOST != ''
+      && secrets.SSH_PRIVATE_KEY != ''
+      && secrets.APP_ROOT != ''
+      && secrets.NODEVENV_PATH != ''
+      && secrets.PRODUCTION_DOMAIN != ''
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -193,6 +202,41 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: 🔍 Verify all required secrets are set (fail fast with clear message)
+        run: |
+          MISSING=0
+          # GitHub Actions can't do dynamic secret access — check each explicitly.
+          if [[ -z "${{ secrets.SSH_HOST }}" ]]; then echo "❌ SSH_HOST is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.SSH_PORT }}" ]]; then echo "❌ SSH_PORT is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.SSH_USER }}" ]]; then echo "❌ SSH_USER is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]]; then echo "❌ SSH_PRIVATE_KEY is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.APP_ROOT }}" ]]; then echo "❌ APP_ROOT is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.NODEVENV_PATH }}" ]]; then echo "❌ NODEVENV_PATH is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.PRODUCTION_DOMAIN }}" ]]; then echo "❌ PRODUCTION_DOMAIN is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.NEXT_PUBLIC_SITE_URL }}" ]]; then echo "❌ NEXT_PUBLIC_SITE_URL is missing"; MISSING=$((MISSING+1)); fi
+          if [[ -z "${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}" ]]; then echo "❌ NEXT_PUBLIC_WHATSAPP_NUMBER is missing"; MISSING=$((MISSING+1)); fi
+          if [[ "$MISSING" -gt 0 ]]; then
+            echo ""
+            echo "=========================================="
+            echo "❌ $MISSING / 9 required secrets are MISSING."
+            echo "=========================================="
+            echo "Add them in: Repo → Settings → Secrets and variables → Actions → New repository secret"
+            echo "Once added, re-run this workflow OR push a new commit."
+            echo ""
+            echo "Reference values (from cPanel screenshot):"
+            echo "  SSH_HOST              = s1-nnvp.crazydns.com"
+            echo "  SSH_PORT              = 22"
+            echo "  SSH_USER              = aqualit1"
+            echo "  SSH_PRIVATE_KEY       = (output of: cat ~/.ssh/id_ed25519)"
+            echo "  APP_ROOT              = /home/aqualit1/lnkicks"
+            echo "  NODEVENV_PATH         = /home/aqualit1/nodevenv/lnkicks/22/bin/activate"
+            echo "  PRODUCTION_DOMAIN     = https://lnkicks.in"
+            echo "  NEXT_PUBLIC_SITE_URL  = https://lnkicks.in"
+            echo "  NEXT_PUBLIC_WHATSAPP_NUMBER = 918881286267"
+            exit 1
+          fi
+          echo "✅ All 9 required secrets are present."
 
       - name: 📦 Download build artifact
         uses: actions/download-artifact@v4
