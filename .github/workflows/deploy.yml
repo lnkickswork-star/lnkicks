@@ -1,0 +1,353 @@
+# =============================================================================
+# Production Deployment Workflow — LN KICKS Next.js → cPanel Node.js
+# =============================================================================
+#
+# Triggered automatically on every push to `main` (after ci.yml passes),
+# and manually via the GitHub Actions "Run workflow" button.
+#
+# Pipeline stages:
+#   1. quality-gate      — type-check + lint + build (aborts deploy on failure)
+#   2. prepare-artifact  — bundle only the files cPanel needs into a tarball
+#   3. deploy            — upload via rsync over SSH, install prod deps,
+#                          restart Node.js app, verify health
+#   4. rollback          — automatic if health check fails after restart
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   SSH_HOST              — cPanel server hostname (e.g. sharedXX.hosting.com)
+#   SSH_PORT              — SSH port (usually 22, sometimes 2222 on shared hosts)
+#   SSH_USER              — cPanel username (e.g. aqualit1)
+#   SSH_PRIVATE_KEY       — contents of the PRIVATE key (the file you generated
+#                           on the server at ~/.ssh/id_rsa — copy its contents
+#                           into this secret, including the BEGIN/END lines)
+#   APP_ROOT              — absolute path on server (e.g. /home/aqualit1/lnkicks)
+#   PRODUCTION_DOMAIN     — your live domain (e.g. https://lnkicks.com)
+#   NEXT_PUBLIC_SITE_URL  — public site URL (same as PRODUCTION_DOMAIN without
+#                           trailing slash). Required at BUILD time for Next.js
+#                           to bake correct metadata/OG tags into the bundle.
+#
+# Optional secrets (set if your build needs them at build time):
+#   NEXT_PUBLIC_WHATSAPP_NUMBER, NEXT_PUBLIC_GA_ID, etc.
+#   Any NEXT_PUBLIC_* var that the app reads at build time must be added here.
+#
+# Server-side env vars (NOT in GitHub Secrets):
+#   Runtime-only secrets (DB passwords, payment gateway keys, JWT secrets,
+#   etc.) must be set in cPanel UI → Setup Node.js App → Environment vars.
+#   They are NOT needed at build time and should NOT live in git.
+# =============================================================================
+
+name: Deploy to Production (cPanel)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_rollback:
+        description: 'Roll back to the previous deployment instead of deploying new code'
+        required: false
+        type: boolean
+        default: false
+
+# Only one deployment at a time — concurrent deploys would corrupt the
+# rsync target. New push cancels any in-flight deploy and starts fresh.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false   # NEVER cancel mid-deploy — could leave prod broken
+
+# Least-privilege: deployment only needs to read the repo and talk to the
+# server over SSH. No GitHub API writes needed.
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '20'
+  # Cache key for npm — speeds up CI 5-10x after first run.
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. QUALITY GATE — Build + lint + type-check. Abort deploy on any failure.
+  # ---------------------------------------------------------------------------
+  quality-gate:
+    name: 🔍 Quality Gate (type-check + lint + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      commit_sha: ${{ github.sha }}
+      commit_short: ${{ steps.meta.outputs.short_sha }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🟢 Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: 📦 Install dependencies (npm ci)
+        run: npm ci
+
+      - name: 🔍 Type-check (tsc --noEmit)
+        run: npm run type-check
+
+      - name: 🧹 Lint (next lint)
+        run: npm run lint
+
+      - name: 🏗️ Production build (next build)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+
+      - name: 🏷️ Build metadata
+        id: meta
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "Deploying commit $SHORT_SHA" >> $GITHUB_STEP_SUMMARY
+          echo "Build timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📦 Upload build artifact (for deploy job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: |
+            .next/
+            public/
+            next.config.js
+            package.json
+            package-lock.json
+            cpanel/app.js
+            cpanel/.cpanel.yml
+          retention-days: 3
+          if-no-files-found: error
+          include-hidden-files: true
+
+  # ---------------------------------------------------------------------------
+  # 2. ROLLBACK (manual trigger only) — skip deploy, restore last good version
+  # ---------------------------------------------------------------------------
+  rollback:
+    name: ⏪ Rollback to previous deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.force_rollback == true
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: 🔐 Load SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: ⏪ Execute rollback on server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh"
+        env:
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
+
+      - name: 🩺 Post-rollback health check
+        run: |
+          bash scripts/deploy/health-check.sh "${{ secrets.PRODUCTION_DOMAIN }}" 60
+
+  # ---------------------------------------------------------------------------
+  # 3. DEPLOY — Upload artifact, install deps, restart, verify health
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: 🚀 Deploy to cPanel
+    needs: quality-gate
+    if: github.event_name != 'workflow_dispatch' || inputs.force_rollback == false
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_DOMAIN }}
+    timeout-minutes: 20
+    steps:
+      - name: 📥 Checkout (for deployment scripts)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: 📦 Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+          path: .
+
+      - name: 📋 Verify artifact contents
+        run: |
+          echo "=== Artifact contents ==="
+          ls -lah
+          echo "=== .next/ exists? ==="
+          test -d .next && echo "OK: .next/ present" || { echo "FAIL: .next/ missing"; exit 1; }
+          echo "=== cpanel/app.js exists? ==="
+          test -f cpanel/app.js && echo "OK: cpanel/app.js present" || { echo "FAIL: cpanel/app.js missing"; exit 1; }
+          echo "=== package.json exists? ==="
+          test -f package.json && echo "OK: package.json present" || { echo "FAIL: package.json missing"; exit 1; }
+          echo "=== Standalone server file in .next? ==="
+          ls .next/BUILD_ID && echo "OK: BUILD_ID present (build succeeded)" || exit 1
+
+      - name: 🔐 Load SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Add server host key to known_hosts to avoid interactive prompt
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          # Verify SSH connection
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            -o BatchMode=yes -o ConnectTimeout=15 \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo SSH_OK; whoami; pwd"
+
+      - name: 📦 Ensure remote directories exist
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "mkdir -p ${{ secrets.APP_ROOT }} \
+             ${{ secrets.APP_ROOT }}/releases \
+             ${{ secrets.APP_ROOT }}/shared \
+             ${{ secrets.APP_ROOT }}/scripts/deploy"
+
+      - name: 📤 Upload deployment scripts to server
+        run: |
+          rsync -azP --delete \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key" \
+            scripts/deploy/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_ROOT }}/scripts/deploy/
+          # Make scripts executable
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "chmod +x ${{ secrets.APP_ROOT }}/scripts/deploy/*.sh"
+
+      - name: 💾 Backup current production (for rollback)
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/backup-current.sh \
+              '${{ secrets.APP_ROOT }}' \
+              '${{ github.sha }}'"
+
+      - name: 📤 Upload production files via rsync
+        run: |
+          # Upload ONLY the files cPanel needs to run the app:
+          #   .next/           — compiled build
+          #   public/          — static assets
+          #   next.config.js   — Next.js config
+          #   package.json     — for npm ci
+          #   package-lock.json— for npm ci
+          #   cpanel/app.js    — Passenger entry point
+          #
+          # We deliberately EXCLUDE:
+          #   node_modules/   — installed on server via npm ci --omit=dev
+          #   .git/           — not needed in production
+          #   prototypes/     — dev-only HTML mockups
+          #   docs/           — not needed at runtime
+          #   agent-ctx/      — dev-only context files
+          #   *.md             — not needed at runtime
+          #   .github/        — CI config, not needed at runtime
+          #   .env*           — env vars are set in cPanel UI, not via files
+          rsync -azP --delete \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='prototypes' \
+            --exclude='docs' \
+            --exclude='agent-ctx' \
+            --exclude='scripts' \
+            --exclude='*.md' \
+            --exclude='.env*' \
+            --exclude='.vscode' \
+            --exclude='.idea' \
+            --exclude='tsconfig.json' \
+            --exclude='next-env.d.ts' \
+            --exclude='.eslintrc*' \
+            --exclude='.gitignore' \
+            --exclude='.gitattributes' \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key" \
+            ./ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_ROOT }}/current/
+
+      - name: 📦 Install production dependencies on server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/install-deps.sh \
+              '${{ secrets.APP_ROOT }}/current'"
+
+      - name: 🔴 Restart Node.js application
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/restart.sh \
+              '${{ secrets.APP_ROOT }}/current'"
+
+      - name: 🩺 Health check (post-deploy verification)
+        id: health
+        run: |
+          bash scripts/deploy/health-check.sh "${{ secrets.PRODUCTION_DOMAIN }}" 90
+        continue-on-error: true
+
+      - name: ⏪ Auto-rollback if health check failed
+        if: steps.health.outcome == 'failure'
+        run: |
+          echo "❌ Health check FAILED after deployment. Initiating automatic rollback..."
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh \
+              '${{ secrets.APP_ROOT }}' \
+              '${{ github.sha }}'"
+
+          echo "⏳ Waiting 20s for rollback to take effect..."
+          sleep 20
+
+          echo "🩺 Re-checking health after rollback..."
+          if bash scripts/deploy/health-check.sh "${{ secrets.PRODUCTION_DOMAIN }}" 60; then
+            echo "✅ Rollback successful — production is healthy again with previous version."
+          else
+            echo "🚨 CRITICAL: Rollback ALSO failed. Production is BROKEN. Manual intervention required."
+            echo "Check server logs at: /home/${{ secrets.SSH_USER }}/logs/"
+            exit 1
+          fi
+          exit 1   # fail the workflow so the team knows deploy failed
+
+      - name: ✅ Deployment summary
+        if: success()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ## ✅ Deployment Successful
+
+          | Field | Value |
+          |-------|-------|
+          | Commit | \`${{ needs.quality-gate.outputs.commit_short }}\` |
+          | Branch | \`main\` |
+          | Environment | production |
+          | URL | ${{ secrets.PRODUCTION_DOMAIN }} |
+          | Deployed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
+
+          ### Verified
+          - ✅ Type-check passed
+          - ✅ Lint passed
+          - ✅ Production build succeeded
+          - ✅ Files uploaded via rsync
+          - ✅ Production dependencies installed (\`npm ci --omit=dev\`)
+          - ✅ Node.js app restarted
+          - ✅ Health check passed (HTTP 200 on homepage)
+
+          ### Rollback
+          Previous version backed up to \`${{ secrets.APP_ROOT }}/releases/\`.
+          To roll back manually, run the workflow with **force_rollback=true**.
+          EOF

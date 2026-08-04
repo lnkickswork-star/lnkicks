@@ -1,0 +1,32 @@
+# cPanel Node.js Application Configuration
+# ==========================================
+#
+# This file documents the cPanel "Setup Node.js App" configuration that
+# corresponds to this repository. It is NOT executed — it exists only as
+# a reference for the operator setting up the app in cPanel UI.
+#
+# Fill in the values for your hosting account, then mirror them in:
+#   cPanel → Software → Setup Node.js App → Create Application
+
+application:
+  node_version: "20"          # Match the version CI builds with (Node 20 LTS)
+  app_root: "lnkicks"          # Subdirectory under /home/aqualit1/ — final path: /home/aqualit1/lnkicks
+  startup_file: "cpanel/app.js"   # Path inside app_root — Passenger entry point
+  application_url: "lnkicks.example.com"   # REPLACE with your production domain
+  application_mode: "production"
+
+# Environment variables — set these in cPanel UI under
+# "Setup Node.js App" → Edit → "Environment variables" section.
+# The values shown here are PLACEHOLDERS. Real values come from your
+# secrets manager / password vault. NEVER commit real values to git.
+environment_variables:
+  NODE_ENV: "production"
+  NEXT_PUBLIC_SITE_URL: "https://lnkicks.example.com"   # REPLACE
+  NEXT_PUBLIC_WHATSAPP_NUMBER: "918881286267"
+  # Add all NEXT_PUBLIC_* vars from .env.production.example
+  # Add all server-side vars (DB, payment gateway, auth secrets, etc.)
+
+# Passenger configuration — cPanel manages these automatically; do not edit.
+passenger:
+  startup_file: "cpanel/app.js"
+  friendly_error_pages: false   # Show real errors in logs, not Passenger's HTML page

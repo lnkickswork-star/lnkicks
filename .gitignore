@@ -2,7 +2,10 @@
 skills/
 upload/
 tool-results/
-scripts/
+# Ignore all of scripts/ EXCEPT scripts/deploy/ (CI/CD pipeline files
+# that MUST be committed to git so GitHub Actions can use them).
+scripts/*
+!scripts/deploy/
 tsconfig.tsbuildinfo
 
 # === From remote main ===
@@ -41,4 +44,7 @@ desktop.ini
 download/
 tool-results/
 .vercel
+# Ignore all .env* files EXCEPT the example template (which is safe to
+# commit — it contains only placeholder values, no real secrets).
 .env*
+!.env.production.example
