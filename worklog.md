@@ -5598,3 +5598,29 @@ Stage Summary:
 - Auto-rollback safety net: if health check fails after deploy, previous version is automatically restored; if rollback also fails, broken code is preserved at releases/failed-<timestamp>/ for debugging
 - Three rollback paths: (1) automatic on health check failure, (2) manual via GitHub UI (force_rollback checkbox), (3) manual via SSH (rollback.sh script)
 - Pending user actions before first deploy: (1) run initial-setup.sh on server, (2) configure cPanel Node.js app, (3) add 8 GitHub Secrets, (4) push commit to trigger first deploy
+
+---
+Task ID: cicd-cpanel-update-node22
+Agent: main (Super Z)
+Task: Update CI/CD pipeline to match user's actual cPanel setup (Node 22, no /current subdir, nodevenv activation) and create env vars auto-setup script.
+
+Work Log:
+- User provided cPanel nodevenv activation path: source /home/aqualit1/nodevenv/lnkicks/22/bin/activate && cd /home/aqualit1/lnkicks
+- Identified 3 key facts: (1) Node.js 22 (not 20), (2) App root /home/aqualit1/lnkicks (no /current subdir), (3) nodevenv at /home/aqualit1/nodevenv/lnkicks/22/
+- Updated .github/workflows/deploy.yml: NODE_VERSION 20→22, dropped /current subdir, rsync now excludes 'releases' and 'tmp' dirs, added NODEVENV_PATH secret referenced throughout, backup/rollback/install/restart steps now pass NODEVENV_PATH arg
+- Updated all 6 existing deploy scripts to: (a) take NODEVENV_ACTIVATE as new arg, (b) source it before any npm/node command, (c) use APP_ROOT directly (no /current), (d) take RELEASES_DIR as separate arg (now /home/aqualit1/lnkicks-releases/, OUTSIDE app root)
+- Created scripts/deploy/setup-env-vars.sh — interactive script that prompts for every env var (with auto-generated JWT secrets via openssl rand -base64 48), writes to BOTH nodevenv etc/envvars AND app .env file. Also supports file mode (bash setup-env-vars.sh /path/to/.env)
+- Created scripts/deploy/.env.production.template — template for file mode, organized by category (Required, Auth, DB, Payment, SMTP, Security, Metadata)
+- Updated .gitignore to allow scripts/deploy/.env.production.template (was blocked by blanket .env* rule)
+- Updated cpanel/.cpanel.yml: Node 22, app_root without /current, added nodevenv section with activate_script and envvars_file paths
+- Updated docs/deployment/DEPLOYMENT.md, CPANEL-SETUP.md, ENVIRONMENT-VARIABLES.md with UPDATE notices explaining the new layout, Node 22, NODEVENV_PATH secret, and setup-env-vars.sh as the recommended env var setup method
+- Validation: all 8 scripts pass shellcheck (zero warnings), bash -n, node --check, and Python yaml.safe_load. Workflow structural validator confirms 3 jobs, all 9 secrets referenced (including new NODEVENV_PATH), no /current references remain
+- Committed locally as 7f3d8f7 — NOT pushed yet (user must add NODEVENV_PATH GitHub Secret before first deploy)
+
+Stage Summary:
+- CI/CD pipeline now matches user's actual cPanel setup exactly
+- New GitHub Secret required: NODEVENV_PATH = /home/aqualit1/nodevenv/lnkicks/22/bin/activate
+- Env vars can now be set up via single script (setup-env-vars.sh) instead of manual cPanel UI entry
+- All scripts source nodevenv activate before npm/node — prevents Node version mismatch issues
+- Backups moved outside app root to avoid rsync --delete recursion
+- 14 files changed (903 insertions, 286 deletions), 2 new files (setup-env-vars.sh, .env.production.template)
