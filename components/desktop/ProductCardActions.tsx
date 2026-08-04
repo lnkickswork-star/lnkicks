@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useApp } from '@/components/context/AppContext';
 
 /**
@@ -53,7 +53,7 @@ interface ProductCardActionsProps {
   variant?: 'light' | 'dark';
 }
 
-export default function ProductCardActions({
+function ProductCardActions({
   product,
   layout = 'card',
 }: ProductCardActionsProps) {
@@ -183,3 +183,9 @@ export default function ProductCardActions({
     </div>
   );
 }
+
+// Memoized default export — `product` prop is a stable object reference
+// from the parent section's PRODUCTS array, so this prevents re-renders
+// when AppContext state changes (cart/wishlist ticks) but the product
+// identity itself hasn't changed.
+export default memo(ProductCardActions);

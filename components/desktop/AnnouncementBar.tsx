@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-
 /**
  * AnnouncementBar — topmost black bar with rotating shipping messaging.
  *

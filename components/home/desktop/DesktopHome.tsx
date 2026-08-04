@@ -1,6 +1,4 @@
-'use client';
 
-import React from 'react';
 import AnnouncementBar from '@/components/desktop/AnnouncementBar';
 import MainHeader from '@/components/desktop/MainHeader';
 import HeroBanner from '@/components/desktop/HeroBanner';

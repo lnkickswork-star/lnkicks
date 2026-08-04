@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import MobileHeader from '@/components/mobile/MobileHeader';
-import MobileMenuDrawer from '@/components/mobile/MobileMenuDrawer';
 import MobileSearch from '@/components/mobile/MobileSearch';
 import MobileBrandShortcuts from '@/components/mobile/MobileBrandShortcuts';
 import MobileAdidasBanner from '@/components/mobile/MobileAdidasBanner';
@@ -10,7 +9,6 @@ import MobileHeroBanner from '@/components/mobile/MobileHeroBanner';
 import MobileFlashSale from '@/components/mobile/MobileFlashSale';
 import MobilePopularShoes from '@/components/mobile/MobilePopularShoes';
 import MobileNewArrivals from '@/components/mobile/MobileNewArrivals';
-import MobileSplashScreen from '@/components/mobile/MobileSplashScreen';
 import {
   MOBILE_TRENDING,
   MOBILE_RECOMMENDED,
@@ -38,6 +36,12 @@ const MobileBottomNav = lazy(() => import('@/components/mobile/MobileBottomNav')
 const MobileServiceWorkerRegister = lazy(
   () => import('@/components/mobile/MobileServiceWorkerRegister'),
 );
+// Lazy-loaded overlays — only mounted on user interaction / first-session gate.
+// MobileSplashScreen (~600 LOC + 2 CDN images + body-scroll lock) renders in
+// ~1% of sessions; MobileMenuDrawer (~860 LOC) only mounts when menuOpen=true.
+// Lazy-loading both shrinks the initial mobile JS bundle.
+const MobileMenuDrawer = lazy(() => import('@/components/mobile/MobileMenuDrawer'));
+const MobileSplashScreen = lazy(() => import('@/components/mobile/MobileSplashScreen'));
 
 /**
  * MobileHome — production mobile homepage for LN KICKS.
@@ -162,20 +166,26 @@ export default function MobileHome() {
 
   // Featured new arrival — pick the first TRENDING product (already a
   // verified CDN image + valid href). Could be parameterized later.
-  const featuredArrival = MOBILE_TRENDING[0];
+  // Memoized: MOBILE_TRENDING is module-level, so this never needs to re-run.
+  const featuredArrival = useMemo(() => MOBILE_TRENDING[0], []);
 
   // Popular Shoes — 4 products. Mix of TRENDING + RECOMMENDED
   // gives brand variety (Air Jordan, Nike, Adidas, New Balance).
-  const popularShoes = [
-    MOBILE_TRENDING[0],
-    MOBILE_TRENDING[1],
-    MOBILE_TRENDING[2],
-    MOBILE_RECOMMENDED[3],
-  ].map((p) => ({
-    ...p,
-    // Ensure every popular card has a rating (mix-in from RECOMMENDED)
-    rating: p.rating ?? 4.7,
-  }));
+  // Memoized: inputs are module-level constants.
+  const popularShoes = useMemo(
+    () =>
+      [
+        MOBILE_TRENDING[0],
+        MOBILE_TRENDING[1],
+        MOBILE_TRENDING[2],
+        MOBILE_RECOMMENDED[3],
+      ].map((p) => ({
+        ...p,
+        // Ensure every popular card has a rating (mix-in from RECOMMENDED)
+        rating: p.rating ?? 4.7,
+      })),
+    []
+  );
 
   return (
     <div
@@ -336,8 +346,11 @@ export default function MobileHome() {
         </Suspense>
 
         {/* 4. Menu drawer — rendered at page level so its z-index (1100)
-              is not trapped inside the MobileHeader's stacking context. */}
-        <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+              is not trapped inside the MobileHeader's stacking context.
+              Lazy-loaded: only fetched when first opened. */}
+        <Suspense fallback={null}>
+          <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+        </Suspense>
       </div>
 
       {/* 5. Service worker registration (production-only, lazy) — provides
@@ -349,9 +362,12 @@ export default function MobileHome() {
       {/* 6. Phase 28: Premium LNKICKS splash overlay — shown once per
             session, above all other content. Mobile-only. Auto-dismisses
             after ~5.5s OR on Skip / Enter Store tap. Body scroll is
-            locked while visible. Desktop homepage never mounts this. */}
+            locked while visible. Desktop homepage never mounts this.
+            Lazy-loaded: ~99% of sessions never need this code. */}
       {showSplash && (
-        <MobileSplashScreen onComplete={() => setShowSplash(false)} />
+        <Suspense fallback={null}>
+          <MobileSplashScreen onComplete={() => setShowSplash(false)} />
+        </Suspense>
       )}
     </div>
   );

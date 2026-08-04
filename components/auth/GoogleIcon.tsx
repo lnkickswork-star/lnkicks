@@ -5,7 +5,6 @@
  * Four-color G (Blue #4285F4, Red #EA4335, Yellow #FBBC04, Green #34A853).
  */
 
-import React from 'react';
 
 export interface GoogleIconProps {
   size?: number;

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { ProductCard as DesktopProductCard } from '@/components/ui/ProductCard';
 import { ProductCard as MobileProductCard } from '@/components/mobile/ProductCard';
 import { useIsMobile } from '@/lib/mobile/utils/useIsMobile';

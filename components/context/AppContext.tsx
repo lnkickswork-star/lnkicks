@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { CartItem, WishlistItem } from '@/types';
 
 export type { CartItem, WishlistItem } from '@/types';
@@ -33,70 +33,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   }, []);
 
-  const saveCartData = (newCart: CartItem[]) => {
+  const saveCartData = useCallback((newCart: CartItem[]) => {
     setCart(newCart);
-    localStorage.setItem('lnk_cart', JSON.stringify(newCart));
-  };
+    try {
+      localStorage.setItem('lnk_cart', JSON.stringify(newCart));
+    } catch (e) {}
+  }, []);
 
-  const saveWishlistData = (newWish: WishlistItem[]) => {
-    setWishlist(newWish);
-    localStorage.setItem('lnk_wishlist', JSON.stringify(newWish));
-  };
-
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 2400);
-  };
+  }, []);
 
-  const addToCart = (product: CartItem) => {
-    const existingIdx = cart.findIndex(i => i.id === product.id && i.size === product.size);
-    if (existingIdx > -1) {
-      const updated = [...cart];
-      updated[existingIdx].qty += (product.qty || 1);
-      saveCartData(updated);
-    } else {
-      saveCartData([...cart, { ...product, qty: product.qty || 1 }]);
-    }
-    showToast('Item added to Shopping Cart!');
-  };
-
-  const removeFromCart = (index: number) => {
-    const updated = [...cart];
-    updated.splice(index, 1);
-    saveCartData(updated);
-    showToast('Item removed from Cart');
-  };
-
-  const updateQty = (index: number, delta: number) => {
-    const updated = [...cart];
-    if (updated[index]) {
-      const newQty = updated[index].qty + delta;
-      if (newQty >= 1) {
-        updated[index].qty = newQty;
-        saveCartData(updated);
+  const addToCart = useCallback((product: CartItem) => {
+    setCart((prev) => {
+      const existingIdx = prev.findIndex(i => i.id === product.id && i.size === product.size);
+      let updated: CartItem[];
+      if (existingIdx > -1) {
+        updated = [...prev];
+        updated[existingIdx] = { ...updated[existingIdx], qty: updated[existingIdx].qty + (product.qty || 1) };
+      } else {
+        updated = [...prev, { ...product, qty: product.qty || 1 }];
       }
-    }
-  };
+      try {
+        localStorage.setItem('lnk_cart', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    showToast('Item added to Shopping Cart!');
+  }, [showToast]);
 
-  const toggleWishlist = (product: WishlistItem) => {
-    const idx = wishlist.findIndex(i => i.id === product.id);
-    if (idx > -1) {
-      const updated = [...wishlist];
-      updated.splice(idx, 1);
-      saveWishlistData(updated);
-      showToast('Removed from Wishlist');
-    } else {
-      saveWishlistData([...wishlist, product]);
-      showToast('Saved to Wishlist ❤');
-    }
-  };
+  const removeFromCart = useCallback((index: number) => {
+    setCart((prev) => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+      try {
+        localStorage.setItem('lnk_cart', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    showToast('Item removed from Cart');
+  }, [showToast]);
 
-  const clearCart = () => {
+  const updateQty = useCallback((index: number, delta: number) => {
+    setCart((prev) => {
+      if (!prev[index]) return prev;
+      const newQty = prev[index].qty + delta;
+      if (newQty < 1) return prev;
+      const updated = [...prev];
+      updated[index] = { ...updated[index], qty: newQty };
+      try {
+        localStorage.setItem('lnk_cart', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  }, []);
+
+  const toggleWishlist = useCallback((product: WishlistItem) => {
+    setWishlist((prev) => {
+      const idx = prev.findIndex(i => i.id === product.id);
+      let updated: WishlistItem[];
+      if (idx > -1) {
+        updated = [...prev];
+        updated.splice(idx, 1);
+        showToast('Removed from Wishlist');
+      } else {
+        updated = [...prev, product];
+        showToast('Saved to Wishlist ❤');
+      }
+      try {
+        localStorage.setItem('lnk_wishlist', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  }, [showToast]);
+
+  const clearCart = useCallback(() => {
     saveCartData([]);
-  };
+  }, [saveCartData]);
+
+  // Stable context value — only changes when cart/wishlist/toastMsg change.
+  // All handlers are useCallback-stable, so consumers don't re-render on
+  // unrelated state ticks.
+  const value = useMemo<AppContextType>(
+    () => ({ cart, wishlist, addToCart, removeFromCart, updateQty, toggleWishlist, clearCart, toastMsg, showToast }),
+    [cart, wishlist, toastMsg, addToCart, removeFromCart, updateQty, toggleWishlist, clearCart, showToast]
+  );
 
   return (
-    <AppContext.Provider value={{ cart, wishlist, addToCart, removeFromCart, updateQty, toggleWishlist, clearCart, toastMsg, showToast }}>
+    <AppContext.Provider value={value}>
       {children}
       {toastMsg && (
         <ToastPortal msg={toastMsg} />

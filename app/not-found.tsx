@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { MobileLayout } from '@/components/layout/MobileLayout';
 import { theme } from '@/lib/mobile/theme/theme';

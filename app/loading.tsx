@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Loading — global route-segment loading UI.

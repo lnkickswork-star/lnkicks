@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useParams } from 'next/navigation';
 import { MobileLayout } from '@/components/layout/MobileLayout';
 import { ResponsiveProductCard } from '@/components/ResponsiveProductCard';

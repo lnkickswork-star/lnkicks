@@ -152,7 +152,7 @@ export default function HeroBanner() {
                 loading={banner.preload ? 'eager' : 'lazy'}
                 // fetchPriority is a React 18+ DOM attribute; falls back
                 // gracefully on older browsers (just ignored).
-                {...(banner.preload ? { fetchpriority: 'high' } : {})}
+                {...(banner.preload ? { fetchPriority: 'high' } : {})}
                 decoding="async"
                 draggable={false}
                 style={{

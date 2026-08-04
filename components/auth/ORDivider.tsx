@@ -5,7 +5,6 @@
  * to match Google's standard auth page pattern.
  */
 
-import React from 'react';
 import { theme } from '@/lib/mobile/theme/theme';
 
 export function ORDivider({ label = 'OR' }: { label?: string }) {
