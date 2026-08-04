@@ -240,8 +240,8 @@ export default function AddProductPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [variants, setVariants] = useState<VariantRow[]>([
-    { id: 'v1', size: 'UK 7', color: 'Black', stock: 0, price: 0, sku: '' },
-    { id: 'v2', size: 'UK 8', color: 'Black', stock: 0, price: 0, sku: '' },
+    { id: 'v1', size: 'EU 40', color: 'Black', stock: 0, price: 0, sku: '' },
+    { id: 'v2', size: 'EU 41', color: 'Black', stock: 0, price: 0, sku: '' },
   ]);
   const [placements, setPlacements] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
@@ -499,7 +499,7 @@ export default function AddProductPage() {
   function addVariant() {
     setVariants(prev => [...prev, {
       id: `v-${Date.now()}`,
-      size: 'UK 7', color: 'Black', stock: 0, price: 0, sku: '',
+      size: 'EU 40', color: 'Black', stock: 0, price: 0, sku: '',
     }]);
   }
   function updateVariant(id: string, field: keyof VariantRow, value: string | number) {
@@ -942,7 +942,7 @@ export default function AddProductPage() {
                 />
                 <Input
                   tokens={tokens} label="Available Sizes (comma separated)"
-                  placeholder="UK 7, UK 8, UK 9, UK 10"
+                  placeholder="EU 40, EU 41, EU 42, EU 43"
                   value={form.sizes}
                   onChange={e => update('sizes', e.target.value)}
                   hint="Used for size filter & variant generator"

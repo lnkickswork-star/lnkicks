@@ -77,7 +77,7 @@ export default function EditProductPage() {
                 <Input tokens={tokens} label="Stock" type="number" defaultValue="42" />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <Input tokens={tokens} label="Sizes" defaultValue="UK 7, UK 8, UK 9, UK 10" />
+                <Input tokens={tokens} label="Sizes" defaultValue="EU 40, EU 41, EU 42, EU 43" />
                 <Input tokens={tokens} label="Colors" defaultValue="Powder Blue, Black" />
               </div>
             </div>

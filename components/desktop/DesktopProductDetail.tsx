@@ -116,7 +116,7 @@ export function DesktopProductDetail({ product }: Props) {
   const { addToCart, toggleWishlist, wishlist, showToast } = useApp();
 
   const [selectedSize, setSelectedSize] = useState<string>(
-    product.availableSizes[0] || 'UK 8',
+    product.availableSizes[0] || 'EU 40',
   );
   const [selectedColor, setSelectedColor] = useState<string>(
     product.availableColors[0] || 'Default',

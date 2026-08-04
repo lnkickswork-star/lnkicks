@@ -47,7 +47,7 @@ export interface Product {
   primaryImage: string;
   /** Optional hover image shown on card mouseover. */
   hoverImage?: string;
-  /** Available size labels (e.g. `UK 7`). */
+  /** Available size labels (e.g. `EU 40`). */
   availableSizes: string[];
   /** Available color labels (e.g. `Powder Blue`). */
   availableColors: string[];

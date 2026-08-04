@@ -14,6 +14,11 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
 import { resolveImage } from '@/lib/images';
 import { useIsMobile } from '@/lib/mobile/utils/useIsMobile';
 import { DesktopProductDetail } from '@/components/desktop/DesktopProductDetail';
+import {
+  getStockBySize,
+  isLowStock,
+  isOutOfStock,
+} from '@/lib/inventory/stockStore';
 
 /**
  * ProductDetailPage — flagship mobile product page.
@@ -21,9 +26,13 @@ import { DesktopProductDetail } from '@/components/desktop/DesktopProductDetail'
  * Phase 29 (Mobile Product Page UI Refinement):
  *  - Breadcrumbs REMOVED. Page starts cleanly with the image gallery
  *    directly under the header (no empty space).
- *  - SIZE SELECTOR now shows a subtle "Only N left" low-stock pill above
- *    each size button. Counts are deterministic per product+size (1-3
- *    range) so they stay stable across re-renders.
+ *  - SIZE SELECTOR now reads real per-size stock from
+ *    lib/inventory/stockStore (localStorage `lnk_inventory`).
+ *    Shows "Only N left" pill when stock is 1..5, "Sold out" pill +
+ *    disabled button when stock = 0, and no pill when stock > 5.
+ *    Stock is decremented automatically when an order is placed
+ *    (see app/checkout/page.tsx → handlePlaceOrder), so the next
+ *    visit to the PDP reflects the new count.
  *  - COLOR SELECTOR redesigned: text buttons replaced with circular
  *    swatches filled with the actual color hex. A `colorToHex` mapper
  *    resolves any color name (Black, White, Powder Blue, Core Black,
@@ -127,18 +136,13 @@ function isLightColor(name: string): boolean {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
- *  LOW-STOCK COUNT — deterministic per (productId, size)
- *  Returns 1, 2, or 3 so it stays stable across re-renders but varies
- *  across sizes within the same product.
+ *  PER-SIZE STOCK — real inventory from lib/inventory/stockStore
+ *  Backed by localStorage `lnk_inventory`. Seeded deterministically
+ *  per (productId, size) in the range [3, 15]. Decremented when an
+ *  order is placed (see app/checkout/page.tsx → handlePlaceOrder).
+ *  The "Only N left" pill renders only when 0 < stock ≤ LOW_STOCK_LIMIT
+ *  (5). When stock = 0 the size button is disabled and shows "Sold out".
  * ──────────────────────────────────────────────────────────────────── */
-function getLowStockCount(productId: string, size: string): number {
-  let h = 0;
-  const s = `${productId}|${size}`;
-  for (let i = 0; i < s.length; i++) {
-    h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  }
-  return 1 + (h % 3); // 1, 2, or 3
-}
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -151,21 +155,20 @@ export default function ProductDetailPage() {
     PRODUCT_REGISTRY.find((p) => p.slug === slug) || PRODUCT_REGISTRY[0];
 
   const [selectedSize, setSelectedSize] = useState<string>(
-    product.availableSizes[0] || 'UK 8',
+    product.availableSizes[0] || 'EU 40',
   );
   const [selectedColor, setSelectedColor] = useState<string>(
     product.availableColors[0] || 'Default',
   );
   const [activeImg, setActiveImg] = useState<string>(product.primaryImage);
 
-  // ── Precompute low-stock counts per size (stable per product+size) ──
+  // ── Precompute real stock counts per size from inventory store ──
+  // Reads from localStorage `lnk_inventory`. After checkout places an
+  // order and decrements the store, this memo picks up the new value
+  // on the next mount (i.e., when the user navigates back to the PDP).
   const stockBySize = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const sz of product.availableSizes) {
-      map[sz] = getLowStockCount(product.id, sz);
-    }
-    return map;
-  }, [product.id, product.availableSizes]);
+    return getStockBySize(product.id);
+  }, [product.id]);
 
   const handleAddToCart = useCallback(() => {
     haptic.medium();
@@ -422,10 +425,12 @@ export default function ProductDetailPage() {
         </p>
 
         {/* ── SIZE SELECTOR ─────────────────────────────────────────────
-            Phase 29: each size now has a "Only N left" low-stock pill
-            rendered above the size button. Layout = vertical column
-            per size (pill + button stacked). Counts are deterministic
-            per (productId, size), stable across re-renders. */}
+            Real per-size stock from lib/inventory/stockStore. Each size
+            renders as a vertical column: optional "Only N left" pill
+            above the size button. Pill only shows when stock is low
+            (1..5). When stock = 0 the button is disabled and labeled
+            "Sold out". When stock > 5 no pill is shown — the size is
+            healthy and we don't want to nag the customer. */}
         <div style={{ marginBottom: theme.spacing.xl }}>
           <div
             style={{
@@ -440,7 +445,7 @@ export default function ProductDetailPage() {
               textTransform: 'uppercase',
             }}
           >
-            <span>Select Size (UK)</span>
+            <span>Select Size (EU)</span>
             <Link
               href="/size-guide"
               style={{
@@ -465,7 +470,9 @@ export default function ProductDetailPage() {
           >
             {product.availableSizes.map((sz) => {
               const active = selectedSize === sz;
-              const stock = stockBySize[sz] ?? 2;
+              const stock = stockBySize[sz] ?? 0;
+              const low = isLowStock(stock);
+              const soldOut = isOutOfStock(stock);
               return (
                 <div
                   key={sz}
@@ -476,42 +483,96 @@ export default function ProductDetailPage() {
                     gap: 6,
                   }}
                 >
-                  {/* Low-stock pill */}
-                  <span
-                    aria-label={`Only ${stock} left in ${sz}`}
-                    style={{
-                      display: 'inline-block',
-                      fontSize: 11,
-                      fontWeight: theme.fontWeight.medium,
-                      letterSpacing: 0.2,
-                      color: theme.colors.warning,
-                      background: '#FEF6E7',
-                      padding: '2px 8px',
-                      borderRadius: theme.radius.pill,
-                      lineHeight: 1.4,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Only {stock} left
-                  </span>
+                  {/* Low-stock pill — only when 0 < stock ≤ LOW_STOCK_LIMIT.
+                      When sold out, the button itself shows "Sold out"
+                      so we don't need a duplicate pill above. When stock
+                      is healthy (>5) we render an invisible spacer so the
+                      size buttons stay aligned across the row regardless
+                      of which sizes happen to be low. */}
+                  {!low && !soldOut ? (
+                    <span
+                      aria-hidden
+                      style={{
+                        display: 'inline-block',
+                        fontSize: 11,
+                        lineHeight: 1.4,
+                        padding: '2px 8px',
+                        visibility: 'hidden',
+                      }}
+                    >
+                      spacer
+                    </span>
+                  ) : low ? (
+                    <span
+                      aria-label={`Only ${stock} left in ${sz}`}
+                      style={{
+                        display: 'inline-block',
+                        fontSize: 11,
+                        fontWeight: theme.fontWeight.medium,
+                        letterSpacing: 0.2,
+                        color: theme.colors.warning,
+                        background: '#FEF6E7',
+                        padding: '2px 8px',
+                        borderRadius: theme.radius.pill,
+                        lineHeight: 1.4,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Only {stock} left
+                    </span>
+                  ) : (
+                    /* sold out — show a muted "Sold out" pill so the
+                       customer knows why the button is disabled. */
+                    <span
+                      aria-label={`Sold out in ${sz}`}
+                      style={{
+                        display: 'inline-block',
+                        fontSize: 11,
+                        fontWeight: theme.fontWeight.medium,
+                        letterSpacing: 0.2,
+                        color: theme.colors.textTertiary,
+                        background: theme.colors.offWhite,
+                        padding: '2px 8px',
+                        borderRadius: theme.radius.pill,
+                        lineHeight: 1.4,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Sold out
+                    </span>
+                  )}
 
                   {/* Size button */}
                   <button
                     type="button"
-                    onClick={() => handleSizeTap(sz)}
+                    onClick={() => !soldOut && handleSizeTap(sz)}
+                    disabled={soldOut}
                     aria-pressed={active}
+                    aria-disabled={soldOut}
+                    aria-label={soldOut ? `${sz} — sold out` : `Select size ${sz}`}
                     className="pressable pdp-size"
                     style={{
                       padding: `${theme.spacing.md}px ${theme.spacing.lg}px`,
                       borderRadius: theme.radius.lg,
-                      border: active
-                        ? `2px solid ${theme.colors.black}`
-                        : `1px solid ${theme.colors.grey300}`,
-                      background: active ? theme.colors.black : theme.colors.white,
-                      color: active ? theme.colors.white : theme.colors.textPrimary,
+                      border: soldOut
+                        ? `1px dashed ${theme.colors.grey300}`
+                        : active
+                          ? `2px solid ${theme.colors.black}`
+                          : `1px solid ${theme.colors.grey300}`,
+                      background: soldOut
+                        ? theme.colors.offWhite
+                        : active
+                          ? theme.colors.black
+                          : theme.colors.white,
+                      color: soldOut
+                        ? theme.colors.textTertiary
+                        : active
+                          ? theme.colors.white
+                          : theme.colors.textPrimary,
                       fontSize: theme.fontSize.body,
                       fontWeight: theme.fontWeight.bold,
-                      cursor: 'pointer',
+                      cursor: soldOut ? 'not-allowed' : 'pointer',
+                      opacity: soldOut ? 0.65 : 1,
                       transition: 'all 200ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
@@ -521,6 +582,21 @@ export default function ProductDetailPage() {
               );
             })}
           </div>
+          {/* Live inventory note — confirms to the customer that the
+              "Only N left" counts are real-time and tied to actual
+              stock. Shown only when at least one size is low. */}
+          {Object.values(stockBySize).some((s) => isLowStock(s)) && (
+            <p
+              style={{
+                margin: `${theme.spacing.md}px 0 0 0`,
+                fontSize: 11,
+                color: theme.colors.textTertiary,
+                letterSpacing: 0.1,
+              }}
+            >
+              Live stock — updated as orders ship.
+            </p>
+          )}
         </div>
 
         {/* ── COLOR SELECTOR ────────────────────────────────────────────

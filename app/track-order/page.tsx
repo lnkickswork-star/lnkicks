@@ -112,7 +112,7 @@ function buildDemoOrder(orderId: string): TrackableOrder {
     }),
     items: [
       {
-        name: 'Air Jordan 1 Low Black Powder Blue (UK 9, Powder Blue)',
+        name: 'Air Jordan 1 Low Black Powder Blue (EU 42, Powder Blue)',
         price: 8899,
         qty: 1,
         image: resolveImage('/jordan_powder_blue_nobg.png'),

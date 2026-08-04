@@ -48,7 +48,7 @@ export default function RecentlyViewedPage() {
       name: item.name,
       price: item.priceValue,
       image: item.image,
-      size: 'UK 9', // default size — user can change in cart
+      size: 'EU 42', // default size — user can change in cart
       qty: 1,
     };
     addToCart(cartItem);

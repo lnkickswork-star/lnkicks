@@ -324,10 +324,13 @@ export default function SearchPage() {
               }}
             >
               <option value="All">All Sizes</option>
-              <option value="UK 7">UK 7</option>
-              <option value="UK 8">UK 8</option>
-              <option value="UK 9">UK 9</option>
-              <option value="UK 10">UK 10</option>
+              <option value="EU 39">EU 39</option>
+              <option value="EU 40">EU 40</option>
+              <option value="EU 41">EU 41</option>
+              <option value="EU 42">EU 42</option>
+              <option value="EU 43">EU 43</option>
+              <option value="EU 44">EU 44</option>
+              <option value="EU 45">EU 45</option>
             </select>
 
             {(query || selectedBrand !== 'All' || selectedSize !== 'All') && (

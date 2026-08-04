@@ -8,6 +8,7 @@ import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { decrementStockForCart } from '@/lib/inventory/stockStore';
 
 /**
  * CheckoutPage — LN KICKS mobile express checkout.
@@ -135,6 +136,18 @@ export default function CheckoutPage() {
       orders.unshift(newOrder);
       localStorage.setItem('lnk_orders', JSON.stringify(orders));
     } catch (e) {}
+
+    // ── Decrement real per-size inventory for every cart line item ──
+    // Called BEFORE clearCart() so we still have the items in `cart`.
+    // Once the order is placed + shipped, each (productId, size) pair
+    // loses `qty` units. The product detail page reads the updated
+    // counts on the next visit (lib/inventory/stockStore persists to
+    // localStorage `lnk_inventory`).
+    try {
+      decrementStockForCart(cart);
+    } catch (e) {
+      // inventory update must never block order placement — fail silent
+    }
 
     clearCart();
     showToast('Order Placed Successfully!');

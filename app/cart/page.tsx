@@ -205,7 +205,7 @@ export default function CartPage() {
                         marginBottom: theme.spacing.md,
                       }}
                     >
-                      Size: {item.size || 'UK 8'}
+                      Size: {item.size || 'EU 40'}
                     </div>
 
                     <div

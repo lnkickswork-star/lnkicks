@@ -19,11 +19,11 @@ import { pressableStyle } from '@/lib/mobile/utils/interactions';
  */
 export default function FiltersPage() {
   const [brand, setBrand] = useState('Nike');
-  const [size, setSize] = useState('UK 8');
+  const [size, setSize] = useState('EU 40');
   const [price, setPrice] = useState(15000);
 
   const brands = ['Nike', 'Adidas', 'Puma', 'New Balance', 'Reebok'];
-  const sizes = ['UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11'];
+  const sizes = ['EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44', 'EU 45'];
 
   return (
     <MobileLayout headerVariant="back" title="Filters"
