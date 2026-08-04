@@ -5560,3 +5560,41 @@ Stage Summary:
 - Micro-animations: animated underline slide on link hover, social/payment icon lift, subscribe button arrow slide, check-pop animation on success.
 - Production-ready: TypeScript clean, build passes, ESLint clean (no new warnings), all changes verified live via agent-browser on Vercel.
 
+
+---
+Task ID: cicd-cpanel-setup
+Agent: main (Super Z)
+Task: Configure complete production-ready CI/CD pipeline for deploying Next.js app to cPanel Node.js shared hosting via GitHub Actions.
+
+Work Log:
+- Inspected existing project: Next.js 14.2.5, npm-based, Node 20 LTS, existing ci.yml workflow, no .github/workflows/deploy.yml existed
+- Created cpanel/app.js — Phusion Passenger-compatible Next.js startup wrapper (graceful shutdown, PORT env var support)
+- Created cpanel/.cpanel.yml — reference config for cPanel UI setup
+- Created .github/workflows/deploy.yml — full deploy pipeline (quality-gate → build → rsync → install deps → restart → health check → auto-rollback), with manual force_rollback option via workflow_dispatch
+- Created 7 server-side deployment scripts in scripts/deploy/:
+  • backup-current.sh (snapshot current/ → releases/<timestamp>-<sha>/, prune old, keep 10)
+  • install-deps.sh (npm ci --omit=dev on server)
+  • restart.sh (touch tmp/restart.txt for Passenger graceful restart)
+  • health-check.sh (curl 6 endpoints: /, /product/<slug>, /categories, /favicon.ico, /sw.js, /manifest.webmanifest — retry up to 90s)
+  • rollback.sh (atomic restore from releases/latest, preserve failed deploy for debugging)
+  • deploy.sh (manual one-shot orchestrator for emergency deploys)
+  • initial-setup.sh (one-time server bootstrap, verifies Node/npm/git/rsync, creates directory layout)
+- Created .env.production.example — template for all env vars with comments on where each must be set (GitHub Secrets for build-time, cPanel for runtime)
+- Created 5 comprehensive docs in docs/deployment/:
+  • DEPLOYMENT.md (architecture diagram, prerequisites, first-time setup, daily workflow, troubleshooting)
+  • CPANEL-SETUP.md (step-by-step cPanel UI walkthrough)
+  • ENVIRONMENT-VARIABLES.md (complete env var reference, secret rotation, common mistakes)
+  • ROLLBACK.md (auto + manual rollback procedures, emergency recovery)
+  • VERIFICATION-CHECKLIST.md (post-deploy verification checklist, red flags, monthly checks)
+- Updated .gitignore to allow scripts/deploy/ (was ignored by blanket scripts/ rule) and .env.production.example (was ignored by .env* rule) using git negation patterns
+- Validation: all 7 scripts pass shellcheck (zero warnings) and bash -n syntax check; cpanel/app.js passes node --check; both YAML files pass Python yaml.safe_load; workflow structurally validated (3 jobs, 21 steps, all required secrets referenced, concurrency group set, permissions least-privilege)
+- Committed locally as 8ab0873 — NOT pushed yet (user must set up GitHub Secrets and cPanel app before first deploy)
+
+Stage Summary:
+- Complete CI/CD pipeline ready: git push → GitHub Actions builds → rsync to cPanel → npm ci --omit=dev → touch tmp/restart.txt → health check → auto-rollback if unhealthy
+- 17 files committed (3,368 insertions), total deploy infrastructure size: 168KB
+- No application code modified (per user's explicit constraint)
+- All scripts are idempotent, defensive (set -euo pipefail, ${var:?} guards), and shellcheck-clean
+- Auto-rollback safety net: if health check fails after deploy, previous version is automatically restored; if rollback also fails, broken code is preserved at releases/failed-<timestamp>/ for debugging
+- Three rollback paths: (1) automatic on health check failure, (2) manual via GitHub UI (force_rollback checkbox), (3) manual via SSH (rollback.sh script)
+- Pending user actions before first deploy: (1) run initial-setup.sh on server, (2) configure cPanel Node.js app, (3) add 8 GitHub Secrets, (4) push commit to trigger first deploy
