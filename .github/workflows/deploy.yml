@@ -202,20 +202,30 @@ jobs:
   deploy:
     name: 🚀 Deploy to cPanel
     needs: quality-gate
-    # Skip deploy if user triggered rollback, OR if any required secret is missing.
-    # Checking secrets here means a push won't fail the workflow just because
-    # secrets aren't set up yet — it'll skip with a clear message instead.
+    # Skip deploy when the user triggered a manual rollback. Secret presence
+    # is verified inside the "Verify all required secrets are set" step below,
+    # which fails with a clear, actionable error message listing any missing
+    # secrets. That step runs in a standards-compliant context (env: + run:).
+    #
+    # NOTE: The `secrets` context is NOT allowed in job-level `if:` per the
+    # GitHub Actions spec — only `github`, `inputs`, `needs`, and `vars` are.
+    # GitHub's parser is currently lenient and accepts `secrets.*` here, but
+    # actionlint and the official docs flag it as invalid. We therefore moved
+    # the presence-check out of `if:` and into the step-level verify step.
     if: |
       (github.event_name != 'workflow_dispatch' || inputs.force_rollback == false)
-      && secrets.SSH_HOST != ''
-      && secrets.SSH_PRIVATE_KEY != ''
-      && secrets.APP_ROOT != ''
-      && secrets.NODEVENV_PATH != ''
-      && secrets.PRODUCTION_DOMAIN != ''
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: ${{ secrets.PRODUCTION_DOMAIN }}
+      # `environment.url` does NOT support the `secrets` context — only
+      # `github`, `inputs`, and `vars` are allowed here. Referencing
+      # `secrets.PRODUCTION_DOMAIN` causes GitHub's parser to fail with:
+      #     "Unrecognized named-value: 'secrets'"
+      # Workaround: use `vars.PRODUCTION_DOMAIN` (a non-secret repository
+      # Variable — URLs are public information, not secrets) with a hardcoded
+      # fallback so the workflow runs even if the Variable is not set. The
+      # deployment URL is also echoed in the final "Deployment summary" step.
+      url: ${{ vars.PRODUCTION_DOMAIN || 'https://lnkicks.in' }}
     timeout-minutes: 20
     steps:
       - name: 📥 Checkout (for deployment scripts)
