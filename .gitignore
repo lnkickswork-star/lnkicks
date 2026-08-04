@@ -44,7 +44,8 @@ desktop.ini
 download/
 tool-results/
 .vercel
-# Ignore all .env* files EXCEPT the example template (which is safe to
-# commit — it contains only placeholder values, no real secrets).
+# Ignore all .env* files EXCEPT the example templates (which are safe to
+# commit — they contain only placeholder values, no real secrets).
 .env*
 !.env.production.example
+!scripts/deploy/.env.production.template

@@ -9,18 +9,36 @@
 #   cPanel → Software → Setup Node.js App → Create Application
 
 application:
-  node_version: "20"          # Match the version CI builds with (Node 20 LTS)
-  app_root: "lnkicks"          # Subdirectory under /home/aqualit1/ — final path: /home/aqualit1/lnkicks
-  startup_file: "cpanel/app.js"   # Path inside app_root — Passenger entry point
-  application_url: "lnkicks.example.com"   # REPLACE with your production domain
+  # MUST match the nodevenv path on the server.
+  # User's nodevenv is at /home/aqualit1/nodevenv/lnkicks/22/ → Node.js 22.
+  node_version: "22"
+  # Code deploys DIRECTLY to this directory (no /current subdir).
+  # Matches the cPanel app root the user has already configured.
+  app_root: "/home/aqualit1/lnkicks"
+  # Path inside app_root — Passenger entry point.
+  startup_file: "cpanel/app.js"
+  # REPLACE with your production domain.
+  application_url: "lnkicks.example.com"
   application_mode: "production"
 
+# nodevenv location — cPanel creates this automatically when you create
+# the Node.js app. The deploy workflow sources this activate script
+# before running npm/node commands.
+nodevenv:
+  activate_script: "/home/aqualit1/nodevenv/lnkicks/22/bin/activate"
+  # cPanel writes env vars set in the UI to this file, which is sourced
+  # by bin/activate. Our setup-env-vars.sh script writes here too.
+  envvars_file: "/home/aqualit1/nodevenv/lnkicks/22/etc/envvars"
+
 # Environment variables — set these in cPanel UI under
-# "Setup Node.js App" → Edit → "Environment variables" section.
+# "Setup Node.js App" → Edit → "Environment variables" section, OR
+# run scripts/deploy/setup-env-vars.sh on the server (recommended).
 # The values shown here are PLACEHOLDERS. Real values come from your
 # secrets manager / password vault. NEVER commit real values to git.
 environment_variables:
   NODE_ENV: "production"
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
   NEXT_PUBLIC_SITE_URL: "https://lnkicks.example.com"   # REPLACE
   NEXT_PUBLIC_WHATSAPP_NUMBER: "918881286267"
   # Add all NEXT_PUBLIC_* vars from .env.production.example

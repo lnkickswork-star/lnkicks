@@ -2,6 +2,12 @@
 
 > Step-by-step walkthrough for configuring the LN KICKS Next.js app in cPanel's "Setup Node.js App" interface. **Run this once** during initial setup (see [DEPLOYMENT.md §3.3](./DEPLOYMENT.md#33-configure-the-cpanel-nodejs-app)).
 
+> **📋 UPDATE (2026-08-05):** These values match the user's actual cPanel setup:
+> - **Node.js version: 22** (not 20)
+> - **App root: `/home/aqualit1/lnkicks`** (NO `/current` subdir — code lives directly here)
+> - **nodevenv: `/home/aqualit1/nodevenv/lnkicks/22/`** (auto-created by cPanel)
+> - **Env vars:** Set via `scripts/deploy/setup-env-vars.sh` (recommended) OR via cPanel UI manually
+
 ---
 
 ## Prerequisites
@@ -35,26 +41,40 @@ You'll be taken to a form with these fields:
 
 | Field | Value to enter | Notes |
 |---|---|---|
-| **Node.js version** | `20` | Must match what CI builds with (Node 20 LTS) |
+| **Node.js version** | `22` | MUST match the nodevenv path on server (`/nodevenv/lnkicks/22/`) |
 | **Application mode** | `Production` | Enables production optimizations |
-| **Application root** | `/home/aqualit1/lnkicks/current` | Absolute path; cPanel creates it if missing |
+| **Application root** | `/home/aqualit1/lnkicks` | Absolute path; code deploys DIRECTLY here (no /current subdir) |
 | **Application URL** | Choose your domain from the dropdown | e.g. `lnkicks.com` or `www.lnkicks.com` |
 | **Application startup file** | `cpanel/app.js` | Relative to Application root |
 | **Passenger log file** | (leave default) | Usually `~/logs/lnkicks.com.error.log` |
 
 ### Important: Application root
 
-The **Application root** must be `/home/aqualit1/lnkicks/current` (NOT just `/home/aqualit1/lnkicks`). The deploy workflow uses this layout:
+The **Application root** is `/home/aqualit1/lnkicks` (NO `/current` subdir — code lives directly here). The deploy workflow uses this layout:
 
 ```
-/home/aqualit1/lnkicks/        ← APP_ROOT (parent, holds backups + scripts)
-└── current/                    ← Application root (live code lives here)
-    ├── .next/
-    ├── cpanel/app.js           ← Startup file (relative to app root)
-    └── ...
+/home/aqualit1/lnkicks/              ← APP_ROOT = cPanel Application root
+├── .next/                           ← Next.js build output
+├── public/                          ← Static assets
+├── cpanel/app.js                    ← Startup file (relative to app root)
+├── package.json
+├── package-lock.json
+├── next.config.js
+├── node_modules/                    ← Installed via npm ci --omit=dev
+├── tmp/restart.txt                  ← Passenger restart trigger
+├── .env                             ← Env vars (written by setup-env-vars.sh)
+└── scripts/deploy/                  ← Deployment scripts (uploaded separately)
+
+/home/aqualit1/lnkicks-releases/     ← Backups (OUTSIDE app root)
+├── 20250101-120000-abc1234/         ← Timestamped backups
+└── latest → (symlink to most recent)
+
+/home/aqualit1/nodevenv/lnkicks/22/  ← cPanel-managed Node.js 22 virtualenv
+├── bin/activate                     ← Sourced before every npm/node command
+└── etc/envvars                      ← Env vars file (sourced by activate)
 ```
 
-If you set Application root to `/home/aqualit1/lnkicks` (without `/current`), Passenger will look for `cpanel/app.js` in the wrong place after the first deploy.
+If you set Application root to a different path (e.g. `/home/aqualit1/lnkicks/current`), the nodevenv would be at a different path and the deploy workflow would fail. Use `/home/aqualit1/lnkicks` exactly.
 
 ---
 

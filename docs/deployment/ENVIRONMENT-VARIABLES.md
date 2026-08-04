@@ -2,6 +2,22 @@
 
 > Complete reference for all environment variables used by LN KICKS. Explains **where** to set each one (GitHub Secrets vs cPanel) and **why**.
 
+> **📋 UPDATE (2026-08-05):** You no longer need to set cPanel env vars manually in the UI. Run this script on the server:
+>
+> ```bash
+> ssh -p 22 aqualit1@your-host.com
+> bash /home/aqualit1/lnkicks/scripts/deploy/setup-env-vars.sh
+> ```
+>
+> The script interactively prompts for each value (with sensible defaults), then writes them to BOTH:
+> 1. `/home/aqualit1/nodevenv/lnkicks/22/etc/envvars` (sourced by `bin/activate` — main mechanism)
+> 2. `/home/aqualit1/lnkicks/.env` (Next.js .env file — backup mechanism)
+>
+> For non-interactive setup, fill in `scripts/deploy/.env.production.template` and run:
+> ```bash
+> bash setup-env-vars.sh /path/to/.env.production
+> ```
+
 ---
 
 ## The Two Places Variables Live
@@ -45,7 +61,8 @@ Set these in: **GitHub repo → Settings → Secrets and variables → Actions �
 | `SSH_PORT` | `22` | SSH port (some hosts use 2222, 2200, etc.) |
 | `SSH_USER` | `aqualit1` | cPanel username |
 | `SSH_PRIVATE_KEY` | `-----BEGIN OPENSSH PRIVATE KEY-----\n...` | Full contents of `~/.ssh/id_rsa` from the server |
-| `APP_ROOT` | `/home/aqualit1/lnkicks` | Absolute path on server where app lives |
+| `APP_ROOT` | `/home/aqualit1/lnkicks` | Absolute path on server where app lives (NO `/current` subdir) |
+| `NODEVENV_PATH` | `/home/aqualit1/nodevenv/lnkicks/22/bin/activate` | Path to cPanel nodevenv activate script (sourced before npm/node) |
 | `PRODUCTION_DOMAIN` | `https://lnkicks.com` | Full URL with `https://` (no trailing slash) |
 | `NEXT_PUBLIC_SITE_URL` | `https://lnkicks.com` | Same as `PRODUCTION_DOMAIN` |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | `918881286267` | WhatsApp business number (country code + number, no +) |
@@ -53,6 +70,8 @@ Set these in: **GitHub repo → Settings → Secrets and variables → Actions �
 ### cPanel Environment Variables
 
 Set these in: **cPanel → Software → Setup Node.js App → your app → "Environment variables" section**
+
+> **💡 EASIER METHOD:** Run `bash /home/aqualit1/lnkicks/scripts/deploy/setup-env-vars.sh` on the server. It interactively prompts for each value (with sensible defaults) and writes to BOTH the nodevenv `etc/envvars` file AND the app's `.env` file. Much faster than adding vars one-by-one in the cPanel UI.
 
 | Variable | Example value | Purpose |
 |---|---|---|

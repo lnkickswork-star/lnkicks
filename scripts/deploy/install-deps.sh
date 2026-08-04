@@ -6,9 +6,10 @@
 # Called by the GitHub Actions deploy workflow AFTER rsync uploads the new
 # build but BEFORE restarting the app.
 #
-# Runs `npm ci --omit=dev` inside the freshly-uploaded `current/` directory.
-# This installs ONLY production dependencies (no devDependencies like
-# eslint, typescript, @types/*) — keeps node_modules small and deploy fast.
+# Runs `npm ci --omit=dev` inside the app root. Sources the cPanel nodevenv
+# activate script FIRST so that the correct Node.js version (22) and npm
+# are on PATH — without this, cPanel's default Node (often v14 or v16)
+# would be used and the install would fail.
 #
 # Why npm ci (not npm install)?
 #   - npm ci removes existing node_modules and installs fresh from
@@ -18,63 +19,72 @@
 #     (catches a common deploy bug early).
 #
 # Usage (invoked over SSH from GitHub Actions):
-#   bash install-deps.sh <APP_ROOT_CURRENT>
+#   bash install-deps.sh <APP_ROOT> <NODEVENV_ACTIVATE>
 #
 # Args:
-#   APP_ROOT_CURRENT — absolute path to the freshly-uploaded code
-#                      (typically $APP_ROOT/current)
+#   APP_ROOT          — absolute path to the app root (e.g. /home/aqualit1/lnkicks)
+#                       Code lives DIRECTLY here (no /current subdir).
+#   NODEVENV_ACTIVATE — absolute path to the cPanel nodevenv activate script
+#                       (e.g. /home/aqualit1/nodevenv/lnkicks/22/bin/activate)
 # =============================================================================
 set -euo pipefail
 
-CURRENT_DIR="${1:?APP_ROOT_CURRENT argument required}"
+APP_ROOT="${1:?APP_ROOT argument required}"
+NODEVENV_ACTIVATE="${2:?NODEVENV_ACTIVATE argument required}"
 
-if [[ ! -d "$CURRENT_DIR" ]]; then
-  echo "[install-deps] ERROR: Directory does not exist: $CURRENT_DIR" >&2
+if [[ ! -d "$APP_ROOT" ]]; then
+  echo "[install-deps] ERROR: Directory does not exist: $APP_ROOT" >&2
   exit 1
 fi
 
-if [[ ! -f "$CURRENT_DIR/package.json" ]]; then
-  echo "[install-deps] ERROR: package.json not found in $CURRENT_DIR" >&2
+if [[ ! -f "$APP_ROOT/package.json" ]]; then
+  echo "[install-deps] ERROR: package.json not found in $APP_ROOT" >&2
   exit 1
 fi
 
-if [[ ! -f "$CURRENT_DIR/package-lock.json" ]]; then
-  echo "[install-deps] ERROR: package-lock.json not found in $CURRENT_DIR" >&2
+if [[ ! -f "$APP_ROOT/package-lock.json" ]]; then
+  echo "[install-deps] ERROR: package-lock.json not found in $APP_ROOT" >&2
   echo "[install-deps] Cannot run 'npm ci' without a lockfile." >&2
   exit 1
 fi
 
-# Try to detect the Node.js version the cPanel app is configured to use.
-# This is informational only — cPanel's Passenger already loads the correct
-# Node.js binary when running the app.
-NODE_BIN="${NODE_BIN:-node}"
-if command -v "$NODE_BIN" >/dev/null 2>&1; then
-  echo "[install-deps] Node.js version: $($NODE_BIN --version)"
-else
-  echo "[install-deps] WARNING: 'node' not found on PATH."
-  echo "[install-deps] If cPanel uses a custom Node binary (e.g. /opt/alt/...),"
-  echo "[install-deps] set NODE_BIN env var to its path before running this script."
-fi
-
-# Use the npm that ships with the detected Node.js, if possible.
-NPM_BIN="${NPM_BIN:-npm}"
-if command -v "$NPM_BIN" >/dev/null 2>&1; then
-  echo "[install-deps] npm version: $($NPM_BIN --version)"
-else
-  echo "[install-deps] ERROR: 'npm' not found on PATH." >&2
+# Source the cPanel nodevenv activate script.
+# This puts the correct Node.js + npm versions on PATH.
+if [[ ! -f "$NODEVENV_ACTIVATE" ]]; then
+  echo "[install-deps] ERROR: nodevenv activate script not found:" >&2
+  echo "[install-deps]   $NODEVENV_ACTIVATE" >&2
+  echo "[install-deps] Did you set the NODEVENV_PATH GitHub Secret correctly?" >&2
+  echo "[install-deps] Expected path format: /home/<user>/nodevenv/<app>/<version>/bin/activate" >&2
   exit 1
 fi
 
-cd "$CURRENT_DIR"
+echo "[install-deps] Sourcing nodevenv: $NODEVENV_ACTIVATE"
+# shellcheck disable=SC1090
+source "$NODEVENV_ACTIVATE"
 
+echo "[install-deps] Node.js version: $(node --version)"
+echo "[install-deps] npm version:     $(npm --version)"
+echo "[install-deps] node path:       $(which node)"
+echo "[install-deps] npm path:        $(which npm)"
+
+cd "$APP_ROOT"
 echo "[install-deps] Working directory: $(pwd)"
+
+# Remove existing node_modules to ensure a clean install.
+# npm ci does this automatically, but we do it explicitly to handle
+# edge cases where node_modules has permission issues.
+if [[ -d "node_modules" ]]; then
+  echo "[install-deps] Removing existing node_modules..."
+  rm -rf node_modules
+fi
+
 echo "[install-deps] Installing production dependencies (npm ci --omit=dev)..."
 
 # --omit=dev          → skip devDependencies (eslint, typescript, etc.)
 # --no-audit          → skip security audit (slows down install, run separately)
 # --no-fund           → skip funding messages
 # --prefer-offline    → use npm cache when possible (faster on shared hosting)
-$NPM_BIN ci --omit=dev --no-audit --no-fund --prefer-offline
+npm ci --omit=dev --no-audit --no-fund --prefer-offline
 
 echo "[install-deps] Verifying 'next' is installed..."
 if [[ ! -d "node_modules/next" ]]; then
@@ -83,4 +93,4 @@ if [[ ! -d "node_modules/next" ]]; then
 fi
 
 echo "[install-deps] node_modules size: $(du -sh node_modules | cut -f1)"
-echo "[install-deps] Done."
+echo "[install-deps] ✅ Done."

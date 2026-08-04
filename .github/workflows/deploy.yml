@@ -20,6 +20,11 @@
 #                           on the server at ~/.ssh/id_rsa — copy its contents
 #                           into this secret, including the BEGIN/END lines)
 #   APP_ROOT              — absolute path on server (e.g. /home/aqualit1/lnkicks)
+#                           NOTE: code deploys DIRECTLY to this path (no /current
+#                           subdir). Backups live in $HOME/lnkicks-releases/.
+#   NODEVENV_PATH         — absolute path to cPanel's nodevenv activate script
+#                           (e.g. /home/aqualit1/nodevenv/lnkicks/22/bin/activate)
+#                           — sourced before every npm/node command on server.
 #   PRODUCTION_DOMAIN     — your live domain (e.g. https://lnkicks.com)
 #   NEXT_PUBLIC_SITE_URL  — public site URL (same as PRODUCTION_DOMAIN without
 #                           trailing slash). Required at BUILD time for Next.js
@@ -60,8 +65,11 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '20'
-  # Cache key for npm — speeds up CI 5-10x after first run.
+  # MUST match the Node.js version configured in cPanel → Setup Node.js App.
+  # The server's nodevenv path (/home/aqualit1/nodevenv/lnkicks/22/) confirms
+  # Node 22 is in use. Changing this without updating cPanel will cause
+  # build/runtime mismatch issues.
+  NODE_VERSION: '22'
   NEXT_TELEMETRY_DISABLED: '1'
 
 jobs:
@@ -153,11 +161,14 @@ jobs:
 
       - name: ⏪ Execute rollback on server
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh"
-        env:
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/id_ed25519 \
+            -o BatchMode=yes -o ConnectTimeout=15 \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh \
+              '${{ secrets.APP_ROOT }}' \
+              'manual-rollback' \
+              '$HOME/lnkicks-releases' \
+              '${{ secrets.NODEVENV_PATH }}'"
 
       - name: 🩺 Post-rollback health check
         run: |
@@ -218,8 +229,8 @@ jobs:
           ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "mkdir -p ${{ secrets.APP_ROOT }} \
-             ${{ secrets.APP_ROOT }}/releases \
-             ${{ secrets.APP_ROOT }}/shared \
+             $HOME/lnkicks-releases \
+             ${{ secrets.APP_ROOT }}/tmp \
              ${{ secrets.APP_ROOT }}/scripts/deploy"
 
       - name: 📤 Upload deployment scripts to server
@@ -239,11 +250,16 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "bash ${{ secrets.APP_ROOT }}/scripts/deploy/backup-current.sh \
               '${{ secrets.APP_ROOT }}' \
-              '${{ github.sha }}'"
+              '${{ github.sha }}' \
+              '$HOME/lnkicks-releases'"
 
       - name: 📤 Upload production files via rsync
         run: |
-          # Upload ONLY the files cPanel needs to run the app:
+          # Upload ONLY the files cPanel needs to run the app. Code is placed
+          # DIRECTLY in $APP_ROOT (no /current subdir) — matches the cPanel
+          # app root configured by the user.
+          #
+          # Files included:
           #   .next/           — compiled build
           #   public/          — static assets
           #   next.config.js   — Next.js config
@@ -257,9 +273,12 @@ jobs:
           #   prototypes/     — dev-only HTML mockups
           #   docs/           — not needed at runtime
           #   agent-ctx/      — dev-only context files
+          #   scripts/        — deployed separately (we keep deploy scripts)
+          #   releases/       — backups live OUTSIDE app root now
+          #   tmp/            — Passenger restart dir, do not overwrite
           #   *.md             — not needed at runtime
           #   .github/        — CI config, not needed at runtime
-          #   .env*           — env vars are set in cPanel UI, not via files
+          #   .env*           — env vars managed via nodevenv etc/envvars
           rsync -azP --delete \
             --exclude='node_modules' \
             --exclude='.git' \
@@ -268,6 +287,8 @@ jobs:
             --exclude='docs' \
             --exclude='agent-ctx' \
             --exclude='scripts' \
+            --exclude='releases' \
+            --exclude='tmp' \
             --exclude='*.md' \
             --exclude='.env*' \
             --exclude='.vscode' \
@@ -279,21 +300,28 @@ jobs:
             --exclude='.gitattributes' \
             -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key" \
             ./ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_ROOT }}/current/
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_ROOT }}/
 
       - name: 📦 Install production dependencies on server
         run: |
+          # Sources the nodevenv activate script (sets PATH to Node 22 + npm)
+          # before running npm ci. Without this, cPanel's default Node (often
+          # Node 14 or 16) would be used and the install would fail.
           ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "bash ${{ secrets.APP_ROOT }}/scripts/deploy/install-deps.sh \
-              '${{ secrets.APP_ROOT }}/current'"
+              '${{ secrets.APP_ROOT }}' \
+              '${{ secrets.NODEVENV_PATH }}'"
 
       - name: 🔴 Restart Node.js application
         run: |
+          # Touches tmp/restart.txt inside app root — Passenger watches this
+          # file and gracefully restarts on next request.
           ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "bash ${{ secrets.APP_ROOT }}/scripts/deploy/restart.sh \
-              '${{ secrets.APP_ROOT }}/current'"
+              '${{ secrets.APP_ROOT }}' \
+              '${{ secrets.NODEVENV_PATH }}'"
 
       - name: 🩺 Health check (post-deploy verification)
         id: health
@@ -309,7 +337,9 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh \
               '${{ secrets.APP_ROOT }}' \
-              '${{ github.sha }}'"
+              '${{ github.sha }}' \
+              '$HOME/lnkicks-releases' \
+              '${{ secrets.NODEVENV_PATH }}'"
 
           echo "⏳ Waiting 20s for rollback to take effect..."
           sleep 20
@@ -348,6 +378,6 @@ jobs:
           - ✅ Health check passed (HTTP 200 on homepage)
 
           ### Rollback
-          Previous version backed up to \`${{ secrets.APP_ROOT }}/releases/\`.
+          Previous version backed up to \`$HOME/lnkicks-releases/\`.
           To roll back manually, run the workflow with **force_rollback=true**.
           EOF

@@ -2,6 +2,14 @@
 
 > **One-line summary:** Push to `main` → GitHub Actions builds → uploads to cPanel → restarts Node.js app → verifies health → auto-rolls back if broken.
 
+> **📋 UPDATE (2026-08-05):** Server layout updated to match user's actual cPanel setup:
+> - **Node.js version: 22** (was 20) — matches `/home/aqualit1/nodevenv/lnkicks/22/`
+> - **App root: `/home/aqualit1/lnkicks`** — code deploys DIRECTLY here, NO `/current` subdir
+> - **Backups: `/home/aqualit1/lnkicks-releases/`** — OUTSIDE app root (avoids rsync recursion)
+> - **nodevenv: `/home/aqualit1/nodevenv/lnkicks/22/bin/activate`** — sourced before every npm/node command
+> - **Env vars:** Auto-configured via `scripts/deploy/setup-env-vars.sh` — writes to nodevenv `etc/envvars` + app `.env`
+> - **NEW GitHub Secret required:** `NODEVENV_PATH` = `/home/aqualit1/nodevenv/lnkicks/22/bin/activate`
+
 ---
 
 ## 📋 Table of Contents
@@ -230,7 +238,8 @@ Add these required secrets (see **[docs/deployment/ENVIRONMENT-VARIABLES.md](./E
 | `SSH_PORT` | `22` (usually) | cPanel → Terminal → prompt shows it, or ask host |
 | `SSH_USER` | `aqualit1` | Your cPanel username |
 | `SSH_PRIVATE_KEY` | (entire contents of `~/.ssh/id_rsa` on server) | On server: `cat ~/.ssh/id_rsa` |
-| `APP_ROOT` | `/home/aqualit1/lnkicks` | Where you want the app to live |
+| `APP_ROOT` | `/home/aqualit1/lnkicks` | Where the app lives (NO `/current` subdir) |
+| `NODEVENV_PATH` | `/home/aqualit1/nodevenv/lnkicks/22/bin/activate` | Path to nodevenv activate script (matches cPanel app config) |
 | `PRODUCTION_DOMAIN` | `https://lnkicks.com` | Your live URL with https:// |
 | `NEXT_PUBLIC_SITE_URL` | `https://lnkicks.com` | Same as PRODUCTION_DOMAIN (no trailing slash) |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | `918881286267` | Your WhatsApp business number |

@@ -10,39 +10,47 @@
 #     A) GitHub Actions UI → "Deploy to Production (cPanel)" workflow →
 #        "Run workflow" → check "force_rollback" → Run.
 #     B) SSH into server and run:
-#          bash $APP_ROOT/scripts/deploy/rollback.sh <APP_ROOT>
+#          bash $APP_ROOT/scripts/deploy/rollback.sh <APP_ROOT> <FAILED_SHA> \
+#            <RELEASES_DIR> <NODEVENV_ACTIVATE>
 #
 # What it does:
-#   1. Locates the most recent backup in $APP_ROOT/releases/
+#   1. Locates the most recent backup in RELEASES_DIR
 #      (using the `latest` symlink maintained by backup-current.sh).
-#   2. Atomically swaps the `current/` pointer to that backup.
-#   3. Re-installs production deps (in case the backup has different deps).
-#   4. Touches tmp/restart.txt to restart Passenger.
+#   2. Moves the current broken app aside (preserved for debugging).
+#   3. Restores the backup to APP_ROOT.
+#   4. Re-installs production deps (in case the backup has different deps).
+#   5. Touches tmp/restart.txt to restart Passenger.
 #
 # Safety guarantees:
-#   - NEVER deletes the current `current/` until the backup is in place.
-#   - NEVER leaves `current/` missing or broken mid-rollback.
+#   - NEVER deletes the current app until the backup is verified.
+#   - NEVER leaves APP_ROOT missing or broken mid-rollback.
 #   - Verifies the backup exists and is non-empty before swapping.
 #
 # Usage:
-#   bash rollback.sh <APP_ROOT> [<FAILED_GIT_SHA>]
+#   bash rollback.sh <APP_ROOT> <FAILED_SHA> <RELEASES_DIR> <NODEVENV_ACTIVATE>
 #
 # Args:
-#   APP_ROOT        — absolute path to app root (e.g. /home/aqualit1/lnkicks)
-#   FAILED_GIT_SHA  — (optional) git SHA of the failed deploy, for logging
+#   APP_ROOT          — absolute path to app root (e.g. /home/aqualit1/lnkicks)
+#   FAILED_SHA        — git SHA of the failed deploy (for logging)
+#   RELEASES_DIR      — absolute path to backups (e.g. /home/aqualit1/lnkicks-releases)
+#   NODEVENV_ACTIVATE — absolute path to nodevenv activate script
 # =============================================================================
 set -euo pipefail
 
 APP_ROOT="${1:?APP_ROOT argument required}"
 FAILED_SHA="${2:-unknown}"
+RELEASES_DIR="${3:?RELEASES_DIR argument required}"
+NODEVENV_ACTIVATE="${4:?NODEVENV_ACTIVATE argument required}"
 
-CURRENT_DIR="$APP_ROOT/current"
-RELEASES_DIR="$APP_ROOT/releases"
-
+echo "[rollback] ============================================================"
+echo "[rollback] LN KICKS — Production Rollback"
+echo "[rollback] ============================================================"
 echo "[rollback] App root:        $APP_ROOT"
 echo "[rollback] Failed deploy:   $FAILED_SHA"
-echo "[rollback] Current target:  $CURRENT_DIR"
-echo ""
+echo "[rollback] Releases dir:    $RELEASES_DIR"
+echo "[rollback] nodevenv:        $NODEVENV_ACTIVATE"
+echo "[rollback] Started at:      $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+echo "[rollback]"
 
 # ---------------------------------------------------------------------------
 # Step 1: Locate the backup to restore.
@@ -77,70 +85,93 @@ if [[ -f "$BACKUP_DIR/.deploy-manifest.json" ]]; then
 else
   echo "  (no manifest file)"
 fi
-echo ""
+echo "[rollback]"
 
 # ---------------------------------------------------------------------------
-# Step 2: Atomic-ish swap of `current/` → backup.
+# Step 2: Move broken current app aside (preserve for debugging).
 # ---------------------------------------------------------------------------
-# We use mv to swap directories on the same filesystem (atomic rename).
-# Steps:
-#   a. Move current/ → a temporary "failed" location (preserved for debugging).
-#   b. Copy backup → current/ (or symlink — we copy to match the deploy flow).
-#   c. If step (b) fails, restore the moved-aside current/ to avoid leaving
-#      production with no current/ directory at all.
-
 FAILED_DIR="$RELEASES_DIR/failed-$(date -u '+%Y%m%d-%H%M%S')"
-if [[ -d "$CURRENT_DIR" ]]; then
-  echo "[rollback] Moving failed deployment aside: $CURRENT_DIR → $FAILED_DIR"
-  mv "$CURRENT_DIR" "$FAILED_DIR"
-fi
+if [[ -d "$APP_ROOT" ]]; then
+  echo "[rollback] Moving failed deployment aside: $APP_ROOT → $FAILED_DIR"
+  mkdir -p "$FAILED_DIR"
 
-echo "[rollback] Restoring backup: $BACKUP_DIR → $CURRENT_DIR"
-if ! cp -a "$BACKUP_DIR" "$CURRENT_DIR"; then
-  echo "[rollback] CRITICAL: Restore failed. Attempting to recover previous (failed) deployment..." >&2
-  if [[ -d "$FAILED_DIR" ]]; then
-    mv "$FAILED_DIR" "$CURRENT_DIR"
-    echo "[rollback] Recovered failed deployment back to $CURRENT_DIR" >&2
+  # Move only the critical app files (not node_modules, tmp, scripts)
+  # to keep the failed-deploy dir small and focused on diagnosis.
+  for item in .next public cpanel package.json package-lock.json next.config.js; do
+    if [[ -e "$APP_ROOT/$item" ]]; then
+      mv "$APP_ROOT/$item" "$FAILED_DIR/"
+    fi
+  done
+  echo "[rollback] Failed code preserved at: $FAILED_DIR"
+fi
+echo "[rollback]"
+
+# ---------------------------------------------------------------------------
+# Step 3: Restore backup → APP_ROOT.
+# ---------------------------------------------------------------------------
+echo "[rollback] Restoring backup: $BACKUP_DIR → $APP_ROOT"
+mkdir -p "$APP_ROOT"
+
+# Copy each item from backup to app root.
+for item in .next public cpanel package.json package-lock.json next.config.js; do
+  if [[ -e "$BACKUP_DIR/$item" ]]; then
+    cp -a "$BACKUP_DIR/$item" "$APP_ROOT/"
   fi
+done
+
+# Verify restoration succeeded.
+if [[ ! -d "$APP_ROOT/.next" ]]; then
+  echo "[rollback] CRITICAL: Restore failed — .next/ missing after copy." >&2
   exit 5
 fi
-
-# Preserve the failed deployment for 24h for debugging, then it'll be
-# pruned by the next backup-current.sh run (it only keeps 10 newest).
-echo "[rollback] Failed deployment preserved at: $FAILED_DIR (for debugging)"
-echo ""
-
-# ---------------------------------------------------------------------------
-# Step 3: Re-install production dependencies.
-# ---------------------------------------------------------------------------
-# The backup's node_modules may have been deleted to save disk space, OR
-# the backup may have different deps than what was just deployed. Re-run
-# npm ci --omit=dev to be safe.
-echo "[rollback] Reinstalling production dependencies..."
-cd "$CURRENT_DIR"
-if [[ -f package-lock.json ]]; then
-  npm ci --omit=dev --no-audit --no-fund --prefer-offline || {
-    echo "[rollback] WARNING: npm ci failed. Using existing node_modules if present." >&2
-  }
-else
-  echo "[rollback] WARNING: No package-lock.json in backup. Skipping npm install." >&2
+if [[ ! -f "$APP_ROOT/cpanel/app.js" ]]; then
+  echo "[rollback] CRITICAL: Restore failed — cpanel/app.js missing after copy." >&2
+  exit 5
 fi
+echo "[rollback] ✅ Backup restored to $APP_ROOT"
+echo "[rollback]"
 
 # ---------------------------------------------------------------------------
-# Step 4: Restart Passenger.
+# Step 4: Source nodevenv + reinstall production deps.
+# ---------------------------------------------------------------------------
+echo "[rollback] Sourcing nodevenv: $NODEVENV_ACTIVATE"
+if [[ ! -f "$NODEVENV_ACTIVATE" ]]; then
+  echo "[rollback] WARNING: nodevenv activate not found — skipping npm install." >&2
+  echo "[rollback] App may fail if node_modules is missing or incompatible." >&2
+else
+  # shellcheck disable=SC1090
+  source "$NODEVENV_ACTIVATE"
+  echo "[rollback] Node.js: $(node --version)"
+
+  cd "$APP_ROOT"
+  if [[ -f package-lock.json ]]; then
+    echo "[rollback] Reinstalling production dependencies..."
+    rm -rf node_modules  # Clean install
+    if npm ci --omit=dev --no-audit --no-fund --prefer-offline; then
+      echo "[rollback] ✅ Dependencies installed"
+    else
+      echo "[rollback] WARNING: npm ci failed. App may not start correctly." >&2
+    fi
+  else
+    echo "[rollback] WARNING: No package-lock.json in restored backup. Skipping npm install." >&2
+  fi
+fi
+echo "[rollback]"
+
+# ---------------------------------------------------------------------------
+# Step 5: Restart Passenger.
 # ---------------------------------------------------------------------------
 echo "[rollback] Restarting Passenger (touch tmp/restart.txt)..."
-mkdir -p "$CURRENT_DIR/tmp"
-touch "$CURRENT_DIR/tmp/restart.txt"
+mkdir -p "$APP_ROOT/tmp"
+touch "$APP_ROOT/tmp/restart.txt"
 
 echo "[rollback] Waiting 5s for Passenger to pick up restart..."
 sleep 5
 
-echo ""
+echo "[rollback] ============================================================"
 echo "[rollback] ✅ Rollback complete."
 echo "[rollback] Production should now be serving the previous version."
-echo "[rollback] Verify with: curl -I $CURRENT_DOMAIN (check HTTP 200)"
-echo ""
+echo "[rollback] ============================================================"
 echo "[rollback] Next steps:"
 echo "[rollback]   1. Investigate why the failed deploy broke production."
 echo "[rollback]      Failed code preserved at: $FAILED_DIR"
