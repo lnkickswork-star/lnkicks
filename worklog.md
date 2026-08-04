@@ -5475,3 +5475,88 @@ Stage Summary:
 - Both pages retain their existing styling, haptic feedback, and accessibility (focus-visible outlines)
 - Build verified clean locally; deployment in progress via Vercel Git integration
 
+
+---
+Task ID: Desktop-Home-Master-Polish
+Agent: main
+Task: Master prompt — desktop homepage bug fix + UI polish. Make all product cards clickable, fix Trending/Designer sections, rebuild footer with rounded corners + payment methods strip + updated link columns, improve Newsletter.
+
+Work Log:
+- Analyzed 5 user-provided screenshots (image-1785844601576.jpg through image-1785844659841.jpg) via VLM to confirm current state of /help-support, /contact-us, InstantShipGrid (Featured Drops), TrendingSection, DesignerSneakersSection, Newsletter, MainFooter.
+- Audited existing desktop home structure:
+  - DesktopHome.tsx → 12-section layout (AnnouncementBar → MainHeader → HeroBanner → CardSlider3D → TrustBadges → InstantShipGrid → TrendingSection → LuxuryShoes → DesignerSneakersSection → BrandsSection → Newsletter → MainFooter)
+  - Confirmed AppContext exposes addToCart / toggleWishlist / wishlist / showToast — but no openQuickView, so built a real modal.
+- Created components/desktop/ProductCardActions.tsx (NEW):
+  - Shared component for all desktop product cards.
+  - Three actions in one pill: Wishlist (heart, fills when saved), Quick View (eye), Add to Cart (cart icon for floating layout, "Add to Cart" pill CTA for card layout).
+  - All onClick handlers call e.stopPropagation() + e.preventDefault() to prevent the parent <Link> from navigating when an action button is clicked.
+  - Includes a real QuickViewModal subcomponent (not a placeholder toast):
+    - Premium 2-column layout (image | body).
+    - Close button (top-right), ESC-to-close, body-scroll-lock.
+    - Body shows: brand kicker, product name, price (current + strikethrough), authenticity copy, Add to Cart button, Wishlist toggle, "View Full Details" deep link.
+    - Backdrop blur + fade-in animation, card pop-in animation.
+    - Responsive: collapses to 1 column on mobile.
+  - Wishlist state syncs with AppContext via useEffect on `wishlist` array.
+- Updated InstantShipGrid.tsx (Featured Drops):
+  - Whole card already wrapped in Link — kept.
+  - Added priceValue to all 8 products (required by ProductCardActions).
+  - Brand-theme price color #0A0A0A (was implicit; removed any red ambiguity).
+  - Added ProductCardActions (layout="card") below price — Wishlist + Quick View + Add to Cart all functional.
+  - Wrapped actions in a div with onClick/onMouseDown stopPropagation.
+  - Replaced View All <button> with <Link href="/products"> so it actually navigates.
+- Updated PremiumProductSlider.tsx (used by TrendingSection):
+  - Removed unused useApp import (cart/wishlist now handled inside ProductCardActions).
+  - Removed the inline Add to Cart button (replaced with ProductCardActions).
+  - Changed price color from off-brand red #DC2626 → brand-theme black #0A0A0A.
+  - Added floating ProductCardActions pill (layout="floating") ON the image — wishlist + quick view + cart icons.
+  - Also added card-style ProductCardActions (layout="card") below the price for users who scroll past image.
+  - Wrapped text-block actions in div with onClick/onMouseDown/onPointerDown stopPropagation to prevent drag/swipe interference.
+  - Removed unused .pps-cta CSS rules.
+- Updated DesignerSneakersSection.tsx:
+  - Same treatment as PremiumProductSlider — removed useApp import, red→black price, floating + card-style ProductCardActions, removed unused .ds-cta CSS.
+- Updated LuxuryShoes.tsx:
+  - Wrapped entire image card in <Link href={shoe.href}> (was previously only the name link).
+  - Added priceValue to all 5 products.
+  - Added floating ProductCardActions on image + card-style CTA below price.
+- Rebuilt MainFooter.tsx (full rewrite):
+  - Rounded top corners (borderTopLeftRadius/borderTopRightRadius = 32px) + marginTop: -32 so footer sits flush against the section above.
+  - Removed "Call +91 95480 57414 · Mon–Fri · 11AM–6PM IST" lower info bar entirely.
+  - Added Payment Methods strip with 12 monochrome Apple-style inline-SVG icons: BHIM UPI, Google Pay, PhonePe, Paytm, Visa, Mastercard, RuPay, American Express, UPI, Debit Card, Credit Card, Net Banking, Wallets.
+  - Refreshed SHOP column: Sneakers / Luxury / Brands / New Arrivals / Coming Soon / Track Order / Gift Cards / Wishlist.
+  - Refreshed CATEGORIES column: Collections / New Arrivals / Best Sellers / Upcoming Drops / Luxury Sneakers / Streetwear / Sale / Accessories / Gift Cards.
+  - Refreshed INFORMATION column: kept existing policies + added FAQ, Size Guide, Sneaker Care, Verification Process.
+  - Social icons now link to real URLs (instagram.com/lnkicks, youtube.com/@lnkicks, x.com/lnkicks, tiktok.com/@lnkicks) with target=_blank rel=noopener noreferrer.
+  - Micro-animations: footer-link hover → animated underline slide (width 0→100%) + 2px right shift; footer-social hover → lift 2px + border brighten; pay-icon hover → brighten + 2px lift; footer-submit hover → scale 1.03 + arrow slides 3px right; success state shows footer-check pop animation (scale 0.4 → 1.15 → 1 over 480ms).
+  - Newsletter block: heading "Stay Ahead of Every Drop" + subtext "Get exclusive early access, restock alerts, member-only releases and offers." + Subscribe button (label + arrow).
+  - Responsive grid collapses 4→2→1 columns at lg/sm breakpoints (footer-grid + footer-newsletter class names drive the media queries).
+  - Extracted FooterColumn sub-component to DRY up the 3 nav columns.
+- Updated Newsletter.tsx (standalone section):
+  - New heading: "Stay Ahead of Every Drop" (responsive clamp(48px, 9vw, 120px)).
+  - New subtext: "Get exclusive early access, restock alerts, member-only releases and offers."
+  - Subscribe button shows label + arrow (was icon-only); on submit it morphs to a green-bordered check with pop animation.
+  - Input border turns green + background turns light green on success.
+- TypeScript check (npx tsc --noEmit): clean.
+- Next.js production build: passed; all 44 routes prerendered successfully.
+- ESLint: only pre-existing warnings (in admin/, mobile/ files); no new warnings from this task.
+- Committed as f25a505: "feat(desktop-home): full UX polish — clickable cards, footer rebuild, payment strip"
+- Pushed to origin/main — Vercel Git integration auto-deployed.
+- Verified live via agent-browser on https://my-project-three-tau-30.vercel.app/:
+  - Homepage loads correctly, all sections render.
+  - InstantShipGrid: 8 cards each show Wishlist + Quick View + Add to Cart buttons (24 total actions).
+  - PremiumProductSlider + DesignerSneakersSection: floating action pills visible on every visible product (50+ actions across carousels).
+  - LuxuryShoes: 5 cards each have floating + card-style actions.
+  - Quick View modal: opens on click — shows image, brand, name, price, copy, Add to Cart, Wishlist toggle, View Full Details link. ESC closes it. Close button works.
+  - Add to Cart: clicking the button updates the header cart badge (0 → 1 → 2 verified). Does NOT trigger parent Link navigation (URL stays on /).
+  - Wishlist: button aria-label correctly reflects "Add X to wishlist" / "Remove X from wishlist" based on state.
+  - Footer: rendered with rounded top corners, all 4 columns (Brand/Shop/Information/Categories) showing correct links, Payment Accepted strip showing all 12 monochrome icons, copyright line shows "© 2026 LN KICKS · LUXURY SNEAKER MARKETPLACE" with NO phone number / hours.
+  - Newsletter: "Stay Ahead of Every Drop" heading + "Get exclusive early access, restock alerts, member-only releases and offers." subtext + Subscribe button rendered.
+
+Stage Summary:
+- All 4 product-card sections on the desktop homepage now have working Wishlist + Quick View + Add to Cart buttons via a single shared ProductCardActions component (no duplication).
+- Quick View is a real premium modal (not a toast) — image, brand, name, price, copy, Add to Cart, Wishlist toggle, View Full Details link, ESC-to-close, body-scroll-lock, fade-in + pop animation.
+- Red price color (#DC2626) eliminated from Trending + Designer sections — replaced with brand-theme black (#0A0A0A).
+- Footer fully rebuilt: 32px rounded top corners, removed phone/hours bar, added 12-icon payment methods strip (BHIM/GPay/PhonePe/Paytm/Visa/MC/RuPay/Amex/UPI/Debit/Credit/NetBanking/Wallets), refreshed all 3 nav columns (Shop + Categories + Information with Size Guide/Sneaker Care/Verification Process added).
+- Newsletter: new "Stay Ahead of Every Drop" heading + new copy + Subscribe label button + green check success animation.
+- Micro-animations: animated underline slide on link hover, social/payment icon lift, subscribe button arrow slide, check-pop animation on success.
+- Production-ready: TypeScript clean, build passes, ESLint clean (no new warnings), all changes verified live via agent-browser on Vercel.
+
