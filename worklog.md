@@ -5297,3 +5297,48 @@ Stage Summary:
   attribution, verified reseller authorization) and explicitly does
   NOT bypass any IP enforcement — it adds a pre-publish screening
   layer that did not previously exist.
+
+---
+Task ID: popup-shoe-removal-1
+Agent: Main
+Task: Remove shoe image from mobile engagement popup (user request: "popup page hai mobile ke liye esme shoes ki image remove krde")
+
+Work Log:
+- Analyzed user-uploaded screenshot (WhatsApp Image 2026-08-04 at 14.17.57 (2).jpeg) via VLM —
+  confirmed it shows the MobileEngagementPopup bottom-sheet modal with an Air Jordan 1 Low
+  shoe image on the right side of the dark top banner.
+- Located popup component: components/mobile/MobileEngagementPopup.tsx
+- Identified shoe image element (lines 540-561): <img> with SHOE_IMAGE_URL (Air Jordan 1 Low
+  "Powder Blue" CDN URL), positioned absolute right:-20 bottom:-10, width 165px.
+- Identified 4 Sparkle SVG sub-components (lines 563-567) positioned around the shoe.
+- Identified related CSS: .lnep-shoe float-in animation (lines 802-812) and
+  @keyframes lnep-sparkle (lines 910-921).
+- Identified SHOE_IMAGE_URL constant (lines 100-106) and Sparkle component definition
+  (lines 927-966).
+- Removed via MultiEdit (single atomic operation):
+  1. SHOE_IMAGE_URL constant
+  2. <img> element with shoe
+  3. 4x <Sparkle> usages
+  4. .lnep-shoe CSS block
+  5. @keyframes lnep-sparkle
+  6. Sparkle sub-component definition
+  7. Updated left-side text container maxWidth from '62%' to '100%' (text now fills banner)
+  8. Updated docstring layout diagram to reflect shoe removal
+- Verified: grep for SHOE_IMAGE_URL|lnep-shoe|Sparkle|lnep-sparkle returns NO matches (clean).
+- Verified: npx tsc --noEmit passes with zero errors.
+- Committed: fix(mobile-popup): remove shoe image + sparkles from engagement popup
+  (1 file changed, 4 insertions, 106 deletions)
+- Pushed to origin/main (commit 6965bf4).
+- Vercel auto-deployed via Git integration (state=READY, URL confirmed).
+- Verified mobile UA routing: iPhone UA → MobileHome (159KB, hamburger menu, mounts popup);
+  Desktop UA → DesktopHome (275KB, inline nav). Popup is mobile-only by mount path.
+- Note: agent-browser emulation kept getting cached desktop homepage despite iPhone UA,
+  so could not screenshot the live popup. However, the code change is verified correct
+  via TypeScript compilation, grep cleanup check, and successful Vercel deployment.
+  Real iPhones correctly receive MobileHome which mounts the popup.
+
+Stage Summary:
+- Shoe image (Air Jordan 1 Low) and 4 sparkle SVGs removed from mobile engagement popup.
+- Top banner now shows full-width text: "Looking for your perfect pair?" + subtext.
+- Desktop homepage untouched (popup is mobile-only by mount path + viewport guard).
+- Live on production: https://my-project-three-tau-30.vercel.app (mobile UA only).
