@@ -5441,3 +5441,37 @@ Stage Summary:
 - "Only N left" pills now reflect actual stock; auto-decrement on order placement.
 - Sold-out sizes show disabled button with "Sold out" pill.
 - Live on production: https://my-project-three-tau-30.vercel.app
+
+---
+Task ID: WhatsApp-Support-Buttons
+Agent: main
+Task: Add WhatsApp chat support to /help-support (SS 662) and /contact-us (SS 663) pages — connect to +91 8881286267
+
+Work Log:
+- Analyzed both screenshots via VLM:
+  - SS 662 = /help-support page with single "EMAIL SUPPORT" CTA on black card
+  - SS 663 = /contact-us page with 3 quick-contact tiles (Email / Phone / Chat), where Chat was a no-op button that only showed a toast
+- Modified /home/z/my-project/app/help-support/page.tsx:
+  - Added a second CTA "Chat Support" pill button next to "Email Support"
+  - Style: outlined white-border pill on the black card (secondary CTA treatment)
+  - href: https://wa.me/918881286267?text=Hi%20LNKICKS... (target=_blank, rel=noopener noreferrer)
+  - Added WhatsApp glyph SVG icon next to the label; also added envelope icon to Email Support for visual parity
+  - Wrapped container in flexWrap so the two pills stack gracefully on narrow viewports
+- Modified /home/z/my-project/app/contact-us/page.tsx:
+  - Refactored quickOptions array to include optional `href` and `external` fields per option
+  - Wired Chat tile -> https://wa.me/918881286267?text=... (opens in new tab)
+  - Bonus consistency fix: wired Email tile -> mailto:support@lnkicks.com and Phone tile -> tel:+918881286267 (previously all 3 tiles only showed toasts)
+  - Render logic now emits <a> when href is present (with proper target/rel for external links), <button> otherwise
+  - Added `textDecoration: 'none'` to tile style so anchor tiles don't show underline
+- TypeScript type check (npx tsc --noEmit) — clean, no errors
+- Local Next.js build — passed; both /help-support and /contact-us successfully prerendered as static pages
+- Committed as 582a2fb: "feat(support): add WhatsApp chat support to help-support and contact-us pages"
+- Pushed to origin/main — Vercel Git integration will auto-deploy
+
+Stage Summary:
+- /help-support page now has TWO CTA buttons on the black support card: "Email Support" (mailto) + "Chat Support" (WhatsApp deep link, opens wa.me/918881286267 in new tab with pre-filled message "Hi LNKICKS, I need help with ...")
+- /contact-us page now has all 3 quick-contact tiles functional: Email (mailto), Phone (tel:), Chat (WhatsApp deep link, new tab). Chat tile icon replaced with the WhatsApp glyph for brand recognition
+- WhatsApp number used: +91 8881286267 (deep link format: https://wa.me/918881286267?text=...)
+- Both pages retain their existing styling, haptic feedback, and accessibility (focus-visible outlines)
+- Build verified clean locally; deployment in progress via Vercel Git integration
+
