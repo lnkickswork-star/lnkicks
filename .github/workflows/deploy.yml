@@ -154,27 +154,47 @@ jobs:
           persist-credentials: false
 
       - name: 🔐 Load SSH key
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+            echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
+            exit 1
+          fi
 
       - name: ⏪ Execute rollback on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
             -o BatchMode=yes -o ConnectTimeout=15 \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh \
-              '${{ secrets.APP_ROOT }}' \
+            "${SSH_USER}@${SSH_HOST}" \
+            "bash '${APP_ROOT}/scripts/deploy/rollback.sh' \
+              '${APP_ROOT}' \
               'manual-rollback' \
-              '$HOME/lnkicks-releases' \
-              '${{ secrets.NODEVENV_PATH }}'"
+              '\$HOME/lnkicks-releases' \
+              '${NODEVENV_PATH}'"
 
       - name: 🩺 Post-rollback health check
+        env:
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
         run: |
-          bash scripts/deploy/health-check.sh "${{ secrets.PRODUCTION_DOMAIN }}" 60
+          bash scripts/deploy/health-check.sh "$PRODUCTION_DOMAIN" 60
 
   # ---------------------------------------------------------------------------
   # 3. DEPLOY — Upload artifact, install deps, restart, verify health
@@ -204,18 +224,41 @@ jobs:
           persist-credentials: false
 
       - name: 🔍 Verify all required secrets are set (fail fast with clear message)
+        env:
+          # Pass secrets via env to avoid bash injection from secret values.
+          # Bash sees only env var references; values never touch the script.
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
         run: |
+          set -euo pipefail
           MISSING=0
-          # GitHub Actions can't do dynamic secret access — check each explicitly.
-          if [[ -z "${{ secrets.SSH_HOST }}" ]]; then echo "❌ SSH_HOST is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.SSH_PORT }}" ]]; then echo "❌ SSH_PORT is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.SSH_USER }}" ]]; then echo "❌ SSH_USER is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]]; then echo "❌ SSH_PRIVATE_KEY is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.APP_ROOT }}" ]]; then echo "❌ APP_ROOT is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.NODEVENV_PATH }}" ]]; then echo "❌ NODEVENV_PATH is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.PRODUCTION_DOMAIN }}" ]]; then echo "❌ PRODUCTION_DOMAIN is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.NEXT_PUBLIC_SITE_URL }}" ]]; then echo "❌ NEXT_PUBLIC_SITE_URL is missing"; MISSING=$((MISSING+1)); fi
-          if [[ -z "${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}" ]]; then echo "❌ NEXT_PUBLIC_WHATSAPP_NUMBER is missing"; MISSING=$((MISSING+1)); fi
+          # Check each secret via env var reference (NOT direct interpolation).
+          for kv in \
+            "SSH_HOST=${SSH_HOST}" \
+            "SSH_PORT=${SSH_PORT}" \
+            "SSH_USER=${SSH_USER}" \
+            "SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY}" \
+            "APP_ROOT=${APP_ROOT}" \
+            "NODEVENV_PATH=${NODEVENV_PATH}" \
+            "PRODUCTION_DOMAIN=${PRODUCTION_DOMAIN}" \
+            "NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}" \
+            "NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}"; do
+            name="${kv%%=*}"
+            value="${kv#*=}"
+            if [[ -z "$value" ]]; then
+              echo "❌ $name is missing"
+              MISSING=$((MISSING+1))
+            else
+              echo "✅ $name is set (length: ${#value})"
+            fi
+          done
           if [[ "$MISSING" -gt 0 ]]; then
             echo ""
             echo "=========================================="
@@ -236,6 +279,7 @@ jobs:
             echo "  NEXT_PUBLIC_WHATSAPP_NUMBER = 918881286267"
             exit 1
           fi
+          echo ""
           echo "✅ All 9 required secrets are present."
 
       - name: 📦 Download build artifact
@@ -257,50 +301,104 @@ jobs:
           echo "=== Standalone server file in .next? ==="
           ls .next/BUILD_ID && echo "OK: BUILD_ID present (build succeeded)" || exit 1
 
-      - name: 🔐 Load SSH key
+      - name: 🔐 Load SSH key & verify connection
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          # Use printf to avoid trailing-newline issues; never echo the key.
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          # Add server host key to known_hosts to avoid interactive prompt
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-          # Verify SSH connection
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
+
+          # Fail fast if the server is unreachable or port is closed.
+          echo "→ Scanning server host key (${SSH_HOST}:${SSH_PORT})..."
+          if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+            echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
+            exit 1
+          fi
+          echo "✅ Host key added to known_hosts."
+
+          # Verify SSH login works with the supplied key.
+          echo "→ Verifying SSH login..."
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
             -o BatchMode=yes -o ConnectTimeout=15 \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo SSH_OK; whoami; pwd"
+            -o PasswordAuthentication=no -o PubkeyAuthentication=yes -o IdentitiesOnly=yes \
+            "${SSH_USER}@${SSH_HOST}" "echo SSH_OK; whoami; pwd; test -d '${APP_ROOT}' && echo APP_ROOT_OK || echo APP_ROOT_MISSING"
 
       - name: 📦 Ensure remote directories exist
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "mkdir -p ${{ secrets.APP_ROOT }} \
-             $HOME/lnkicks-releases \
-             ${{ secrets.APP_ROOT }}/tmp \
-             ${{ secrets.APP_ROOT }}/scripts/deploy"
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "mkdir -p '${APP_ROOT}' \
+             \$HOME/lnkicks-releases \
+             '${APP_ROOT}/tmp' \
+             '${APP_ROOT}/scripts/deploy'"
 
       - name: 📤 Upload deployment scripts to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           rsync -azP --delete \
-            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key" \
+            -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key -o BatchMode=yes" \
             scripts/deploy/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_ROOT }}/scripts/deploy/
+            "${SSH_USER}@${SSH_HOST}:${APP_ROOT}/scripts/deploy/"
           # Make scripts executable
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "chmod +x ${{ secrets.APP_ROOT }}/scripts/deploy/*.sh"
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "chmod +x '${APP_ROOT}/scripts/deploy/'*.sh"
 
       - name: 💾 Backup current production (for rollback)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          GIT_SHA: ${{ github.sha }}
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/backup-current.sh \
-              '${{ secrets.APP_ROOT }}' \
-              '${{ github.sha }}' \
-              '$HOME/lnkicks-releases'"
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "bash '${APP_ROOT}/scripts/deploy/backup-current.sh' \
+              '${APP_ROOT}' \
+              '${GIT_SHA}' \
+              '\$HOME/lnkicks-releases'"
 
       - name: 📤 Upload production files via rsync
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           # Upload ONLY the files cPanel needs to run the app. Code is placed
           # DIRECTLY in $APP_ROOT (no /current subdir) — matches the cPanel
           # app root configured by the user.
@@ -319,10 +417,10 @@ jobs:
           #   prototypes/     — dev-only HTML mockups
           #   docs/           — not needed at runtime
           #   agent-ctx/      — dev-only context files
-          #   scripts/        — deployed separately (we keep deploy scripts)
+          #   scripts/        — deployed separately (deploy scripts)
           #   releases/       — backups live OUTSIDE app root now
           #   tmp/            — Passenger restart dir, do not overwrite
-          #   *.md             — not needed at runtime
+          #   *.md            — not needed at runtime
           #   .github/        — CI config, not needed at runtime
           #   .env*           — env vars managed via nodevenv etc/envvars
           rsync -azP --delete \
@@ -344,64 +442,106 @@ jobs:
             --exclude='.eslintrc*' \
             --exclude='.gitignore' \
             --exclude='.gitattributes' \
-            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key" \
+            --exclude='tsconfig.tsbuildinfo' \
+            --exclude='bun.lock' \
+            --exclude='vercel.json' \
+            --exclude='.editorconfig' \
+            --exclude='.npmrc' \
+            --exclude='.yarnrc' \
+            -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key -o BatchMode=yes" \
             ./ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_ROOT }}/
+            "${SSH_USER}@${SSH_HOST}:${APP_ROOT}/"
 
       - name: 📦 Install production dependencies on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
         run: |
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           # Sources the nodevenv activate script (sets PATH to Node 22 + npm)
-          # before running npm ci. Without this, cPanel's default Node (often
-          # Node 14 or 16) would be used and the install would fail.
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/install-deps.sh \
-              '${{ secrets.APP_ROOT }}' \
-              '${{ secrets.NODEVENV_PATH }}'"
+          # before running npm ci. Without this, cPanel's default Node would
+          # be used and the install would fail.
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "bash '${APP_ROOT}/scripts/deploy/install-deps.sh' \
+              '${APP_ROOT}' \
+              '${NODEVENV_PATH}'"
 
-      - name: 🔴 Restart Node.js application
+      - name: 🔴 Restart Node.js application (Passenger)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
         run: |
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           # Touches tmp/restart.txt inside app root — Passenger watches this
           # file and gracefully restarts on next request.
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/restart.sh \
-              '${{ secrets.APP_ROOT }}' \
-              '${{ secrets.NODEVENV_PATH }}'"
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "bash '${APP_ROOT}/scripts/deploy/restart.sh' \
+              '${APP_ROOT}' \
+              '${NODEVENV_PATH}'"
 
       - name: 🩺 Health check (post-deploy verification)
         id: health
+        env:
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
         run: |
-          bash scripts/deploy/health-check.sh "${{ secrets.PRODUCTION_DOMAIN }}" 90
+          bash scripts/deploy/health-check.sh "$PRODUCTION_DOMAIN" 90
         continue-on-error: true
 
       - name: ⏪ Auto-rollback if health check failed
         if: steps.health.outcome == 'failure'
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
+          GIT_SHA: ${{ github.sha }}
         run: |
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           echo "❌ Health check FAILED after deployment. Initiating automatic rollback..."
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh \
-              '${{ secrets.APP_ROOT }}' \
-              '${{ github.sha }}' \
-              '$HOME/lnkicks-releases' \
-              '${{ secrets.NODEVENV_PATH }}'"
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "bash '${APP_ROOT}/scripts/deploy/rollback.sh' \
+              '${APP_ROOT}' \
+              '${GIT_SHA}' \
+              '\$HOME/lnkicks-releases' \
+              '${NODEVENV_PATH}'"
 
           echo "⏳ Waiting 20s for rollback to take effect..."
           sleep 20
 
           echo "🩺 Re-checking health after rollback..."
-          if bash scripts/deploy/health-check.sh "${{ secrets.PRODUCTION_DOMAIN }}" 60; then
+          if bash scripts/deploy/health-check.sh "$PRODUCTION_DOMAIN" 60; then
             echo "✅ Rollback successful — production is healthy again with previous version."
           else
             echo "🚨 CRITICAL: Rollback ALSO failed. Production is BROKEN. Manual intervention required."
-            echo "Check server logs at: /home/${{ secrets.SSH_USER }}/logs/"
+            echo "Check server logs at: /home/${SSH_USER}/logs/"
             exit 1
           fi
           exit 1   # fail the workflow so the team knows deploy failed
 
       - name: ✅ Deployment summary
         if: success()
+        env:
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY <<EOF
           ## ✅ Deployment Successful
@@ -411,7 +551,7 @@ jobs:
           | Commit | \`${{ needs.quality-gate.outputs.commit_short }}\` |
           | Branch | \`main\` |
           | Environment | production |
-          | URL | ${{ secrets.PRODUCTION_DOMAIN }} |
+          | URL | ${PRODUCTION_DOMAIN} |
           | Deployed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
 
           ### Verified

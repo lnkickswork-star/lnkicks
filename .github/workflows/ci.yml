@@ -97,7 +97,10 @@ jobs:
           persist-credentials: false
 
       - name: 🔍 TruffleHog OSS secret scan
-        uses: trufflesecurity/trufflehog@main
+        # Pinned to a specific major version (v3.88) instead of @main for
+        # supply-chain safety — @main could change behavior or pull in
+        # malicious code if the upstream repo were compromised.
+        uses: trufflesecurity/trufflehog@v3.88.0
         with:
           path: .
           extra_args: --only-verified --results=verified,unknown

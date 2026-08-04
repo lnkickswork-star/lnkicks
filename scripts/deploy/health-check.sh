@@ -31,6 +31,11 @@ TIMEOUT_SECONDS="${2:-90}"
 # Strip trailing slash for clean URL joining.
 DOMAIN="${DOMAIN%/}"
 
+# Use a unique temp file per health-check run (avoids collision if multiple
+# health checks ever run in parallel — defensive cleanup at exit).
+BODY_TMPFILE="$(mktemp /tmp/lnkicks-health.XXXXXX)"
+trap 'rm -f "$BODY_TMPFILE"' EXIT
+
 # A representative product slug to test the dynamic product route.
 # This matches the redirect target in next.config.js — if the product
 # slug ever changes, update it here.
@@ -65,14 +70,14 @@ check_endpoint() {
   # curl options:
   #   -s            silent (no progress bar)
   #   -S            show errors
-  #   -o /dev/null  discard body (we'll check size separately if needed)
+  #   -o $BODY_TMPFILE  discard body to per-run temp file
   #   -w            write metrics to stdout (HTTP code, size, time)
   #   --max-time 15 hard per-request timeout
   #   -L            follow redirects (301/302)
   #   --compressed  accept gzip
   local response
   response=$(curl -sS -L --compressed --max-time 15 \
-    -o /tmp/health-check-body \
+    -o "$BODY_TMPFILE" \
     -w "%{http_code}|%{size_download}|%{time_total}" \
     "$url" 2>&1) || true
 
@@ -94,8 +99,8 @@ check_endpoint() {
     echo "  ❌ $description ($url)"
     echo "     HTTP $http_code, ${body_size} bytes, ${elapsed_ms}ms"
     # Show first 200 chars of body for debugging.
-    if [[ -f /tmp/health-check-body ]]; then
-      echo "     Body preview: $(head -c 200 /tmp/health-check-body | tr '\n' ' ')"
+    if [[ -f "$BODY_TMPFILE" ]]; then
+      echo "     Body preview: $(head -c 200 "$BODY_TMPFILE" | tr '\n' ' ')"
     fi
     return 1
   fi
@@ -136,7 +141,7 @@ echo ""
 echo "[health-check] ❌ FAILED: endpoints did not become healthy within ${TIMEOUT_SECONDS}s."
 echo "[health-check] Suggested actions:"
 echo "[health-check]   1. Check cPanel → Logs → Error Log for the production domain"
-echo "[health-check]   2. SSH in and run: pm2 logs (or tail -f ~/logs/*.log)"
-echo "[health-check]   3. Verify Passenger picked up the new code: ls -la $HOME/lnkicks/current/tmp/restart.txt"
+echo "[health-check]   2. SSH in and tail the Passenger logs:  tail -f ~/logs/*.log"
+echo "[health-check]   3. Verify Passenger picked up the new code: ls -la ${DOMAIN#https://*} 2>/dev/null; ls -la \$HOME/lnkicks/tmp/restart.txt"
 echo "[health-check]   4. If broken, trigger rollback: GitHub Actions → Run workflow → force_rollback=true"
 exit 1

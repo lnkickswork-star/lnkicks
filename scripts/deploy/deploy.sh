@@ -157,6 +157,12 @@ rsync -a --delete \
   --exclude='.eslintrc*' \
   --exclude='.gitignore' \
   --exclude='.gitattributes' \
+  --exclude='tsconfig.tsbuildinfo' \
+  --exclude='bun.lock' \
+  --exclude='vercel.json' \
+  --exclude='.editorconfig' \
+  --exclude='.npmrc' \
+  --exclude='.yarnrc' \
   "$STAGING_DIR/" "$APP_ROOT/"
 
 echo "  → Artifacts copied to $APP_ROOT"
