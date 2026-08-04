@@ -278,7 +278,13 @@ export default function MobileSplashScreen({ onComplete }: Props) {
           </p>
         </div>
 
-        {/* ── MIDDLE: Two diagonal sneakers (BOTH inside viewport) ──── */}
+        {/* ── MIDDLE: Two MIRROR-symmetric sneakers, centered as a pair ──
+              Both shoes share identical width + maxWidth + rotation
+              magnitude (±16deg). They are anchored to the screen center
+              (left:50%) and use translate(-94%/-6%) so their visual
+              centers are perfectly mirrored around 50%. A 12% overlap
+              creates a clean, intertwined, premium composition that
+              NEVER leans left or right. */}
         <div
           className="lnk-splash__shoes"
           aria-hidden="true"
@@ -293,19 +299,18 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             justifyContent: 'center',
           }}
         >
-          {/* LEFT shoe — Nike Air Force 1 (white), rotated -22deg, pulled inward */}
+          {/* LEFT shoe — anchored to center, mirrored -16deg */}
           <img
             src={LEFT_SHOE_URL}
             alt=""
             className="lnk-splash__shoe lnk-splash__shoe--left"
             style={{
               position: 'absolute',
-              left: '8%',
+              left: '50%',
               top: '50%',
-              transform:
-                'translateY(-50%) rotate(-22deg) translateX(-1%)',
-              width: '46%',
-              maxWidth: 180,
+              transform: 'translate(-94%, -50%) rotate(-16deg)',
+              width: '44%',
+              maxWidth: 165,
               height: 'auto',
               userSelect: 'none',
               pointerEvents: 'none',
@@ -314,19 +319,18 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             }}
           />
 
-          {/* RIGHT shoe — Yeezy 350 V2 (beige), rotated +18deg, pulled inward */}
+          {/* RIGHT shoe — anchored to center, mirrored +16deg */}
           <img
             src={RIGHT_SHOE_URL}
             alt=""
             className="lnk-splash__shoe lnk-splash__shoe--right"
             style={{
               position: 'absolute',
-              right: '8%',
+              left: '50%',
               top: '50%',
-              transform:
-                'translateY(-50%) rotate(18deg) translateX(1%)',
+              transform: 'translate(-6%, -50%) rotate(16deg)',
               width: '44%',
-              maxWidth: 170,
+              maxWidth: 165,
               height: 'auto',
               userSelect: 'none',
               pointerEvents: 'none',
@@ -494,11 +498,12 @@ export default function MobileSplashScreen({ onComplete }: Props) {
           transform: translateY(0);
         }
 
-        /* Shoes entrance — left slides in from left, right from right.
-           Both settle to translateX(±4%) so they stay INSIDE the viewport. */
+        /* Shoes entrance — left slides in from further left, right from
+           further right. Both settle to a MIRROR-symmetric centered pair
+           (translate -94% / -6%) so the composition never leans. */
         .lnk-splash__shoe--left {
           opacity: 0;
-          transform: translateY(-50%) rotate(-22deg) translateX(-26%);
+          transform: translate(-118%, -50%) rotate(-16deg);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 360ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 360ms;
@@ -506,13 +511,13 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--left {
           opacity: 1;
-          transform: translateY(-50%) rotate(-22deg) translateX(-1%);
+          transform: translate(-94%, -50%) rotate(-16deg);
           animation: lnk-float-left 4.2s ease-in-out 1.4s infinite;
         }
 
         .lnk-splash__shoe--right {
           opacity: 0;
-          transform: translateY(-50%) rotate(18deg) translateX(26%);
+          transform: translate(18%, -50%) rotate(16deg);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 440ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 440ms;
@@ -520,25 +525,26 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--right {
           opacity: 1;
-          transform: translateY(-50%) rotate(18deg) translateX(1%);
+          transform: translate(-6%, -50%) rotate(16deg);
           animation: lnk-float-right 4.6s ease-in-out 1.6s infinite;
         }
 
-        /* Gentle floating animation (premium, non-intrusive) */
+        /* Gentle floating animation — perfectly vertical bob only.
+           No horizontal drift, so the centered pair stays centered. */
         @keyframes lnk-float-left {
           0%, 100% {
-            transform: translateY(-50%) rotate(-22deg) translateX(-1%);
+            transform: translate(-94%, -50%) rotate(-16deg);
           }
           50% {
-            transform: translateY(calc(-50% - 6px)) rotate(-22deg) translateX(-1%);
+            transform: translate(-94%, calc(-50% - 6px)) rotate(-16deg);
           }
         }
         @keyframes lnk-float-right {
           0%, 100% {
-            transform: translateY(-50%) rotate(18deg) translateX(1%);
+            transform: translate(-6%, -50%) rotate(16deg);
           }
           50% {
-            transform: translateY(calc(-50% - 8px)) rotate(18deg) translateX(1%);
+            transform: translate(-6%, calc(-50% - 8px)) rotate(16deg);
           }
         }
 
@@ -579,10 +585,10 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             animation: none !important;
           }
           .lnk-splash--in .lnk-splash__shoe--left {
-            transform: translateY(-50%) rotate(-22deg) translateX(-1%) !important;
+            transform: translate(-94%, -50%) rotate(-16deg) !important;
           }
           .lnk-splash--in .lnk-splash__shoe--right {
-            transform: translateY(-50%) rotate(18deg) translateX(1%) !important;
+            transform: translate(-6%, -50%) rotate(16deg) !important;
           }
           .lnk-splash--in .lnk-splash__halo {
             transform: translate(-50%, -50%) scale(1) !important;
