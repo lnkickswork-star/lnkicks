@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import ProductCardActions from './ProductCardActions';
 
 /**
  * InstantShipGrid — 4-column premium sneaker grid.
@@ -10,8 +9,8 @@ import ProductCardActions from './ProductCardActions';
  * Refinements (Phase 2):
  *  - Whole card is a single <Link> (no dead click areas)
  *  - Brand-theme price (black, not red) — matches LN KICKS identity
- *  - Per-card Wishlist + Quick View + Add to Cart actions
- *    (uses shared ProductCardActions component)
+ *  - Per-card Add-to-Cart actions removed per user spec — card is now
+ *    click-through only (whole card navigates to product page)
  *  - "From" label uses luxury ice-blue (no more orange)
  *  - Card hover: image scale + subtle lift + shadow
  *  - Premium grayscale-to-color image transition on hover
@@ -269,16 +268,6 @@ export default function InstantShipGrid() {
                   <span style={{ fontSize: '12px', color: '#d1d5db', textDecoration: 'line-through' }}>
                     {product.comparePrice}
                   </span>
-                </div>
-                {/* Per-card actions: Wishlist · Quick View · Add to Cart.
-                    ProductCardActions stops event propagation so these
-                    clicks never trigger the parent Link navigation. */}
-                <div
-                  style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}
-                  onClick={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  <ProductCardActions product={product} layout="card" variant="light" />
                 </div>
               </div>
             </Link>
