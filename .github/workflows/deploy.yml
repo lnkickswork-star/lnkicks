@@ -17,8 +17,10 @@
 #   SSH_PORT              — SSH port (usually 22, sometimes 2222 on shared hosts)
 #   SSH_USER              — cPanel username (e.g. aqualit1)
 #   SSH_PRIVATE_KEY       — contents of the PRIVATE key (the file you generated
-#                           on the server at ~/.ssh/id_rsa — copy its contents
-#                           into this secret, including the BEGIN/END lines)
+#                           on the server at ~/.ssh/id_ed25519 — copy its contents
+#                           into this secret, including the BEGIN/END lines).
+#                           MUST be a passphrase-less ed25519 key (RSA also works
+#                           but ed25519 is preferred — smaller, faster, modern).
 #   APP_ROOT              — absolute path on server (e.g. /home/aqualit1/lnkicks)
 #                           NOTE: code deploys DIRECTLY to this path (no /current
 #                           subdir). Backups live in $HOME/lnkicks-releases/.
@@ -155,13 +157,13 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: ⏪ Execute rollback on server
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/id_ed25519 \
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key \
             -o BatchMode=yes -o ConnectTimeout=15 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "bash ${{ secrets.APP_ROOT }}/scripts/deploy/rollback.sh \
