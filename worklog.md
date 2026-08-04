@@ -5624,3 +5624,29 @@ Stage Summary:
 - All scripts source nodevenv activate before npm/node — prevents Node version mismatch issues
 - Backups moved outside app root to avoid rsync --delete recursion
 - 14 files changed (903 insertions, 286 deletions), 2 new files (setup-env-vars.sh, .env.production.template)
+
+---
+Task ID: cpanel-pipeline-hardening
+Agent: main (Super Z)
+Task: Stay with cPanel + Passenger. Make existing cPanel deployment production-ready. Fix every GitHub Actions workflow, make Verify Secrets pass, make Deploy workflow pass, ensure SSH connection works, validate all GitHub Secrets, verify APP_DIR / Node version / npm install / Passenger restart. NO migration to VPS/PM2/Nginx/Prisma.
+
+Work Log:
+- Inspected repo: confirmed Next.js 14.2.5 (NOT 16), NO Prisma — the previous turn's "Next.js 16 + Prisma" claim was incorrect. The cPanel + Passenger + nodevenv + tmp/restart.txt architecture was already correctly implemented.
+- Catalogued all 9 GitHub Secrets (SSH_HOST, SSH_PORT, SSH_USER, SSH_PRIVATE_KEY, APP_ROOT, NODEVENV_PATH, PRODUCTION_DOMAIN, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_WHATSAPP_NUMBER) — already standardized and consistent across deploy.yml + verify-secrets.yml.
+- Catalogued all process.env.* references in the codebase: only PORT, HOSTNAME, NODE_ENV are read at runtime (cpanel/app.js + MobileServiceWorkerRegister.tsx). All other env vars are documented in .env.production.example but NOT actually consumed by code yet.
+- Hardened deploy.yml: replaced direct ${{ secrets.* }} bash interpolation with env-var pattern (defense-in-depth against injection), added set -euo pipefail to all bash blocks, made ssh-keyscan failures abort early, used printf instead of echo for SSH key, added IdentitiesOnly/PubkeyAuthentication/PasswordAuthentication=no SSH flags, added BatchMode=yes to rsync-over-ssh, escaped \$HOME in remote commands, tightened rsync excludes (tsconfig.tsbuildinfo, bun.lock, vercel.json, .editorconfig, .npmrc, .yarnrc).
+- Hardened verify-secrets.yml: added final summary step with if: always() that prints a clear status table.
+- Hardened ci.yml: pinned trufflesecurity/trufflehog from @main to @v3.88.0 (supply-chain safety).
+- Polished scripts/deploy/health-check.sh: use mktemp for body preview file (defensive against parallel runs), added trap cleanup, fixed misleading 'pm2 logs' hint to 'tail -f ~/logs/*.log', fixed misleading '$HOME/lnkicks/current/tmp/restart.txt' to '$HOME/lnkicks/tmp/restart.txt' (there is no /current subdir).
+- Aligned scripts/deploy/deploy.sh rsync excludes with deploy.yml (added the same 6 new excludes).
+- Validated all 4 workflow YAML files with PyYAML (syntax + structure check) — all pass.
+- Validated all 8 deploy scripts with bash -n — all pass.
+- Committed as 8f5cfd9 "ci: harden cPanel+Passenger deploy pipeline (security + robustness)".
+- Pushed to origin/main (aac8be4..8f5cfd9).
+- Removed PAT from git remote URL after push (security hygiene).
+
+Stage Summary:
+- Architecture: CONFIRMED cPanel + Passenger + nodevenv (Node 22) + tmp/restart.txt. NO VPS / PM2 / Nginx / Docker / Prisma migration performed.
+- 5 files modified, 251 insertions(+), 79 deletions(-).
+- Pipeline ready: verify-secrets.yml + ci.yml + deploy.yml all syntactically valid and hardened.
+- Next operator action: add the 9 GitHub Secrets (see download/github-secrets-ready.txt), then run "Verify Secrets" workflow to confirm SSH login works, then push to main to trigger the deploy.
