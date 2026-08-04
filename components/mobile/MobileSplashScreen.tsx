@@ -3,31 +3,33 @@
 /**
  * MobileSplashScreen — premium mobile-only splash / intro overlay for LN KICKS.
  *
- * DESIGN (matches user-provided screenshot exactly):
- *  - Pure white background, no card frame, edge-to-edge
- *  - "LNKICKS" wordmark at the top — large, bold, black, centered,
- *    tight letter-spacing
- *  - Two sneakers floating in the middle with opposing diagonal angles:
- *      • LEFT shoe  — Nike Air Force 1 (white) rotated -28deg
- *      • RIGHT shoe — Yeezy Boost 350 V2 (beige/tan) rotated +22deg
- *    Both with soft drop-shadows for a premium floating effect
+ * DESIGN (premium Apple × Nike × GOAT inspired):
+ *  - Pure white background with a soft radial glow halo behind the shoes
+ *    for depth and premium feel
+ *  - "LNKICKS" wordmark at the top with refined typography + a small
+ *    accent rule + tagline "PREMIUM SNEAKERS · INDIA"
+ *  - Two sneakers floating in the middle with opposing diagonal angles,
+ *    BOTH FULLY INSIDE THE VIEWPORT (no right-side cutoff):
+ *      • LEFT shoe  — Nike Air Force 1 (white) rotated -22deg
+ *      • RIGHT shoe — Yeezy Boost 350 V2 (beige/tan) rotated +18deg
+ *    Both with soft drop-shadows + a subtle floating animation
  *  - "Get Started" button at the bottom — solid black pill, white text,
- *    generous padding, centered
- *  - No tagline, no eyebrow text — clean minimal Nike-app-style layout
+ *    generous padding, arrow icon, centered
+ *  - "Swipe to explore" hint beneath CTA for premium app-store feel
+ *  - Top-right "Skip" link
  *
  * BEHAVIOR:
  *  - Shown ONLY on the mobile homepage (mounted inside MobileHome)
  *  - Once per browser session (sessionStorage flag)
  *  - Auto-dismisses after 5.5s
- *  - User can dismiss via the top-right "Skip" link or the bottom
- *    "Get Started" button
+ *  - User can dismiss via top-right "Skip" or bottom "Get Started"
  *  - 380ms ease-out fade when dismissing (Apple-style)
  *  - Locks body scroll while visible
  *
  * ACCESSIBILITY:
  *  - role="dialog" aria-modal="true" aria-label="LN KICKS welcome"
  *  - Skip + Get Started are keyboard-focusable
- *  - prefers-reduced-motion respected
+ *  - prefers-reduced-motion respected (skips choreography + float)
  *  - Body scroll locked while splash is visible
  *
  * Mobile-only — Desktop homepage never mounts this component.
@@ -121,6 +123,24 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         overflow: 'hidden',
       }}
     >
+      {/* ── Soft radial glow halo behind shoes (depth + premium) ────── */}
+      <div
+        aria-hidden="true"
+        className="lnk-splash__halo"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '125%',
+          height: '125%',
+          background:
+            'radial-gradient(circle at 50% 50%, rgba(17,17,17,0.06) 0%, rgba(17,17,17,0.03) 28%, rgba(255,255,255,0) 60%)',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
       {/* ── Skip link (top-right, subtle) ───────────────────────────── */}
       <button
         type="button"
@@ -172,28 +192,93 @@ export default function MobileSplashScreen({ onComplete }: Props) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '0 32px',
+          padding: '0 24px',
         }}
       >
-        {/* ── TOP: LNKICKS wordmark ─────────────────────────────────── */}
-        <h1
-          className="lnk-splash__wordmark"
+        {/* ── TOP: LNKICKS wordmark + accent rule + tagline ────────── */}
+        <div
+          className="lnk-splash__brand"
           style={{
-            fontFamily: theme.fontFamily.display,
-            fontSize: 'clamp(44px, 15vw, 56px)',
-            fontWeight: theme.fontWeight.bold,
-            letterSpacing: '-0.02em',
-            lineHeight: 1,
-            color: theme.colors.textPrimary,
-            margin: 0,
-            fontFeatureSettings: theme.fontFeatures,
-            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 14,
           }}
         >
-          LNKICKS
-        </h1>
+          <h1
+            className="lnk-splash__wordmark"
+            style={{
+              fontFamily: theme.fontFamily.display,
+              fontSize: 'clamp(44px, 15vw, 56px)',
+              fontWeight: theme.fontWeight.bold,
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+              color: theme.colors.textPrimary,
+              margin: 0,
+              fontFeatureSettings: theme.fontFeatures,
+              textAlign: 'center',
+            }}
+          >
+            LNKICKS
+          </h1>
 
-        {/* ── MIDDLE: Two diagonal sneakers ─────────────────────────── */}
+          {/* Accent rule — small horizontal line + dot for premium feel */}
+          <div
+            aria-hidden="true"
+            className="lnk-splash__rule"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              opacity: 0,
+            }}
+          >
+            <span
+              style={{
+                width: 28,
+                height: 1,
+                background: theme.colors.textPrimary,
+                opacity: 0.4,
+              }}
+            />
+            <span
+              style={{
+                width: 4,
+                height: 4,
+                borderRadius: '50%',
+                background: theme.colors.textPrimary,
+                opacity: 0.6,
+              }}
+            />
+            <span
+              style={{
+                width: 28,
+                height: 1,
+                background: theme.colors.textPrimary,
+                opacity: 0.4,
+              }}
+            />
+          </div>
+
+          {/* Tagline */}
+          <p
+            className="lnk-splash__tagline"
+            style={{
+              margin: 0,
+              fontFamily: theme.fontFamily.body,
+              fontSize: 11,
+              fontWeight: theme.fontWeight.semibold,
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase',
+              color: theme.colors.textSecondary,
+              textAlign: 'center',
+            }}
+          >
+            Premium Sneakers · India
+          </p>
+        </div>
+
+        {/* ── MIDDLE: Two diagonal sneakers (BOTH inside viewport) ──── */}
         <div
           className="lnk-splash__shoes"
           aria-hidden="true"
@@ -201,26 +286,26 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             position: 'relative',
             width: '100%',
             height: 280,
-            marginTop: 48,
-            marginBottom: 48,
+            marginTop: 36,
+            marginBottom: 36,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {/* LEFT shoe — Nike Air Force 1 (white), rotated -28deg */}
+          {/* LEFT shoe — Nike Air Force 1 (white), rotated -22deg, pulled inward */}
           <img
             src={LEFT_SHOE_URL}
             alt=""
             className="lnk-splash__shoe lnk-splash__shoe--left"
             style={{
               position: 'absolute',
-              left: '-4%',
+              left: '8%',
               top: '50%',
               transform:
-                'translateY(-50%) rotate(-28deg) translateX(-12%)',
-              width: '62%',
-              maxWidth: 240,
+                'translateY(-50%) rotate(-22deg) translateX(-1%)',
+              width: '46%',
+              maxWidth: 180,
               height: 'auto',
               userSelect: 'none',
               pointerEvents: 'none',
@@ -229,19 +314,19 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             }}
           />
 
-          {/* RIGHT shoe — Yeezy 350 V2 (beige), rotated +22deg */}
+          {/* RIGHT shoe — Yeezy 350 V2 (beige), rotated +18deg, pulled inward */}
           <img
             src={RIGHT_SHOE_URL}
             alt=""
             className="lnk-splash__shoe lnk-splash__shoe--right"
             style={{
               position: 'absolute',
-              right: '-4%',
+              right: '8%',
               top: '50%',
               transform:
-                'translateY(-50%) rotate(22deg) translateX(12%)',
-              width: '60%',
-              maxWidth: 230,
+                'translateY(-50%) rotate(18deg) translateX(1%)',
+              width: '44%',
+              maxWidth: 170,
               height: 'auto',
               userSelect: 'none',
               pointerEvents: 'none',
@@ -251,13 +336,15 @@ export default function MobileSplashScreen({ onComplete }: Props) {
           />
         </div>
 
-        {/* ── BOTTOM: Get Started button ───────────────────────────── */}
+        {/* ── BOTTOM: Get Started button + hint ────────────────────── */}
         <div
           className="lnk-splash__cta-wrap"
           style={{
             width: '100%',
             display: 'flex',
-            justifyContent: 'center',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 14,
           }}
         >
           <button
@@ -272,7 +359,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
               gap: 10,
               width: '100%',
               maxWidth: 280,
-              padding: '18px 48px',
+              padding: '18px 44px',
               borderRadius: 12,
               background: theme.colors.black,
               color: theme.colors.white,
@@ -289,7 +376,41 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             }}
           >
             Get Started
+            <span
+              aria-hidden="true"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.14)',
+                fontSize: 13,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              →
+            </span>
           </button>
+
+          {/* Swipe hint — premium app-store style nudge */}
+          <p
+            className="lnk-splash__hint"
+            style={{
+              margin: 0,
+              fontFamily: theme.fontFamily.body,
+              fontSize: 11,
+              fontWeight: theme.fontWeight.regular,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: theme.colors.textTertiary,
+              textAlign: 'center',
+            }}
+          >
+            Swipe to explore
+          </p>
         </div>
       </div>
 
@@ -302,6 +423,19 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         .lnk-splash--out {
           opacity: 0;
           pointer-events: none;
+        }
+
+        /* Halo entrance */
+        .lnk-splash__halo {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.85);
+          transition:
+            opacity 900ms cubic-bezier(0.16, 1, 0.3, 1) 120ms,
+            transform 900ms cubic-bezier(0.16, 1, 0.3, 1) 120ms;
+        }
+        .lnk-splash--in .lnk-splash__halo {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
         }
 
         /* Skip link entrance */
@@ -322,7 +456,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
           outline: none;
         }
 
-        /* LNKICKS wordmark entrance */
+        /* Brand block entrance */
         .lnk-splash__wordmark {
           opacity: 0;
           transform: translateY(12px) scale(0.96);
@@ -336,10 +470,35 @@ export default function MobileSplashScreen({ onComplete }: Props) {
           transform: translateY(0) scale(1);
         }
 
-        /* Shoes entrance — left slides in from left, right from right */
+        .lnk-splash__rule {
+          opacity: 0;
+          transform: translateY(6px);
+          transition:
+            opacity 520ms cubic-bezier(0.16, 1, 0.3, 1) 420ms,
+            transform 520ms cubic-bezier(0.16, 1, 0.3, 1) 420ms;
+        }
+        .lnk-splash--in .lnk-splash__rule {
+          opacity: 1 !important;
+          transform: translateY(0);
+        }
+
+        .lnk-splash__tagline {
+          opacity: 0;
+          transform: translateY(6px);
+          transition:
+            opacity 520ms cubic-bezier(0.16, 1, 0.3, 1) 520ms,
+            transform 520ms cubic-bezier(0.16, 1, 0.3, 1) 520ms;
+        }
+        .lnk-splash--in .lnk-splash__tagline {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Shoes entrance — left slides in from left, right from right.
+           Both settle to translateX(±4%) so they stay INSIDE the viewport. */
         .lnk-splash__shoe--left {
           opacity: 0;
-          transform: translateY(-50%) rotate(-28deg) translateX(-40%);
+          transform: translateY(-50%) rotate(-22deg) translateX(-26%);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 360ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 360ms;
@@ -347,12 +506,13 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--left {
           opacity: 1;
-          transform: translateY(-50%) rotate(-28deg) translateX(-12%);
+          transform: translateY(-50%) rotate(-22deg) translateX(-1%);
+          animation: lnk-float-left 4.2s ease-in-out 1.4s infinite;
         }
 
         .lnk-splash__shoe--right {
           opacity: 0;
-          transform: translateY(-50%) rotate(22deg) translateX(40%);
+          transform: translateY(-50%) rotate(18deg) translateX(26%);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 440ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 440ms;
@@ -360,7 +520,26 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--right {
           opacity: 1;
-          transform: translateY(-50%) rotate(22deg) translateX(12%);
+          transform: translateY(-50%) rotate(18deg) translateX(1%);
+          animation: lnk-float-right 4.6s ease-in-out 1.6s infinite;
+        }
+
+        /* Gentle floating animation (premium, non-intrusive) */
+        @keyframes lnk-float-left {
+          0%, 100% {
+            transform: translateY(-50%) rotate(-22deg) translateX(-1%);
+          }
+          50% {
+            transform: translateY(calc(-50% - 6px)) rotate(-22deg) translateX(-1%);
+          }
+        }
+        @keyframes lnk-float-right {
+          0%, 100% {
+            transform: translateY(-50%) rotate(18deg) translateX(1%);
+          }
+          50% {
+            transform: translateY(calc(-50% - 8px)) rotate(18deg) translateX(1%);
+          }
         }
 
         /* CTA entrance */
@@ -384,22 +563,29 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             0 8px 18px rgba(17,17,17,0.10);
         }
 
-        /* Reduced motion: skip the choreography */
+        /* Reduced motion: skip choreography + float loop */
         @media (prefers-reduced-motion: reduce) {
           .lnk-splash,
           .lnk-splash__skip,
           .lnk-splash__wordmark,
+          .lnk-splash__rule,
+          .lnk-splash__tagline,
           .lnk-splash__shoe--left,
           .lnk-splash__shoe--right,
-          .lnk-splash__cta-wrap {
+          .lnk-splash__cta-wrap,
+          .lnk-splash__halo {
             transition: opacity 200ms ease-out !important;
             transform: none !important;
+            animation: none !important;
           }
           .lnk-splash--in .lnk-splash__shoe--left {
-            transform: translateY(-50%) rotate(-28deg) translateX(-12%) !important;
+            transform: translateY(-50%) rotate(-22deg) translateX(-1%) !important;
           }
           .lnk-splash--in .lnk-splash__shoe--right {
-            transform: translateY(-50%) rotate(22deg) translateX(12%) !important;
+            transform: translateY(-50%) rotate(18deg) translateX(1%) !important;
+          }
+          .lnk-splash--in .lnk-splash__halo {
+            transform: translate(-50%, -50%) scale(1) !important;
           }
         }
       `}</style>
