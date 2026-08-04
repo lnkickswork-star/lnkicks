@@ -63,7 +63,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const session = authService.getCurrentSession();
     if (session) {
-      router.replace('/profile');
+      router.replace('/account');
     }
   }, [router]);
 
@@ -170,7 +170,7 @@ export default function RegisterPage() {
     if (result.result.welcomeBonusCredited) {
       setBonusOpen(true);
     } else {
-      router.push('/profile');
+      router.push('/account');
     }
   };
 
@@ -459,11 +459,11 @@ export default function RegisterPage() {
         open={bonusOpen}
         onClose={() => {
           setBonusOpen(false);
-          router.push('/profile');
+          router.push('/account');
         }}
         onContinue={() => {
           setBonusOpen(false);
-          router.push('/profile');
+          router.push('/account');
         }}
       />
 

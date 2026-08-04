@@ -57,7 +57,7 @@ export default function VerifyOtpPage() {
   // Redirect if already logged in
   useEffect(() => {
     const session = authService.getCurrentSession();
-    if (session) router.replace('/profile');
+    if (session) router.replace('/account');
   }, [router]);
 
   // Countdown effect
@@ -221,7 +221,7 @@ export default function VerifyOtpPage() {
     if (result.result?.welcomeBonusCredited) {
       setBonusOpen(true);
     } else {
-      router.push('/profile');
+      router.push('/account');
     }
   };
 
@@ -533,11 +533,11 @@ export default function VerifyOtpPage() {
         open={bonusOpen}
         onClose={() => {
           setBonusOpen(false);
-          router.push('/profile');
+          router.push('/account');
         }}
         onContinue={() => {
           setBonusOpen(false);
-          router.push('/profile');
+          router.push('/account');
         }}
       />
 

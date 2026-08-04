@@ -45,12 +45,19 @@ export interface AuthUser {
   passwordHash?: string;
   authMethod: AuthMethod;
   walletBalance: number;
+  rewardPoints: number;
   referralCode: string;
   referredBy?: string;
   emailVerified: boolean;
   phoneVerified: boolean;
   createdAt: string;
   lastLogin: string;
+  /** ISO date string (YYYY-MM-DD) of last daily-login reward claim */
+  lastDailyRewardDate?: string;
+  /** ISO date string (YYYY-MM-DD) of last share reward claim */
+  lastShareRewardDate?: string;
+  /** Total shares count (lifetime) */
+  shareCount?: number;
 }
 
 export interface SessionUser {
@@ -61,6 +68,7 @@ export interface SessionUser {
   isLoggedIn: true;
   authMethod: AuthMethod;
   walletBalance: number;
+  rewardPoints: number;
   referralCode: string;
   joined: string;
   avatar?: string;
@@ -69,9 +77,17 @@ export interface SessionUser {
 
 export interface WalletTransaction {
   id: string;
-  type: 'Welcome Bonus' | 'Referral Bonus' | 'Order' | 'Refund' | 'Cashback';
+  type: 'Welcome Bonus' | 'Referral Bonus' | 'Order' | 'Refund' | 'Cashback' | 'Daily Login' | 'Share Reward' | 'Points Redemption';
   amount: number;
   status: 'Success' | 'Pending' | 'Failed';
+  description: string;
+  createdAt: string;
+}
+
+export interface RewardTransaction {
+  id: string;
+  type: 'Welcome' | 'Daily Login' | 'Share' | 'Referral' | 'Purchase' | 'Redeemed';
+  points: number;
   description: string;
   createdAt: string;
 }
@@ -98,10 +114,25 @@ export const OTP_MAX_ATTEMPTS = 5;
 export const OTP_RESEND_COOLDOWN_SECONDS = 60;
 export const OTP_LENGTH = 6;
 
+// ── Reward Points system ──────────────────────────────────────────────
+//  - Welcome bonus:   100 pts on signup (separate from ₹ wallet bonus)
+//  - Daily login:     10 pts/day, claimable once per calendar day
+//  - Share reward:    25 pts per share, max 1 share per day (anti-abuse)
+//  - Redemption:      100 pts = ₹10 wallet credit (10:1 ratio)
+//  - Referral:        200 pts when a referred friend signs up
+// ──────────────────────────────────────────────────────────────────────
+export const WELCOME_REWARD_POINTS = 100;
+export const DAILY_LOGIN_REWARD_POINTS = 10;
+export const SHARE_REWARD_POINTS = 25;
+export const REFERRAL_REWARD_POINTS = 200;
+export const POINTS_TO_RUPEE_RATIO = 10; // 10 pts = ₹1
+export const MIN_REDEMPTION_POINTS = 100; // minimum to redeem
+
 const USERS_KEY = 'lnk_users';
 const SESSION_KEY = 'lnk_user';
 const OTP_PREFIX = 'lnk_otp_';
 const WALLET_PREFIX = 'lnk_wallet_';
+const REWARDS_PREFIX = 'lnk_rewards_';
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Storage helpers (SSR-safe)
@@ -139,6 +170,26 @@ function readWallet(uid: string): WalletTransaction[] {
 function writeWallet(uid: string, txns: WalletTransaction[]): void {
   if (!isBrowser()) return;
   localStorage.setItem(WALLET_PREFIX + uid, JSON.stringify(txns));
+}
+
+function readRewards(uid: string): RewardTransaction[] {
+  if (!isBrowser()) return [];
+  try {
+    const raw = localStorage.getItem(REWARDS_PREFIX + uid);
+    return raw ? (JSON.parse(raw) as RewardTransaction[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRewards(uid: string, txns: RewardTransaction[]): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(REWARDS_PREFIX + uid, JSON.stringify(txns));
+}
+
+/** Returns today's date as YYYY-MM-DD (calendar day in user's locale). */
+function todayDateString(): string {
+  return new Date().toLocaleDateString('en-CA'); // en-CA = YYYY-MM-DD
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -297,6 +348,10 @@ export function creditWelcomeBonus(user: AuthUser): WalletTransaction | null {
     createdAt: new Date().toISOString(),
   };
   writeWallet(user.uid, [txn, ...txns]);
+
+  // Also credit welcome reward points (separate from ₹ wallet bonus)
+  creditRewardPoints(user.uid, WELCOME_REWARD_POINTS, 'Welcome', 'Welcome reward points for joining LNKICKS');
+
   const users = readUsers();
   const idx = users.findIndex((u) => u.uid === user.uid);
   if (idx > -1) {
@@ -308,6 +363,143 @@ export function creditWelcomeBonus(user: AuthUser): WalletTransaction | null {
 
 export function getWalletHistory(uid: string): WalletTransaction[] {
   return readWallet(uid);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Reward Points operations
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Persist updated user + session (if active) after reward changes. */
+function persistUserUpdate(uid: string, patch: Partial<AuthUser>): void {
+  const users = readUsers();
+  const idx = users.findIndex((u) => u.uid === uid);
+  if (idx > -1) {
+    users[idx] = { ...users[idx], ...patch };
+    writeUsers(users);
+    // Refresh session if this user is the one logged in
+    const sess = getCurrentSession();
+    if (sess && sess.uid === uid) {
+      const refreshed = toSessionUser(users[idx]);
+      persistSession(users[idx]);
+      // Also update the visible session object returned downstream
+      Object.assign(sess, refreshed);
+    }
+  }
+}
+
+/** Internal: credit reward points + write a reward transaction record. */
+function creditRewardPoints(uid: string, points: number, type: RewardTransaction['type'], description: string): RewardTransaction {
+  const rtxns = readRewards(uid);
+  const txn: RewardTransaction = {
+    id: 'rwd-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+    type,
+    points,
+    description,
+    createdAt: new Date().toISOString(),
+  };
+  writeRewards(uid, [txn, ...rtxns]);
+
+  const users = readUsers();
+  const idx = users.findIndex((u) => u.uid === uid);
+  if (idx > -1) {
+    users[idx].rewardPoints = (users[idx].rewardPoints || 0) + points;
+    writeUsers(users);
+    const sess = getCurrentSession();
+    if (sess && sess.uid === uid) {
+      sess.rewardPoints = users[idx].rewardPoints;
+      persistSession(users[idx]);
+    }
+  }
+  return txn;
+}
+
+export function getRewardHistory(uid: string): RewardTransaction[] {
+  return readRewards(uid);
+}
+
+export function getRewardPoints(uid: string): number {
+  const u = readUsers().find((x) => x.uid === uid);
+  return u?.rewardPoints || 0;
+}
+
+/** Claim daily login reward (10 pts). Returns txn if claimed, null if already claimed today. */
+export function claimDailyLoginReward(uid: string): RewardTransaction | null {
+  const user = readUsers().find((u) => u.uid === uid);
+  if (!user) return null;
+  const today = todayDateString();
+  if (user.lastDailyRewardDate === today) return null;
+
+  const txn = creditRewardPoints(uid, DAILY_LOGIN_REWARD_POINTS, 'Daily Login', 'Daily login reward — 10 points');
+  persistUserUpdate(uid, { lastDailyRewardDate: today });
+  return txn;
+}
+
+/** Check if daily login reward is claimable today. */
+export function canClaimDailyLogin(uid: string): boolean {
+  const user = readUsers().find((u) => u.uid === uid);
+  if (!user) return false;
+  return user.lastDailyRewardDate !== todayDateString();
+}
+
+/** Get ISO date string of last daily login claim (YYYY-MM-DD), or null. */
+export function getLastDailyLoginDate(uid: string): string | null {
+  const user = readUsers().find((u) => u.uid === uid);
+  return user?.lastDailyRewardDate || null;
+}
+
+/** Claim share reward (25 pts, max 1/day). Returns txn if claimed, null if already shared today. */
+export function claimShareReward(uid: string): RewardTransaction | null {
+  const user = readUsers().find((u) => u.uid === uid);
+  if (!user) return null;
+  const today = todayDateString();
+  if (user.lastShareRewardDate === today) return null;
+
+  const txn = creditRewardPoints(uid, SHARE_REWARD_POINTS, 'Share', 'Share reward — 25 points for sharing LN KICKS');
+  persistUserUpdate(uid, {
+    lastShareRewardDate: today,
+    shareCount: (user.shareCount || 0) + 1,
+  });
+  return txn;
+}
+
+/** Check if share reward is claimable today. */
+export function canClaimShareReward(uid: string): boolean {
+  const user = readUsers().find((u) => u.uid === uid);
+  if (!user) return false;
+  return user.lastShareRewardDate !== todayDateString();
+}
+
+/** Redeem reward points for wallet cash. 10 pts = ₹1. Min 100 pts per redemption. */
+export function redeemRewardPoints(uid: string, pointsToRedeem: number): { ok: true; walletTxn: WalletTransaction; rewardTxn: RewardTransaction } | { ok: false; error: string } {
+  if (pointsToRedeem < MIN_REDEMPTION_POINTS) {
+    return { ok: false, error: `Minimum ${MIN_REDEMPTION_POINTS} points required to redeem` };
+  }
+  const user = readUsers().find((u) => u.uid === uid);
+  if (!user) return { ok: false, error: 'User not found' };
+  if ((user.rewardPoints || 0) < pointsToRedeem) {
+    return { ok: false, error: 'Insufficient reward points' };
+  }
+
+  const rupees = Math.floor(pointsToRedeem / POINTS_TO_RUPEE_RATIO);
+  if (rupees < 1) {
+    return { ok: false, error: 'Redemption amount too small' };
+  }
+
+  // Debit reward points
+  const rtxn = creditRewardPoints(uid, -pointsToRedeem, 'Redeemed', `Redeemed ${pointsToRedeem} points for ₹${rupees} wallet credit`);
+  // Credit wallet
+  const wtxn: WalletTransaction = {
+    id: generateTxnId(),
+    type: 'Points Redemption',
+    amount: rupees,
+    status: 'Success',
+    description: `Redeemed ${pointsToRedeem} reward points`,
+    createdAt: new Date().toISOString(),
+  };
+  writeWallet(uid, [wtxn, ...readWallet(uid)]);
+  persistUserUpdate(uid, { walletBalance: (user.walletBalance || 0) + rupees });
+
+  return { ok: true, walletTxn: wtxn, rewardTxn: rtxn };
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -356,6 +548,7 @@ function toSessionUser(user: AuthUser): SessionUser {
     isLoggedIn: true,
     authMethod: user.authMethod,
     walletBalance: user.walletBalance,
+    rewardPoints: user.rewardPoints || 0,
     referralCode: user.referralCode,
     joined,
     tier: 'Standard',
@@ -432,6 +625,7 @@ export function signupWithEmail(input: EmailSignupInput): { ok: true; result: Si
     passwordHash: hashPassword(input.password),
     authMethod: 'email',
     walletBalance: 0,
+    rewardPoints: 0,
     referralCode: generateReferralCode(input.firstName),
     referredBy: input.referralCode?.trim() || undefined,
     emailVerified: false,
@@ -534,6 +728,7 @@ export function loginWithGoogle(input: GoogleUserInput): { ok: true; result: Log
     phone: '',
     authMethod: 'google',
     walletBalance: 0,
+    rewardPoints: 0,
     referralCode: generateReferralCode(firstName),
     emailVerified: true,
     phoneVerified: false,
@@ -708,6 +903,7 @@ export function verifyOtp(phone: string, code: string, name?: string): VerifyOtp
     phone: validators.normalizePhone(phone),
     authMethod: 'phone',
     walletBalance: 0,
+    rewardPoints: 0,
     referralCode: generateReferralCode(firstName),
     emailVerified: false,
     phoneVerified: true,

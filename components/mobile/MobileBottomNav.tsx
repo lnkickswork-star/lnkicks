@@ -60,7 +60,7 @@ const NAV_ITEMS: NavItem[] = [
   // (center FAB slot — empty in the array, FAB rendered separately)
   {
     label: 'Profile',
-    href: '/profile',
+    href: '/account',
     icon: (color: string) => (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke={color} strokeWidth="2" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

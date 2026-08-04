@@ -73,7 +73,7 @@ export default function LoginPage() {
   useEffect(() => {
     const session = authService.getCurrentSession();
     if (session) {
-      router.replace('/profile');
+      router.replace('/account');
     }
   }, [router]);
 
@@ -121,7 +121,7 @@ export default function LoginPage() {
     showToast(`Welcome back, ${result.session.name.split(' ')[0]}!`);
 
     // Existing user → no bonus popup, just go to profile
-    router.push('/profile');
+    router.push('/account');
   };
 
   const handleGoogleLogin = async () => {
@@ -162,7 +162,7 @@ export default function LoginPage() {
       // Show welcome bonus popup, then route to profile on close
       setBonusOpen(true);
     } else {
-      router.push('/profile');
+      router.push('/account');
     }
   };
 
@@ -344,11 +344,11 @@ export default function LoginPage() {
         open={bonusOpen}
         onClose={() => {
           setBonusOpen(false);
-          router.push('/profile');
+          router.push('/account');
         }}
         onContinue={() => {
           setBonusOpen(false);
-          router.push('/profile');
+          router.push('/account');
         }}
       />
 

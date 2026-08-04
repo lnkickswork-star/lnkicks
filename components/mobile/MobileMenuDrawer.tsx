@@ -75,7 +75,7 @@ const GUEST_LINKS = [
 const ACCOUNT_LINKS = [
   {
     label: 'My Profile',
-    href: '/profile',
+    href: '/account',
     icon: (
       <>
         <circle cx="12" cy="8" r="4" />
@@ -156,7 +156,7 @@ const ACCOUNT_LINKS = [
   },
   {
     label: 'Rewards / Points',
-    href: '/profile?tab=rewards',
+    href: '/rewards',
     icon: (
       <>
         <circle cx="12" cy="9" r="6" />
@@ -166,7 +166,7 @@ const ACCOUNT_LINKS = [
   },
   {
     label: 'Coupons',
-    href: '/profile?tab=coupons',
+    href: '/account',
     icon: (
       <>
         <path d="M3 5h18v6a3 3 0 0 0 0 6v2H3v-2a3 3 0 0 0 0-6z" strokeLinejoin="round" />
@@ -176,7 +176,7 @@ const ACCOUNT_LINKS = [
   },
   {
     label: 'Refer & Earn',
-    href: '/profile?tab=refer',
+    href: '/rewards',
     icon: (
       <>
         <circle cx="6" cy="12" r="3" />
