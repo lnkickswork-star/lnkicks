@@ -89,13 +89,21 @@ echo "[backup-current] Backup size: $(du -sh "$BACKUP_DIR" | cut -f1)"
 # Prune: keep the 10 most recent backups, delete older ones.
 # This prevents the disk from slowly filling up over months of deploys.
 echo "[backup-current] Pruning old backups (keeping last 10)..."
-cd "$RELEASES_DIR"
-# List directories (not symlinks), newest first, skip the first 10, delete rest.
-ls -1dt */ 2>/dev/null | tail -n +11 | while read -r old_dir; do
-  echo "[backup-current] Removing old backup: $old_dir"
-  # ${RELEASES_DIR:?} ensures this never expands to / (defensive).
-  rm -rf -- "${RELEASES_DIR:?}/${old_dir%/}"
-done
+cd "$RELEASES_DIR" || { echo "[backup-current] ERROR: cannot cd to $RELEASES_DIR" >&2; exit 1; }
+# Use find (not ls) — handles filenames with dashes/spaces correctly.
+# List directories newest-first, skip the first 10, delete the rest.
+find . -maxdepth 1 -mindepth 1 -type d -not -name '.*' -printf '%T@ %p\n' 2>/dev/null \
+  | sort -rn \
+  | tail -n +11 \
+  | while read -r _ old_dir; do
+      old_dir="${old_dir#./}"
+      echo "[backup-current] Removing old backup: $old_dir"
+      # ${RELEASES_DIR:?} ensures this never expands to / (defensive).
+      rm -rf -- "${RELEASES_DIR:?}/${old_dir}"
+    done
 
 echo "[backup-current] Done. Current backups:"
-ls -1dt "$RELEASES_DIR"/*/ 2>/dev/null | head -n 10 || true
+find "$RELEASES_DIR" -maxdepth 1 -mindepth 1 -type d -not -name '.*' -printf '%T@ %p\n' 2>/dev/null \
+  | sort -rn \
+  | head -n 10 \
+  | while read -r _ d; do echo "  $d"; done || true
