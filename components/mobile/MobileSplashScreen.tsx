@@ -423,6 +423,14 @@ export default function MobileSplashScreen({ onComplete }: Props) {
 
       {/* ── styles-jx ─────────────────────────────────────────────── */}
       <style jsx>{`
+        /* Force shoe widths — !important overrides any inherited img
+           sizing from browser defaults or parent cascade. Both shoes
+           MUST be 150px for the centered pair math to work. */
+        .lnk-splash__shoe {
+          width: 150px !important;
+          max-width: 150px !important;
+          min-width: 150px !important;
+        }
         .lnk-splash {
           opacity: 1;
           transition: opacity 380ms cubic-bezier(0.16, 1, 0.3, 1);
