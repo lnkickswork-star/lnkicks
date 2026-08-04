@@ -299,10 +299,9 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             justifyContent: 'center',
           }}
         >
-          {/* LEFT shoe — anchored to center, -16deg.
-              translate(-94%) places the shoe's bounding-box center
-              exactly at screen-left-of-center (mathematically
-              symmetric with the right shoe). */}
+          {/* LEFT shoe — explicit 150px width for predictable
+              centering. translate(-105%) creates a 7.5px gap from
+              the right shoe. Pair center = screen center. */}
           <img
             src={LEFT_SHOE_URL}
             alt=""
@@ -311,9 +310,8 @@ export default function MobileSplashScreen({ onComplete }: Props) {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              transform: 'translate(-94%, -50%) rotate(-16deg)',
-              width: '44%',
-              maxWidth: 165,
+              transform: 'translate(-105%, -50%) rotate(-16deg)',
+              width: 150,
               height: 'auto',
               userSelect: 'none',
               pointerEvents: 'none',
@@ -322,9 +320,10 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             }}
           />
 
-          {/* RIGHT shoe — anchored to center, +16deg.
-              translate(-6%) places the shoe's bounding-box center
-              exactly at screen-right-of-center (symmetric with left). */}
+          {/* RIGHT shoe — explicit 150px width. translate(5%)
+              creates a 7.5px gap from the left shoe. Pair center
+              = screen center. Right edge at 352px (38px from screen
+              edge on 390px viewport — no cutoff). */}
           <img
             src={RIGHT_SHOE_URL}
             alt=""
@@ -333,9 +332,8 @@ export default function MobileSplashScreen({ onComplete }: Props) {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              transform: 'translate(-6%, -50%) rotate(16deg)',
-              width: '44%',
-              maxWidth: 165,
+              transform: 'translate(5%, -50%) rotate(16deg)',
+              width: 150,
               height: 'auto',
               userSelect: 'none',
               pointerEvents: 'none',
@@ -504,11 +502,10 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
 
         /* Shoes entrance — left slides in from further left, right from
-           further right. Both settle to a MIRROR-symmetric centered pair
-           (translate -94% / -6%) so the composition never leans. */
+           further right. Both settle to a symmetric centered pair. */
         .lnk-splash__shoe--left {
           opacity: 0;
-          transform: translate(-118%, -50%) rotate(-16deg);
+          transform: translate(-130%, -50%) rotate(-16deg);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 360ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 360ms;
@@ -516,13 +513,13 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--left {
           opacity: 1;
-          transform: translate(-94%, -50%) rotate(-16deg);
+          transform: translate(-105%, -50%) rotate(-16deg);
           animation: lnk-float-left 4.2s ease-in-out 1.4s infinite;
         }
 
         .lnk-splash__shoe--right {
           opacity: 0;
-          transform: translate(18%, -50%) rotate(16deg);
+          transform: translate(30%, -50%) rotate(16deg);
           transition:
             opacity 720ms cubic-bezier(0.16, 1, 0.3, 1) 440ms,
             transform 820ms cubic-bezier(0.16, 1, 0.3, 1) 440ms;
@@ -530,7 +527,7 @@ export default function MobileSplashScreen({ onComplete }: Props) {
         }
         .lnk-splash--in .lnk-splash__shoe--right {
           opacity: 1;
-          transform: translate(-6%, -50%) rotate(16deg);
+          transform: translate(5%, -50%) rotate(16deg);
           animation: lnk-float-right 4.6s ease-in-out 1.6s infinite;
         }
 
@@ -538,18 +535,18 @@ export default function MobileSplashScreen({ onComplete }: Props) {
            No horizontal drift, so the centered pair stays centered. */
         @keyframes lnk-float-left {
           0%, 100% {
-            transform: translate(-94%, -50%) rotate(-16deg);
+            transform: translate(-105%, -50%) rotate(-16deg);
           }
           50% {
-            transform: translate(-94%, calc(-50% - 6px)) rotate(-16deg);
+            transform: translate(-105%, calc(-50% - 6px)) rotate(-16deg);
           }
         }
         @keyframes lnk-float-right {
           0%, 100% {
-            transform: translate(-6%, -50%) rotate(16deg);
+            transform: translate(5%, -50%) rotate(16deg);
           }
           50% {
-            transform: translate(-6%, calc(-50% - 8px)) rotate(16deg);
+            transform: translate(5%, calc(-50% - 8px)) rotate(16deg);
           }
         }
 
@@ -590,10 +587,10 @@ export default function MobileSplashScreen({ onComplete }: Props) {
             animation: none !important;
           }
           .lnk-splash--in .lnk-splash__shoe--left {
-            transform: translate(-94%, -50%) rotate(-16deg) !important;
+            transform: translate(-105%, -50%) rotate(-16deg) !important;
           }
           .lnk-splash--in .lnk-splash__shoe--right {
-            transform: translate(-6%, -50%) rotate(16deg) !important;
+            transform: translate(5%, -50%) rotate(16deg) !important;
           }
           .lnk-splash--in .lnk-splash__halo {
             transform: translate(-50%, -50%) scale(1) !important;
