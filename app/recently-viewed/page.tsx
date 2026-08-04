@@ -8,6 +8,7 @@ import { useApp } from '@/components/context/AppContext';
 import { theme } from '@/lib/mobile/theme/theme';
 import { haptic } from '@/lib/mobile/utils/haptics';
 import { pressableStyle } from '@/lib/mobile/utils/interactions';
+import { getRecentlyViewed, clearRecentlyViewed, type RecentItem } from '@/lib/recently-viewed';
 import type { CartItem } from '@/types';
 
 /**
@@ -20,27 +21,9 @@ import type { CartItem } from '@/types';
  * Each product card uses the shared <ProductCard> so the look matches
  * the rest of the catalog. "Clear All" button wipes the history.
  *
- * The list is capped at 24 items (older entries are pruned when new
- * ones are added — see the push helper at the bottom of this file).
- *
  * Auth: NOT required. Anonymous users can still see their recently
  * viewed items (browser-local).
  */
-type RecentItem = {
-  id: string;
-  brand: string;
-  name: string;
-  price: string;
-  priceValue: number;
-  comparePrice?: string;
-  image: string;
-  href: string;
-  viewedAt: string;
-};
-
-const STORAGE_KEY = 'lnk_recently_viewed';
-const MAX_ITEMS = 24;
-
 export default function RecentlyViewedPage() {
   const { showToast, addToCart } = useApp();
   const [items, setItems] = useState<RecentItem[]>([]);
@@ -48,26 +31,14 @@ export default function RecentlyViewedPage() {
 
   useEffect(() => {
     setHydrated(true);
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setItems(parsed.slice(0, MAX_ITEMS));
-      }
-    } catch {
-      // ignore
-    }
+    setItems(getRecentlyViewed());
   }, []);
 
   const handleClear = () => {
     haptic.medium();
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      setItems([]);
-      showToast('Recently viewed cleared');
-    } catch {
-      showToast('Could not clear history');
-    }
+    clearRecentlyViewed();
+    setItems([]);
+    showToast('Recently viewed cleared');
   };
 
   const handleQuickAdd = (item: RecentItem) => {
@@ -193,7 +164,7 @@ export default function RecentlyViewedPage() {
                   lineHeight: 1.5,
                 }}
               >
-                Browse sneakers and they'll appear here so you can easily revisit them later.
+                Browse sneakers and they&apos;ll appear here so you can easily revisit them later.
               </p>
               <Link
                 href="/products"
@@ -283,36 +254,4 @@ export default function RecentlyViewedPage() {
       `}</style>
     </MobileLayout>
   );
-}
-
-/**
- * Helper to push a product into the recently-viewed list.
- * Exported so other pages (product detail, product card) can call it.
- *
- * Behavior:
- *  - Deduplicates by product.id (moves existing to top)
- *  - Caps at MAX_ITEMS (24)
- *  - Adds viewedAt ISO timestamp
- */
-export function pushRecentlyViewed(product: {
-  id: string;
-  brand: string;
-  name: string;
-  price: string;
-  priceValue: number;
-  comparePrice?: string;
-  image: string;
-  href: string;
-}): void {
-  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const existing: RecentItem[] = raw ? JSON.parse(raw) : [];
-    const filtered = existing.filter((x) => x.id !== product.id);
-    const next: RecentItem = { ...product, viewedAt: new Date().toISOString() };
-    const updated = [next, ...filtered].slice(0, MAX_ITEMS);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {
-    // ignore quota / parse errors
-  }
 }
