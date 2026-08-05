@@ -6479,3 +6479,45 @@ Stage Summary:
      (or run setup-env-vars.sh on the server)
   2. Push to main — GitHub Actions will deploy with Prisma migrations
   3. After first deploy, SSH in and run `npx prisma db pull` to introspect the Neon database
+
+---
+Task ID: runtime-fix-passenger
+Agent: Main (Senior DevOps + cPanel/Passenger Expert)
+Task: Fix 3 runtime errors after deployment: P1001 (DB unreachable), next-not-found, EADDRINUSE
+
+Work Log:
+- Diagnosed root cause of all 3 errors:
+  1. `next: command not found` — spawn-based cpanel/app.js ran `npm run start` → `next start`
+     via shell, but Passenger's spawn env doesn't have node_modules/.bin on PATH.
+  2. `EADDRINUSE :::3000` — spawn approach started a SECOND process (next start) that tried
+     to bind to the same port Passenger assigned. Two processes, one port = conflict.
+  3. `Prisma P1001` — Passenger does NOT source nodevenv etc/envvars, so DATABASE_URL set
+     there never reached the app process. spawn's `env: { ...process.env }` only forwarded
+     what Passenger actually injected (which was incomplete).
+- Rewrote cpanel/app.js to be BULLETPROOF:
+  - Loads .env from app root via dotenv BEFORE requiring next (fixes P1001 — DATABASE_URL
+    is now available regardless of Passenger's env injection).
+  - Uses require('next') directly (fixes next-not-found — no shell, no PATH dependency,
+    Node resolves next from node_modules/next).
+  - Binds to process.env.PORT via http.createServer (fixes EADDRINUSE — no child process,
+    no port conflict, single listener).
+  - Logs startup diagnostics: Node version, pid, cwd, app root, env var PRESENCE (length
+    only, never values) for PORT, DATABASE_URL, DIRECT_URL, etc.
+  - Fails fast with actionable error if DATABASE_URL is missing.
+- Updated .github/workflows/deploy.yml:
+  - Added new step "Write .env file on server (from GitHub Secrets)" that runs AFTER rsync
+    and BEFORE install-deps. Writes DATABASE_URL, DIRECT_URL, JWT_SECRET, ADMIN_JWT_SECRET,
+    SESSION_SECRET, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_WHATSAPP_NUMBER, NODE_ENV to .env on
+    the server via SSH (secrets never touch disk on the runner).
+  - Updated secrets verification step to check 14 secrets (was 9) — added DATABASE_URL,
+    DIRECT_URL, JWT_SECRET, ADMIN_JWT_SECRET, SESSION_SECRET.
+- Validation: actionlint 0 errors, bash -n all 9 scripts OK, YAML parse OK, node -c OK,
+  tsc --noEmit 0 errors, next build SUCCESS.
+
+Stage Summary:
+- Files modified: cpanel/app.js (rewrote to bulletproof require-based pattern + dotenv),
+  .github/workflows/deploy.yml (added .env writing step + 5 new secrets in verification).
+- All 3 runtime errors addressed with single root-cause fix each.
+- User must add 5 new GitHub Secrets: DATABASE_URL, DIRECT_URL, JWT_SECRET,
+  ADMIN_JWT_SECRET, SESSION_SECRET.
+- After push + deploy, the app will: load .env → require next → bind to PORT → serve.
