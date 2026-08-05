@@ -5746,3 +5746,200 @@ Stage Summary:
   message (if any are missing).
 - ARTIFACT: `/tmp/actionlint` (v1.7.7 binary) is available for re-validation
   if any future workflow edits need linting.
+
+---
+Task ID: autonomous-deploy-iteration-1
+Agent: Main (Autonomous DevOps — Senior Engineer role)
+Task: Take complete ownership of deploying production. Continuously analyze,
+  repair, configure, deploy, verify, rollback if needed, and redeploy until
+  the production deployment succeeds. Do NOT stop after finding an error.
+
+Work Log:
+- Phase 1 (Inspect repository): Read package.json, next.config.js, tsconfig.json,
+  .env.production.example, cpanel/app.js, cpanel/.cpanel.yml, all 8 scripts
+  in scripts/deploy/. Confirmed: Next.js 14.2.5, React 18.3, TypeScript 5.5,
+  Node 22 target, no Prisma (no schema.prisma file in repo — DB config is
+  in code only). Application code is a clean Next.js App Router project.
+- Phase 2 (Code audit): Ran ripgrep for process.env.* and NEXT_PUBLIC_*
+  references. Found only 4 process.env references in source code:
+    * cpanel/app.js: PORT, HOSTNAME
+    * components/mobile/MobileServiceWorkerRegister.tsx: NODE_ENV
+  No broken imports, no missing dependencies, no invalid paths, no wrong
+  build commands. Code is healthy.
+- Phase 3 (Local build pipeline):
+    * npm run type-check  → PASSED (0 errors)
+    * npm run lint        → PASSED (0 errors, 9 warnings — react-hooks deps
+                              and <img> vs <Image>, all non-blocking)
+    * npm run build       → PASSED (70 routes, 0 errors, ~143 kB First Load
+                              JS on homepage, all routes built successfully)
+  Application is buildable and deployable as-is.
+- Phase 4 (Workflow audit): Re-downloaded actionlint v1.7.7 (binary was
+  cleared from /tmp). Ran on all 4 workflows:
+    * .github/workflows/ci.yml             → 0 errors
+    * .github/workflows/deploy.yml         → 0 errors (parser fix from
+                                              previous task verified)
+    * .github/workflows/verify-secrets.yml → 0 errors
+    * .github/workflows/release.yml        → 0 errors
+  All workflows pass GitHub's parser and actionlint's stricter checks.
+- Phase 5 (Env var audit): Created two reference files in /home/z/my-project/download/:
+    * .env.production — ready-to-upload production env file with REAL Neon
+      DATABASE_URL + DIRECT_URL, placeholders for JWT secrets (must be
+      generated with openssl rand -base64 48 before going live). Includes
+      a SECURITY NOTE that the Neon URL was shared in chat and should be
+      rotated.
+    * github-secrets-ready.txt — reference card listing all 9 required
+      GitHub Secrets with their correct values, plus optional repository
+      Variables. Includes instructions for generating a new ed25519 SSH
+      key on the server (the user's previous RSA key was passphrase-
+      protected and unsuitable for GitHub Actions).
+- Phase 6 (SSH connectivity diagnosis — CRITICAL FINDINGS):
+  Ran comprehensive network diagnostics from this environment. Discovered
+  THREE compounding issues:
+
+  FINDING A — Wrong SSH_HOST (typo, single-z vs double-z):
+    * GitHub Secret SSH_HOST is set to: s1-nnvp.crazydns.com  (single-z)
+    * That hostname has EXPIRED — DNS returns CNAME to
+      expired.namebright.com (NameBright is a domain registrar's parking
+      page). The crazydns.com domain itself has expired or been parked.
+    * The CORRECT hostname is: s1-nnvp.crazzydns.com  (DOUBLE-Z)
+    * Verified: s1-nnvp.crazzydns.com resolves to 135.181.217.49
+    * Cross-verified: reverse DNS on 135.181.217.49 returns s1-nnvp.crazzydns.com
+    * Cross-verified: lnkicks.in also resolves to 135.181.217.49 — same
+      server. So the production domain IS on the correct host; the GitHub
+      Secret just has a typo.
+
+  FINDING B — SSH access disabled on cPanel account:
+    * Tested SSH ports on the CORRECT hostname (s1-nnvp.crazzydns.com):
+        Port 22    → connection refused
+        Port 2222  → closed
+        Port 7822  → closed
+        Port 21098 → closed
+        Port 1022  → closed
+        Port 2200  → closed
+        + 19 other high ports → all closed
+    * cPanel web ports all OPEN and serving:
+        Port 80    → OPEN (HTTP)
+        Port 443   → OPEN (HTTPS, LiteSpeed server header)
+        Port 2082  → OPEN (cPanel HTTP)
+        Port 2083  → OPEN (cPanel HTTPS, returns valid cPanel login cookie)
+        Port 2086  → OPEN (WHM HTTP)
+        Port 2087  → OPEN (WHM HTTPS)
+    * Conclusion: cPanel hosting is alive and well, but SSH access is
+      disabled on this cPanel account. User must enable SSH in cPanel UI:
+        cPanel → Security → SSH Access → Enable SSH
+      OR submit a support ticket to the host (CrazzyDNS) asking them to
+      enable SSH on port 22 for user `aqualit1`.
+
+  FINDING C — Production domain has a default LiteSpeed index page:
+    * https://lnkicks.in/ returns HTTP 200 with a "Index of /" page showing
+      only a cgi-bin/ folder. Server header: LiteSpeed.
+    * This means: the cPanel account exists, the domain is configured, but
+      no Next.js app has been deployed yet. The Passenger Node.js app
+      needs to be set up in cPanel → Software → Setup Node.js App.
+
+  FINDING D — Application URL placeholder in cpanel/.cpanel.yml is wrong:
+    * Line 21: application_url: "lnkicks.example.com" — should be "lnkicks.in"
+    * Did NOT fix in code (left for user to confirm) — this is a documentation
+      file only, doesn't affect deployment.
+
+- Phase 7 (Commit + push): Working tree was clean after the previous task's
+  commit (e1cba03 — secrets context fix). Only spurious file-mode changes
+  from running scripts locally; reset those with `git config core.fileMode
+  false && git checkout`. No new code changes to push — application and
+  workflows are already in a deployable state on origin/main.
+
+  Tried to verify the latest GitHub Actions run via API, but the PAT
+  (github_pat_11CJB2HGA0...) returns "Bad credentials" — user has rotated
+  it (correctly, after it was leaked in chat). Cannot query Actions API
+  or push further commits without a new PAT.
+
+Stage Summary:
+- ROOT CAUSE of the deploy failure (screenshot from previous iteration):
+  ssh-keyscan failed because SSH_HOST GitHub Secret has a TYPO — set to
+  "s1-nnvp.crazydns.com" (single-z) but the correct hostname is
+  "s1-nnvp.crazzydns.com" (DOUBLE-Z). The single-z domain has expired
+  and is parked by NameBright, so all connection attempts to it fail
+  before they even reach the real server.
+
+- ROOT CAUSE #2 (will surface after fixing #1): SSH access is DISABLED
+  on the cPanel account. Even with the correct hostname, the deploy
+  workflow will fail at "Verify SSH login" because no SSH port is open
+  on the server. User must enable SSH in cPanel UI before re-running
+  the workflow.
+
+- ROOT CAUSE #3 (will surface after fixing #2): The Passenger Node.js
+  app is not yet set up in cPanel. https://lnkicks.in/ currently returns
+  a default LiteSpeed "Index of /" page. User must create the Node.js
+  app in cPanel → Software → Setup Node.js App → Create Application,
+  pointing to cpanel/app.js as the startup file, BEFORE the deploy
+  workflow can install deps and restart Passenger.
+
+- FILES CHANGED (this iteration): NONE pushed. Working tree is clean.
+  The previous iteration's commit (e1cba03 — secrets context fix) is
+  already on origin/main and is the latest commit.
+
+- COMMIT HASH: e1cba03 (already pushed in previous iteration)
+  → https://github.com/lnkickswork-star/lnkicks/commit/e1cba03
+
+- DEPLOYMENT STATUS: BLOCKED on user action (3 blockers, listed below).
+  Application code, workflows, scripts, and env files are all ready.
+  Once the 3 blockers are cleared, the next push to main should produce
+  a successful deploy.
+
+- REMAINING BLOCKERS (in remediation order):
+
+  BLOCKER 1 — Fix SSH_HOST GitHub Secret (typo):
+    Action: Update SSH_HOST from "s1-nnvp.crazydns.com" to "s1-nnvp.crazzydns.com"
+    Where: Repo → Settings → Secrets and variables → Actions → SSH_HOST → Edit
+    Time:  30 seconds
+
+  BLOCKER 2 — Enable SSH access on cPanel account:
+    Action: cPanel → Security → SSH Access → click "Enable SSH" (or similar)
+    If your cPanel doesn't show that option, submit a ticket to CrazzyDNS
+    support: "Please enable SSH access on port 22 for cPanel user aqualit1
+    on s1-nnvp.crazzydns.com. I need it for automated GitHub Actions
+    deployment."
+    Verify it's enabled by running from your local machine:
+      ssh -p 22 aqualit1@s1-nnvp.crazzydns.com
+    (should prompt for password or accept your key, NOT "connection refused")
+    Time:  5 minutes (UI) — 24-48 hours (support ticket)
+
+  BLOCKER 3 — Create the Node.js app in cPanel:
+    Action: cPanel → Software → Setup Node.js App → Create Application
+      Node.js version:    22
+      Application mode:   Production
+      Application root:   /home/aqualit1/lnkicks
+      Application URL:    lnkicks.in
+      Startup file:       cpanel/app.js
+    This creates the nodevenv at /home/aqualit1/nodevenv/lnkicks/22/bin/activate
+    which the NODEVENV_PATH GitHub Secret already points to.
+    Time:  2 minutes
+
+  BLOCKER 4 (after deploy succeeds) — Rotate compromised credentials:
+    The following have been leaked in chat during this session and MUST
+    be rotated BEFORE going live:
+      a) Neon DB password — Neon Console → Project → Roles → neondb_owner
+         → Reset password. Then update DATABASE_URL and DIRECT_URL in
+         /home/z/my-project/download/.env.production AND in cPanel env vars.
+      b) GitHub PAT — already rotated (confirmed — API returns Bad credentials).
+      c) RSA SSH private key — replace with a fresh passphrase-less ed25519
+         key generated ON the server (instructions in github-secrets-ready.txt).
+         Paste the new key into the SSH_PRIVATE_KEY GitHub Secret.
+
+- ARTIFACTS produced this iteration (in /home/z/my-project/download/):
+    * .env.production              — production env file with real Neon URLs
+    * github-secrets-ready.txt     — reference card for all 9 GitHub Secrets
+
+- NEXT ITERATION: Once the user confirms Blockers 1-3 are cleared and
+  provides a fresh PAT (or pushes manually), re-run the deploy workflow.
+  Expected sequence:
+    1. quality-gate PASSED (already verified locally)
+    2. Verify all 9 secrets PASSED (all values already correct in
+       github-secrets-ready.txt — user just needs to apply Blocker 1 fix)
+    3. SSH connection PASSED (after Blockers 1 + 2)
+    4. rsync upload PASSED (after Blocker 3)
+    5. npm ci --omit=dev PASSED (lockfile is in sync)
+    6. Passenger restart PASSED (tmp/restart.txt touch works)
+    7. Health check on https://lnkicks.in/ → HTTP 200 (Passenger will
+       serve the new Next.js build instead of the default LiteSpeed
+       index page)
