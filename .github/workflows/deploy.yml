@@ -153,37 +153,58 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 🔐 Load SSH key
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-            echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
-            exit 1
-          fi
-
-      - name: ⏪ Execute rollback on server
+      - name: 🔐 Load SSH key & configure SSH
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          # Sanitize key (strip CR + blank lines)
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Write SSH config (same options as deploy job)
+          cat > ~/.ssh/config <<SSHCFG
+          Host ${SSH_HOST}
+            HostName ${SSH_HOST}
+            User ${SSH_USER}
+            Port ${SSH_PORT}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            AddressFamily inet
+            BatchMode yes
+            ConnectTimeout 30
+            ServerAliveInterval 5
+            ServerAliveCountMax 3
+            GSSAPIAuthentication no
+            GSSAPIDelegateCredentials no
+            PasswordAuthentication no
+            PubkeyAuthentication yes
+            PreferredAuthentications publickey
+            StrictHostKeyChecking accept-new
+            UserKnownHostsFile ~/.ssh/known_hosts
+          SSHCFG
+          chmod 600 ~/.ssh/config
+          if ! ssh-keyscan -4 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+            echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
+            exit 1
+          fi
+          echo "✅ SSH configured for ${SSH_HOST}:${SSH_PORT}"
+
+      - name: ⏪ Execute rollback on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
           NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
-            -o BatchMode=yes -o ConnectTimeout=15 \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh "${SSH_HOST}" \
             "bash '${APP_ROOT}/scripts/deploy/rollback.sh' \
               '${APP_ROOT}' \
               'manual-rollback' \
@@ -322,38 +343,123 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Use printf to avoid trailing-newline issues; never echo the key.
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+
+          # ── Write the SSH private key (SANITIZED) ──────────────────────
+          # Strip CR characters (Windows \r\n line endings) that corrupt
+          # the key and cause "error in libcrypto" / "Permission denied".
+          # Also strip leading/trailing blank lines. printf '%s\n' preserves
+          # internal newlines and adds exactly one trailing newline.
+          printf '%s\n' "$SSH_PRIVATE_KEY" \
+            | tr -d '\r' \
+            | sed '/^$/d' \
+            > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          # Fail fast if the server is unreachable or port is closed.
+          # ── Diagnostics: verify the key file is well-formed ───────────
+          echo "→ SSH key file diagnostics:"
+          echo "  File size: $(wc -c < ~/.ssh/deploy_key) bytes"
+          echo "  Line count: $(wc -l < ~/.ssh/deploy_key)"
+          echo "  First line: $(head -1 ~/.ssh/deploy_key)"
+          echo "  Last line:  $(tail -1 ~/.ssh/deploy_key)"
+          if command -v ssh-keygen >/dev/null 2>&1; then
+            echo "  Key fingerprint:"
+            ssh-keygen -lf ~/.ssh/deploy_key 2>&1 | sed 's/^/    /' || echo "    ⚠️ ssh-keygen could not read the key"
+          fi
+
+          # ── Write ~/.ssh/config (SINGLE source of truth for SSH flags) ─
+          # Every ssh and rsync command in this workflow reads this file
+          # automatically — no need to repeat -o flags on every command.
+          #
+          # Why each option:
+          #   AddressFamily=inet         → force IPv4. Eliminates the most
+          #                               common "ssh-keyscan works but ssh
+          #                               times out" failure mode where ssh
+          #                               tries IPv6 first.
+          #   ConnectTimeout=30          → 15s was too short for some shared-
+          #                               hosting SSH daemons that do reverse-
+          #                               DNS lookups on connect.
+          #   ServerAliveInterval=5      → keep the connection alive through
+          #   ServerAliveCountMax=3         stateful firewalls with short idle
+          #                               timeouts (common on shared hosting).
+          #   GSSAPIAuthentication=no    → skip slow GSSAPI auth round-trips.
+          #   PreferredAuthentications   → try ONLY publickey (the deploy key).
+          #   StrictHostKeyChecking=accept-new → auto-add new host keys without
+          #                               prompting (BatchMode-safe).
+          cat > ~/.ssh/config <<SSHCFG
+          Host ${SSH_HOST}
+            HostName ${SSH_HOST}
+            User ${SSH_USER}
+            Port ${SSH_PORT}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            AddressFamily inet
+            BatchMode yes
+            ConnectTimeout 30
+            ServerAliveInterval 5
+            ServerAliveCountMax 3
+            GSSAPIAuthentication no
+            GSSAPIDelegateCredentials no
+            PasswordAuthentication no
+            PubkeyAuthentication yes
+            PreferredAuthentications publickey
+            StrictHostKeyChecking accept-new
+            UserKnownHostsFile ~/.ssh/known_hosts
+          SSHCFG
+          chmod 600 ~/.ssh/config
+          echo "✅ ~/.ssh/config written for host ${SSH_HOST}:${SSH_PORT}"
+
+          # ── Scan host key (IPv4, matching AddressFamily=inet) ─────────
           echo "→ Scanning server host key (${SSH_HOST}:${SSH_PORT})..."
-          if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+          if ! ssh-keyscan -4 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
             echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
             exit 1
           fi
           echo "✅ Host key added to known_hosts."
 
-          # Verify SSH login works with the supplied key.
-          echo "→ Verifying SSH login..."
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
-            -o BatchMode=yes -o ConnectTimeout=15 \
-            -o PasswordAuthentication=no -o PubkeyAuthentication=yes -o IdentitiesOnly=yes \
-            "${SSH_USER}@${SSH_HOST}" "echo SSH_OK; whoami; pwd; test -d '${APP_ROOT}' && echo APP_ROOT_OK || echo APP_ROOT_MISSING"
+          # ── Verify SSH login (with retry + verbose for debugging) ─────
+          # Retry up to 3 times with 5s gap. Transient TCP issues and
+          # server-side connection rate limits are common on shared hosting.
+          echo "→ Verifying SSH login (verbose, up to 3 attempts)..."
+          SSH_VERIFY_OK=0
+          for attempt in 1 2 3; do
+            echo "─── Attempt $attempt/3 ───"
+            if ssh -v "${SSH_HOST}" \
+              "echo SSH_OK; whoami; pwd; test -d '${APP_ROOT}' && echo APP_ROOT_OK || echo APP_ROOT_MISSING"; then
+              SSH_VERIFY_OK=1
+              break
+            fi
+            echo "⚠️ Attempt $attempt failed. Waiting 5s before retry..."
+            sleep 5
+          done
+          if [[ "$SSH_VERIFY_OK" -ne 1 ]]; then
+            echo "❌ SSH login failed after 3 attempts."
+            echo "   Verbose output above shows the exact failure point."
+            echo "   Common causes:"
+            echo "     1. SSH_PRIVATE_KEY has Windows line endings (\r\n) — already fixed by tr -d '\r'"
+            echo "     2. SSH_PRIVATE_KEY is passphrase-protected — regenerate WITHOUT passphrase"
+            echo "     3. SSH_PRIVATE_KEY doesn't match the authorized_keys on the server"
+            echo "     4. Server firewall blocking GitHub Actions IPs"
+            echo "   Diagnostics:"
+            echo "     - Key file: ~/.ssh/deploy_key ($(wc -c < ~/.ssh/deploy_key) bytes)"
+            echo "     - Key type: $(head -1 ~/.ssh/deploy_key)"
+            echo "     - Config:   ~/.ssh/config ($(wc -l < ~/.ssh/config) lines)"
+            echo "     - Known hosts: $(wc -l < ~/.ssh/known_hosts 2>/dev/null || echo 0) entries"
+            exit 1
+          fi
+          echo "✅ SSH login verified."
 
       - name: 📦 Ensure remote directories exist
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          # SSH options are read from ~/.ssh/config (created in the
+          # "Load SSH key & verify connection" step).
+          ssh "${SSH_HOST}" \
             "mkdir -p '${APP_ROOT}' \
              \$HOME/lnkicks-releases \
              '${APP_ROOT}/tmp' \
@@ -362,37 +468,32 @@ jobs:
       - name: 📤 Upload deployment scripts to server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          # rsync picks up SSH options from ~/.ssh/config automatically.
           rsync -azP --delete \
-            -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key -o BatchMode=yes" \
+            -e "ssh" \
             scripts/deploy/ \
-            "${SSH_USER}@${SSH_HOST}:${APP_ROOT}/scripts/deploy/"
+            "${SSH_HOST}:${APP_ROOT}/scripts/deploy/"
           # Make scripts executable
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh "${SSH_HOST}" \
             "chmod +x '${APP_ROOT}/scripts/deploy/'*.sh"
 
       - name: 💾 Backup current production (for rollback)
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
           GIT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh "${SSH_HOST}" \
             "bash '${APP_ROOT}/scripts/deploy/backup-current.sh' \
               '${APP_ROOT}' \
               '${GIT_SHA}' \
@@ -401,13 +502,11 @@ jobs:
       - name: 📤 Upload production files via rsync
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Upload ONLY the files cPanel needs to run the app. Code is placed
           # DIRECTLY in $APP_ROOT (no /current subdir) — matches the cPanel
@@ -433,6 +532,9 @@ jobs:
           #   *.md            — not needed at runtime
           #   .github/        — CI config, not needed at runtime
           #   .env*           — env vars managed via nodevenv etc/envvars
+          #
+          # rsync picks up SSH options (port, key, BatchMode, etc.) from
+          # ~/.ssh/config created in the "Load SSH key" step.
           rsync -azP --delete \
             --exclude='node_modules' \
             --exclude='.git' \
@@ -458,27 +560,24 @@ jobs:
             --exclude='.editorconfig' \
             --exclude='.npmrc' \
             --exclude='.yarnrc' \
-            -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key -o BatchMode=yes" \
+            -e "ssh" \
             ./ \
-            "${SSH_USER}@${SSH_HOST}:${APP_ROOT}/"
+            "${SSH_HOST}:${APP_ROOT}/"
 
       - name: 📦 Install production dependencies on server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
           NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Sources the nodevenv activate script (sets PATH to Node 22 + npm)
           # before running npm ci. Without this, cPanel's default Node would
           # be used and the install would fail.
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh "${SSH_HOST}" \
             "bash '${APP_ROOT}/scripts/deploy/install-deps.sh' \
               '${APP_ROOT}' \
               '${NODEVENV_PATH}'"
@@ -486,19 +585,16 @@ jobs:
       - name: 🔴 Restart Node.js application (Passenger)
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
           NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Touches tmp/restart.txt inside app root — Passenger watches this
           # file and gracefully restarts on next request.
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh "${SSH_HOST}" \
             "bash '${APP_ROOT}/scripts/deploy/restart.sh' \
               '${APP_ROOT}' \
               '${NODEVENV_PATH}'"
@@ -515,8 +611,6 @@ jobs:
         if: steps.health.outcome == 'failure'
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           APP_ROOT: ${{ secrets.APP_ROOT }}
           NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
@@ -524,11 +618,10 @@ jobs:
           GIT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           echo "❌ Health check FAILED after deployment. Initiating automatic rollback..."
-          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key -o BatchMode=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh "${SSH_HOST}" \
             "bash '${APP_ROOT}/scripts/deploy/rollback.sh' \
               '${APP_ROOT}' \
               '${GIT_SHA}' \
