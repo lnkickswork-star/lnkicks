@@ -5943,3 +5943,262 @@ Stage Summary:
     7. Health check on https://lnkicks.in/ → HTTP 200 (Passenger will
        serve the new Next.js build instead of the default LiteSpeed
        index page)
+
+---
+Task ID: autonomous-deploy-iteration-2
+Agent: Main (Autonomous DevOps — Senior Engineer role, iteration 2)
+Task: Complete SSH diagnosis per user's 7-step protocol. Automatically fix
+  infrastructure until deployment succeeds. Do NOT stop after first failure.
+
+Work Log:
+- STEP 1 (Audit deploy.yml for SSH commands):
+  Found 9 `ssh -p` commands, 2 `ssh-keyscan` calls (lines 167, 331),
+  2 `rsync` commands using `ssh -p` as transport, 0 `scp` commands.
+  All use `BatchMode=yes` (correct for non-interactive CI). No
+  StrictHostKeyChecking option is set — relies on `ssh-keyscan -H`
+  pre-populating known_hosts. `deploy_key` filename standardized across
+  all steps (correct). The `ssh-keyscan` call has NO fallback — if it
+  fails, the workflow exits immediately.
+
+- STEP 2 (Validate SSH_HOST via DNS):
+  Tested both candidate hostnames:
+    * s1-nnvp.crazydns.com (single-z, current GitHub Secret value):
+      CNAME chain → expired.namebright.com → cdl-prd-https-...elb.us-east-1
+      Final IPs: 44.208.83.180, 54.84.240.235 (NameBright parking page on AWS)
+      CONCLUSION: Domain EXPIRED. Hostname is wrong.
+    * s1-nnvp.crazzydns.com (double-z):
+      Direct A record → 135.181.217.49 (no CNAME chain)
+      Cross-verified: lnkicks.in also resolves to 135.181.217.49 (same server)
+      Cross-verified: reverse DNS on 135.181.217.49 returns s1-nnvp.crazzydns.com
+      CONCLUSION: This is the CORRECT hostname.
+
+- STEP 3 (SSH port detection):
+  Scanned 50+ ports on the correct hostname (s1-nnvp.crazzydns.com):
+    22, 222, 1022, 2022, 2122, 2222, 2322, 2522, 2622, 2822, 2922, 3122,
+    3222, 3322, 3422, 3522, 3622, 3722, 3822, 3922, 4022, 4122, 4222, 4322,
+    4422, 4522, 4622, 4722, 4822, 4922, 5022, 5122, 5222, 5322, 5422, 5522,
+    5622, 5722, 5822, 5922, 6022, 7022, 8022, 9022, 10022, 21022, 22000,
+    22222, 32022, 7822, 21098
+  RESULT: ALL CLOSED.
+  Sanity check: outbound from this environment to github.com:22 succeeds.
+  Sanity check: cPanel web ports all open on same host (80, 443, 2082,
+  2083, 2086, 2087, 2096) — hosting is alive.
+  CONCLUSION: SSH access is DISABLED on this cPanel account. Not a port
+  issue — no SSH daemon is reachable at all.
+
+- STEP 4 (Verbose SSH test):
+  Cannot run `ssh -v` — `ssh` client not installed in this environment.
+  However, the bash /dev/tcp port scan above provides equivalent
+  diagnostic information: TCP connections to all 50+ SSH candidate ports
+  fail with "connection refused" or timeout. This means no SSH daemon is
+  listening, OR a firewall is dropping packets before they reach the host.
+  Given that cPanel web ports ARE reachable on the same host, the most
+  likely explanation is that the hosting provider (CrazzyDNS) disables
+  SSH by default on shared hosting plans and requires explicit enablement.
+
+- STEP 5 (SSH key diagnosis):
+  Cannot rotate or test SSH keys without server access. The previous
+  RSA key the user pasted in chat was passphrase-protected (aes256-ctr +
+  bcrypt KDF) — unsuitable for GitHub Actions, which cannot unlock
+  passphrase-protected keys. A new passphrase-less ed25519 key must be
+  generated ON the server (instructions in
+  /home/z/my-project/download/github-secrets-ready.txt). This step is
+  BLOCKED on SSH being enabled first (Step 3 blocker).
+
+- STEP 6 (Verify cPanel Node.js app via HTTP):
+  Probed https://lnkicks.in/ and various subpaths. Critical findings:
+    * https://lnkicks.in/ → HTTP 200, but body is the default LiteSpeed
+      "Index of /" autoindex page showing only cgi-bin/. NO Next.js app
+      is being served.
+    * All Next.js routes return 404:
+        /_next/static → 404
+        /api/health   → 404
+        /robots.txt   → 404
+        /sitemap.xml  → 404
+        /manifest.webmanifest → 404
+        /favicon.ico  → 404
+        /sw.js        → 404
+      (All of these exist in our /public/ folder, confirming Next.js
+      is NOT serving the domain.)
+    * https://lnkicks.in/cpanel/ → 200, but it's just cPanel's HTTP
+      redirect page (not our app).
+    * https://s1-nnvp.crazzydns.com/~aqualit1/ → HTTP 200, body is:
+        "It works!\n\nNodeJS 22.18.0"
+      This is cPanel's DEFAULT Node.js app placeholder page. It confirms:
+        ✅ Node.js 22.18.0 is installed (matches our target Node 22)
+        ✅ Passenger IS running
+        ✅ Node.js app IS registered in cPanel
+        ❌ But the app is bound to the USERDIR URL (~aqualit1) instead
+           of to lnkicks.in. The "Application URL" field in cPanel is
+           misconfigured.
+    * https://lnkicks.in/~aqualit1/ → also returns "It works! NodeJS 22.18.0"
+      (confirms the userdir URL works on both hostnames because they're
+      the same server).
+    * Port 3000 (Node.js default) → connection timed out. Passenger is
+      not listening on a separate port; it's reverse-proxied via LiteSpeed
+      on 443.
+
+  CONCLUSION: The Node.js app EXISTS in cPanel and Passenger is running,
+  but the "Application URL" is set to ~aqualit1 (the default userdir)
+  instead of lnkicks.in. The user needs to edit the app in:
+    cPanel → Software → Setup Node.js App → Edit →
+    Application URL: change from ~aqualit1 to lnkicks.in
+
+- STEP 7 (Push fixes via PAT):
+  Tried previous PAT (github_pat_11CJB2HGA0...). API returns "Bad
+  credentials" — confirmed rotated (correctly, after leak in chat).
+  Cannot push commits or update GitHub Secrets via API without a new PAT.
+  No new code changes to push anyway — the application code, workflows,
+  and scripts are all in a deployable state on origin/main (commit
+  e1cba03).
+
+Stage Summary:
+- ROOT CAUSE of "ssh-keyscan failed" error:
+  THREE compounding issues, ALL infrastructure-side (none fixable via code):
+
+  ROOT CAUSE #1: SSH_HOST GitHub Secret has a TYPO.
+    Current:  s1-nnvp.crazydns.com  (single-z, domain EXPIRED)
+    Correct:  s1-nnvp.crazzydns.com (double-z, alive at 135.181.217.49)
+    The single-z domain's DNS now points to expired.namebright.com —
+    a registrar parking page. ssh-keyscan connects to the parking page's
+    IP, which doesn't run SSH, so the scan fails.
+
+  ROOT CAUSE #2: SSH access is DISABLED on the cPanel account.
+    Even with the correct hostname, no SSH port is open. Scanned 50+
+    ports — all closed. cPanel web ports (80/443/2082/2083/2086/2087/
+    2096) all open. Hosting is alive; SSH daemon is either not running
+    or firewalled. Most likely: CrazzyDNS disables SSH by default on
+    shared hosting and requires explicit enablement via cPanel UI or
+    support ticket.
+
+  ROOT CAUSE #3: Node.js app is bound to the wrong URL.
+    User created the Node.js app in cPanel (confirmed — "It works!
+    NodeJS 22.18.0" placeholder responds), but the "Application URL"
+    is set to the userdir (~aqualit1) instead of lnkicks.in. So even
+    after we fix SSH and deploy, the deployed code would be served at
+    /~aqualit1/ instead of at the domain root. The user needs to edit
+    the app's Application URL in cPanel UI.
+
+- FILES CHANGED (this iteration): NONE.
+  No code changes were needed. The deploy.yml, scripts, and application
+  code are all already correct. The blockers are all infrastructure-side.
+
+- SECRETS UPDATED: NONE.
+  Cannot update GitHub Secrets — PAT is invalid (rotated). The user must
+  manually update SSH_HOST in:
+    Repo → Settings → Secrets and variables → Actions → SSH_HOST → Edit
+    Old: s1-nnvp.crazydns.com
+    New: s1-nnvp.crazzydns.com
+
+- INFRASTRUCTURE CHANGES: NONE (cannot make any without cPanel/SSH access).
+  Three changes needed (all user-side):
+    1. Update SSH_HOST GitHub Secret (fix typo)
+    2. Enable SSH access on cPanel account (or request from host)
+    3. Rebind Node.js app URL from ~aqualit1 to lnkicks.in in cPanel UI
+
+- GITHUB WORKFLOW STATUS: BLOCKED at "Load SSH key & verify connection"
+  step. Previous status (last successful run):
+    ✅ Quality Gate (type-check + lint + build) — PASSED
+    ✅ Verify all required secrets are set — PASSED
+    ✅ Download build artifact — PASSED
+    ✅ Verify artifact contents — PASSED
+    ❌ Load SSH key & verify connection — FAILED (ssh-keyscan fails
+       because SSH_HOST points to expired domain)
+  All prior steps will continue to pass; this step will continue to
+  fail until SSH_HOST is corrected AND SSH is enabled on the server.
+
+- DEPLOYMENT STATUS: NOT STARTED.
+  Deployment cannot proceed past step 5 of 14 until the three blockers
+  above are resolved. Once resolved, the remaining 9 steps (rsync upload,
+  npm ci, Passenger restart, health check) should all succeed.
+
+- REMAINING BLOCKERS (in strict remediation order):
+
+  BLOCKER 1 — Fix SSH_HOST GitHub Secret typo (30 seconds, user action):
+    Where: Repo → Settings → Secrets and variables → Actions → SSH_HOST
+    Old value: s1-nnvp.crazydns.com
+    New value: s1-nnvp.crazzydns.com  (DOUBLE-Z)
+    Verification: After updating, manually trigger the "Verify Secrets"
+      workflow. The SSH connection test step should now reach the correct
+      server (though it will still fail at the SSH login step until
+      Blocker 2 is resolved).
+
+  BLOCKER 2 — Enable SSH access on cPanel account (5 min UI, 24-48h ticket):
+    Option A (preferred): cPanel → Security → SSH Access → click
+      "Enable SSH" or "Manage SSH Keys". If option is not visible,
+      SSH is disabled at the hosting-plan level — proceed to Option B.
+    Option B: Submit support ticket to CrazzyDNS:
+      "Please enable SSH access on port 22 for cPanel user aqualit1 on
+       s1-nnvp.crazzydns.com. Required for automated GitHub Actions
+       deployment. If port 22 is blocked, please advise which port to
+       use and whitelist GitHub Actions IP ranges:
+       https://docs.github.com/en/actions/reference/runners/github-hosted-runners#ip-addresses"
+    Verification: From your local machine, run:
+      ssh -p 22 aqualit1@s1-nnvp.crazzydns.com
+      (Should prompt for password or accept key — NOT "connection refused")
+    Alternative: If the host refuses to enable SSH, consider switching
+      to a different deployment method (e.g., Git-based deployment via
+      cPanel's "Git Version Control" feature, which doesn't need SSH).
+      This would require rewriting parts of deploy.yml but is technically
+      feasible.
+
+  BLOCKER 3 — Rebind Node.js app URL from ~aqualit1 to lnkicks.in (2 min):
+    Where: cPanel → Software → Setup Node.js App → click "Edit" next to
+           your existing Node.js app
+    Field: "Application URL"
+    Old value: ~aqualit1  (or however it's currently set)
+    New value: lnkicks.in
+    Save and let Passenger restart.
+    Verification: Visit https://lnkicks.in/ — should show "It works!
+      NodeJS 22.18.0" (the placeholder). After Blockers 1+2 are resolved
+      and the deploy workflow runs, this URL will serve your Next.js app.
+
+  BLOCKER 4 (after deploy succeeds) — Rotate compromised credentials:
+    a) Neon DB password — leaked in chat. Reset at Neon Console →
+       Project → Roles → neondb_owner → Reset password. Update
+       DATABASE_URL and DIRECT_URL in /home/z/my-project/download/.env.production
+       AND in cPanel env vars.
+    b) GitHub PAT — already rotated (confirmed: API returns Bad credentials).
+    c) RSA SSH key (passphrase-protected, unsuitable for GitHub Actions) —
+       Generate a NEW passphrase-less ed25519 key ON the server (after
+       SSH is enabled), paste into SSH_PRIVATE_KEY GitHub Secret.
+       Instructions in /home/z/my-project/download/github-secrets-ready.txt.
+
+- WHAT I COULD DO AUTONOMOUSLY (this iteration):
+    ✅ Read deploy.yml and extract all 13 SSH-related command sites
+    ✅ Validate SSH_HOST via DNS — confirmed typo (single-z vs double-z)
+    ✅ Detect SSH port — scanned 50+ ports, all closed
+    ✅ Verify Node.js app status — discovered it's bound to wrong URL
+    ✅ Cross-verify via reverse DNS, forward DNS, and HTTP probing
+    ✅ Document root causes with hard evidence (DNS responses, port
+       scan results, HTTP responses)
+
+- WHAT I COULD NOT DO (requires user action or credentials):
+    ❌ Update SSH_HOST GitHub Secret — PAT is invalid (rotated)
+    ❌ Enable SSH on cPanel — no cPanel login credentials
+    ❌ Rebind Node.js app URL — no cPanel login credentials
+    ❌ Test SSH login with the actual deploy key — no SSH access
+    ❌ Push additional commits — PAT is invalid
+    ❌ Run the workflow — cannot trigger without PAT or git push
+
+- HONEST ASSESSMENT:
+  The mission stated "zero manual intervention except credentials."
+  I have NOT been given credentials in this iteration (the PAT was
+  rotated, no cPanel login was provided, no working SSH key was
+  provided). I have therefore done everything possible from this
+  environment — comprehensive network-level diagnosis with hard
+  evidence — and identified exactly three user-side actions needed
+  to unblock the deployment. None of the three can be performed by
+  modifying repository code; all require either GitHub UI access
+  (to update Secrets) or cPanel UI access (to enable SSH and rebind
+  the app URL). I am blocked on credentials, not on diagnosis.
+
+- NEXT ITERATION: When the user provides:
+    (a) confirmation that SSH_HOST has been updated to s1-nnvp.crazzydns.com
+    (b) confirmation that SSH is enabled on the cPanel account
+    (c) confirmation that the Node.js app URL is rebound to lnkicks.in
+    (d) optionally, a fresh PAT for pushing commits
+  Then the next deploy workflow run should succeed end-to-end:
+    ✅ quality-gate, ✅ verify-secrets, ✅ SSH connection, ✅ rsync upload,
+    ✅ npm ci, ✅ Passenger restart, ✅ health check (HTTP 200 on
+    https://lnkicks.in/).
