@@ -92,5 +92,26 @@ if [[ ! -d "node_modules/next" ]]; then
   exit 1
 fi
 
+echo "[install-deps] Verifying '@prisma/client' is installed..."
+if [[ ! -d "node_modules/@prisma/client" ]]; then
+  echo "[install-deps] ERROR: '@prisma/client' package not found in node_modules after install." >&2
+  echo "[install-deps] Ensure @prisma/client is in package.json dependencies (NOT devDependencies)." >&2
+  exit 1
+fi
+
+echo "[install-deps] Verifying 'prisma' CLI is installed..."
+if [[ ! -d "node_modules/prisma" ]]; then
+  echo "[install-deps] ERROR: 'prisma' package not found in node_modules after install." >&2
+  echo "[install-deps] Ensure prisma is in package.json dependencies (NOT devDependencies)." >&2
+  exit 1
+fi
+
+echo "[install-deps] Verifying 'dotenv' is installed..."
+if [[ ! -d "node_modules/dotenv" ]]; then
+  echo "[install-deps] ERROR: 'dotenv' package not found in node_modules after install." >&2
+  echo "[install-deps] Ensure dotenv is in package.json dependencies." >&2
+  exit 1
+fi
+
 echo "[install-deps] node_modules size: $(du -sh node_modules | cut -f1)"
 echo "[install-deps] ✅ Done."

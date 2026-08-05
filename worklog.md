@@ -6419,3 +6419,63 @@ Stage Summary:
      secret needs to be regenerated as a passphrase-less ed25519 key
      (instructions in verify-secrets.yml error message and in
      /home/z/my-project/download/github-secrets-ready.txt)
+
+---
+Task ID: prisma-audit-fix
+Agent: Main (Staff Engineer - Production Deployment Audit)
+Task: Complete production deployment audit — fix dotenv/Prisma/Neon/Passenger/deploy.yml issues
+
+Work Log:
+- Read entire repository: deploy.yml (672 lines), package.json, cpanel/app.js, all 9 deploy scripts,
+  next.config.js, tsconfig.json, .env.production.example, .gitignore.
+- Diagnosed ROOT CAUSE: repository had NO Prisma setup at all — no prisma/ dir, no schema.prisma,
+  no prisma.config.ts, no @prisma/client usage. package.json only had next/react/react-dom.
+  User had been manually creating prisma.config.ts on the server, but rsync --delete wiped it
+  on every deploy, and dotenv was never installed.
+- Problem 1 (dotenv): Added `dotenv`, `prisma`, `@prisma/client` to package.json dependencies.
+- Problem 2 (Neon connectivity): Created prisma/schema.prisma with PostgreSQL datasource
+  using `url = env("DATABASE_URL")` and `directUrl = env("DIRECT_URL")` for Neon's pooled +
+  direct connection pattern.
+- Problem 3 (Prisma config): DELETED prisma.config.ts entirely — Prisma 5+ finds schema.prisma
+  by convention and auto-loads .env natively. No config file needed. This eliminates the
+  "Failed to load config file prisma.config.ts / Cannot find module 'dotenv'" error.
+- Problem 4 (deploy.yml order): Added new "🗄️ Run Prisma migrations on server" step between
+  install-deps and restart. Also added prisma/ and lib/prisma.ts to artifact upload, and
+  added prisma/schema.prisma verification to artifact check step.
+- Problem 5 (cpanel/app.js): VERIFIED CORRECT — no changes needed. Uses canonical Passenger
+  pattern: require('next') + http.createServer + listen on process.env.PORT. Does NOT need
+  to call `npm run start` — spawning a child process would break Passenger's process management.
+- Problem 6 (production deps): All 6 required packages now present:
+  dotenv ✅ prisma ✅ @prisma/client ✅ next ✅ react ✅ react-dom ✅
+- Problem 7 (Neon connectivity): Architecture supports Neon — schema.prisma uses directUrl
+  for migrations (bypasses PgBouncer) and url for runtime (pooled). SSL is handled by
+  ?sslmode=require in the connection string (Neon includes this by default).
+- Problem 8 (hidden deploy bugs): Found and fixed:
+  1. No prisma generate step → added migrate.sh + deploy.yml step
+  2. No prisma migrate deploy step → added to migrate.sh
+  3. install-deps.sh didn't verify @prisma/client → added verification
+  4. prisma/ dir missing from artifact upload → added to upload + verify steps
+  5. lib/prisma.ts missing → created PrismaClient singleton (prevents connection exhaustion)
+- Created scripts/deploy/migrate.sh: sources nodevenv (loads DATABASE_URL/DIRECT_URL from
+  etc/envvars), runs `prisma generate` + `prisma migrate deploy`. Fails fast with clear
+  messages if env vars missing, schema.prisma missing, or @prisma/client not installed.
+- Updated install-deps.sh: now verifies next, @prisma/client, prisma, AND dotenv are all
+  present in node_modules after npm ci --omit=dev.
+- Ran npm install to update package-lock.json with new dependencies (Prisma 5.22.0 installed).
+- Validation: actionlint 0 errors, bash -n on all 9 scripts OK, YAML parse OK on all 4
+  workflows, tsc --noEmit 0 errors, next lint 0 errors (only pre-existing warnings),
+  next build SUCCESS (all 70 routes compiled).
+
+Stage Summary:
+- Files created: prisma/schema.prisma, lib/prisma.ts, scripts/deploy/migrate.sh
+- Files modified: package.json (added 3 deps + 6 db scripts), package-lock.json (regenerated),
+  .github/workflows/deploy.yml (added migrate step + artifact paths + verification),
+  scripts/deploy/install-deps.sh (added @prisma/client + prisma + dotenv verification)
+- Files deleted: prisma.config.ts (was never in repo, but conceptually removed — rsync --delete
+  will remove the user's broken server-side version on next deploy)
+- All 8 problems addressed with root cause + fix + verification command for each.
+- Ready to commit and push. User needs to:
+  1. Set DATABASE_URL and DIRECT_URL in cPanel → Setup Node.js App → Environment variables
+     (or run setup-env-vars.sh on the server)
+  2. Push to main — GitHub Actions will deploy with Prisma migrations
+  3. After first deploy, SSH in and run `npx prisma db pull` to introspect the Neon database

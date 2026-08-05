@@ -135,6 +135,8 @@ jobs:
             package-lock.json
             cpanel/app.js
             cpanel/.cpanel.yml
+            prisma/
+            lib/prisma.ts
           retention-days: 3
           if-no-files-found: error
           include-hidden-files: true
@@ -329,6 +331,8 @@ jobs:
           test -f cpanel/app.js && echo "OK: cpanel/app.js present" || { echo "FAIL: cpanel/app.js missing"; exit 1; }
           echo "=== package.json exists? ==="
           test -f package.json && echo "OK: package.json present" || { echo "FAIL: package.json missing"; exit 1; }
+          echo "=== prisma/schema.prisma exists? ==="
+          test -f prisma/schema.prisma && echo "OK: prisma/schema.prisma present" || { echo "FAIL: prisma/schema.prisma missing"; exit 1; }
           echo "=== Standalone server file in .next? ==="
           ls .next/BUILD_ID && echo "OK: BUILD_ID present (build succeeded)" || exit 1
 
@@ -579,6 +583,25 @@ jobs:
           # be used and the install would fail.
           ssh "${SSH_HOST}" \
             "bash '${APP_ROOT}/scripts/deploy/install-deps.sh' \
+              '${APP_ROOT}' \
+              '${NODEVENV_PATH}'"
+
+      - name: 🗄️ Run Prisma migrations on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_ROOT: ${{ secrets.APP_ROOT }}
+          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Runs `prisma generate` (regenerate the query engine for the
+          # deployed schema) and `prisma migrate deploy` (apply any pending
+          # migrations in order). Sources the nodevenv activate script first
+          # so that DATABASE_URL + DIRECT_URL from etc/envvars are available.
+          ssh "${SSH_HOST}" \
+            "bash '${APP_ROOT}/scripts/deploy/migrate.sh' \
               '${APP_ROOT}' \
               '${NODEVENV_PATH}'"
 

@@ -1,0 +1,44 @@
+// =============================================================================
+// LN KICKS — Prisma Schema
+// =============================================================================
+//
+// Database: PostgreSQL (Neon)
+//
+// Connection strategy:
+//   - `url`       → DATABASE_URL  (pooled connection via Neon's PgBouncer)
+//                    Used by the Next.js app at runtime for queries.
+//                    MUST include `?sslmode=require` and `&pgbouncer=true`.
+//   - `directUrl` → DIRECT_URL     (direct connection, bypasses pooler)
+//                    Used by Prisma CLI for migrations and `prisma db pull`.
+//                    MUST include `?sslmode=require`.
+//
+// Why two URLs?
+//   Neon's pooled endpoint (-pooler) uses PgBouncer in transaction mode,
+//   which breaks Prisma's migration engine (it needs a session-level
+//   connection). The direct URL bypasses the pooler for DDL operations.
+//
+// Environment variable sources (in order of precedence):
+//   1. cPanel nodevenv etc/envvars  (sourced by bin/activate — production)
+//   2. .env file in app root        (read by dotenv in dev)
+//   3. process.env                  (set by parent process)
+//
+// To introspect an existing Neon database:
+//   npx prisma db pull
+//
+// To apply migrations:
+//   npx prisma migrate deploy
+//
+// To create a new migration:
+//   npx prisma migrate dev --name <descriptive-name>
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
