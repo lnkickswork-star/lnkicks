@@ -6521,3 +6521,38 @@ Stage Summary:
 - User must add 5 new GitHub Secrets: DATABASE_URL, DIRECT_URL, JWT_SECRET,
   ADMIN_JWT_SECRET, SESSION_SECRET.
 - After push + deploy, the app will: load .env → require next → bind to PORT → serve.
+
+---
+Task ID: deploy-fix-1
+Agent: Main (Senior DevOps Engineer)
+Task: Fix cPanel LNKICKS deployment — `npm run build` failing with "Module not found" for 5 modules that exist on disk. Continue end-to-end deployment.
+
+Work Log:
+- Verified local sandbox has the LNKICKS project at /home/z/my-project/ (git remote: github.com/lnkickswork-star/lnkicks.git)
+- Confirmed all 5 "missing" files exist locally with correct content and on origin/main
+- Fetched origin → local was actually up-to-date (7 "ahead" commits were already pushed)
+- Reproduced build locally on Node v24.18.0, npm 11.16.0 → BUILD SUCCEEDED (BUILD_ID: gqu2B7em3o3zZ7pdvSUtH)
+- Root cause of cPanel build failure: cPanel deployment uses Node 20 (package.json requires >=22.0.0) + node_modules is a SYMLINK to ~/nodevenv/LNKICKS/20/lib/node_modules. CloudLinux CageFS + Node 20 + symlinked node_modules breaks webpack module resolution.
+- Identified runtime root cause: cpanel/app.js listens on process.env.PORT (TCP), but server uses LiteSpeed LSAPI + lsnode which sets LSNODE_SOCKET (UNIX socket) instead. This caused 503/timeout errors.
+- Created new root app.js with dual support: listens on LSNODE_SOCKET when set (LiteSpeed production), falls back to PORT for local dev. Also: removes stale socket file before binding, chmods socket to 0666 for CageFS cross-user access, loads .env from app root before requiring next/@prisma/client, logs env var PRESENCE (never values) for P1001 diagnosis, verifies DATABASE_URL fails fast.
+- Syntax-checked app.js (node --check) → OK
+- Committed and pushed app.js to GitHub (commit 8d2eec5 on origin/main)
+- Wrote /home/z/my-project/download/cpanel-deploy.sh — comprehensive cPanel Terminal deployment script that:
+  1. Verifies Node version (>= 22 required)
+  2. Detects LNKICKS app root
+  3. Pulls latest code from GitHub (gets new app.js)
+  4. Removes broken node_modules symlink and runs real npm install
+  5. Writes .env with provided Neon DATABASE_URL
+  6. Generates Prisma client
+  7. Runs npm run build
+  8. Prints next steps for cPanel UI (startup file = app.js, env vars, STOP+START)
+
+Stage Summary:
+- GitHub repo is fully synced with local sandbox — all code on origin/main
+- New app.js (commit 8d2eec5) provides LSNODE_SOCKET support for LiteSpeed server
+- cpanel-deploy.sh script ready for user to paste into cPanel Terminal
+- Build verified working on Node 24 locally with all 5 "missing" modules
+- CRITICAL: User MUST switch Node from 20 → 22 (or 24) in cPanel UI before running script
+- CRITICAL: User MUST set "Application startup file" to app.js (NOT cpanel/app.js) in cPanel UI
+- CRITICAL: User MUST click STOP then START (not just Restart) after config changes
+- SECURITY: GitHub PAT, SSH private key, and Neon DB URL were leaked in chat — user MUST rotate all three after deployment
