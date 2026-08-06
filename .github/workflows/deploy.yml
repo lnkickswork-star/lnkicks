@@ -1,744 +1,104 @@
 # =============================================================================
-# Production Deployment Workflow — LN KICKS Next.js → cPanel Node.js
-# =============================================================================
-#
-# Triggered automatically on every push to `main` (after ci.yml passes),
-# and manually via the GitHub Actions "Run workflow" button.
-#
-# Pipeline stages:
-#   1. quality-gate      — type-check + lint + build (aborts deploy on failure)
-#   2. prepare-artifact  — bundle only the files cPanel needs into a tarball
-#   3. deploy            — upload via rsync over SSH, install prod deps,
-#                          restart Node.js app, verify health
-#   4. rollback          — automatic if health check fails after restart
-#
-# Required GitHub Secrets (Settings → Secrets and variables → Actions):
-#   SSH_HOST              — cPanel server hostname (e.g. sharedXX.hosting.com)
-#   SSH_PORT              — SSH port (usually 22, sometimes 2222 on shared hosts)
-#   SSH_USER              — cPanel username (e.g. aqualit1)
-#   SSH_PRIVATE_KEY       — contents of the PRIVATE key (the file you generated
-#                           on the server at ~/.ssh/id_ed25519 — copy its contents
-#                           into this secret, including the BEGIN/END lines).
-#                           MUST be a passphrase-less ed25519 key (RSA also works
-#                           but ed25519 is preferred — smaller, faster, modern).
-#   APP_ROOT              — absolute path on server (e.g. /home/aqualit1/lnkicks)
-#                           NOTE: code deploys DIRECTLY to this path (no /current
-#                           subdir). Backups live in $HOME/lnkicks-releases/.
-#   NODEVENV_PATH         — absolute path to cPanel's nodevenv activate script
-#                           (e.g. /home/aqualit1/nodevenv/lnkicks/22/bin/activate)
-#                           — sourced before every npm/node command on server.
-#   PRODUCTION_DOMAIN     — your live domain (e.g. https://lnkicks.com)
-#   NEXT_PUBLIC_SITE_URL  — public site URL (same as PRODUCTION_DOMAIN without
-#                           trailing slash). Required at BUILD time for Next.js
-#                           to bake correct metadata/OG tags into the bundle.
-#
-# Optional secrets (set if your build needs them at build time):
-#   NEXT_PUBLIC_WHATSAPP_NUMBER, NEXT_PUBLIC_GA_ID, etc.
-#   Any NEXT_PUBLIC_* var that the app reads at build time must be added here.
-#
-# Server-side env vars (NOT in GitHub Secrets):
-#   Runtime-only secrets (DB passwords, payment gateway keys, JWT secrets,
-#   etc.) must be set in cPanel UI → Setup Node.js App → Environment vars.
-#   They are NOT needed at build time and should NOT live in git.
+# Production Deployment Workflow — LN KICKS Next.js → cPanel via FTP
 # =============================================================================
 
-name: Deploy to Production (cPanel)
+name: Deploy to Production (cPanel FTP)
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      force_rollback:
-        description: 'Roll back to the previous deployment instead of deploying new code'
-        required: false
-        type: boolean
-        default: false
 
-# Only one deployment at a time — concurrent deploys would corrupt the
-# rsync target. New push cancels any in-flight deploy and starts fresh.
 concurrency:
   group: deploy-production
-  cancel-in-progress: false   # NEVER cancel mid-deploy — could leave prod broken
-
-# Least-privilege: deployment only needs to read the repo and talk to the
-# server over SSH. No GitHub API writes needed.
-permissions:
-  contents: read
+  cancel-in-progress: false
 
 env:
-  # MUST match the Node.js version configured in cPanel → Setup Node.js App.
-  # The server's nodevenv path (/home/aqualit1/nodevenv/lnkicks/22/) confirms
-  # Node 22 is in use. Changing this without updating cPanel will cause
-  # build/runtime mismatch issues.
   NODE_VERSION: '22'
   NEXT_TELEMETRY_DISABLED: '1'
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # 1. QUALITY GATE — Build + lint + type-check. Abort deploy on any failure.
-  # ---------------------------------------------------------------------------
-  quality-gate:
-    name: 🔍 Quality Gate (type-check + lint + build)
+  build-and-deploy:
+    name: 🚀 Build & Deploy via FTP
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    outputs:
-      commit_sha: ${{ github.sha }}
-      commit_short: ${{ steps.meta.outputs.short_sha }}
+    timeout-minutes: 20
+
     steps:
-      - name: 📥 Checkout
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - name: 🟢 Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: package-lock.json
 
-      - name: 📦 Install dependencies (npm ci)
+      - name: 📦 Install Dependencies
         run: npm ci
 
-      - name: 🔍 Type-check (tsc --noEmit)
-        run: npm run type-check
+      - name: 🔍 Type-check & Lint
+        run: |
+          npm run type-check
+          npm run lint
 
-      - name: 🧹 Lint (next lint)
-        run: npm run lint
-
-      - name: 🏗️ Production build (next build)
+      - name: 🏗️ Production Build (Next.js)
         run: npm run build
         env:
           NODE_ENV: production
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
 
-      - name: 🏷️ Build metadata
-        id: meta
+      - name: 🔐 Create Production .env File
         run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "Deploying commit $SHORT_SHA" >> $GITHUB_STEP_SUMMARY
-          echo "Build timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-
-      - name: 📦 Upload build artifact (for deploy job)
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-build
-          path: |
-            .next/
-            public/
-            next.config.js
-            package.json
-            package-lock.json
-            cpanel/app.js
-            cpanel/.cpanel.yml
-            prisma/
-            lib/prisma.ts
-          retention-days: 3
-          if-no-files-found: error
-          include-hidden-files: true
-
-  # ---------------------------------------------------------------------------
-  # 2. ROLLBACK (manual trigger only) — skip deploy, restore last good version
-  # ---------------------------------------------------------------------------
-  rollback:
-    name: ⏪ Rollback to previous deployment
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && inputs.force_rollback == true
-    timeout-minutes: 10
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: 🔐 Load SSH key & configure SSH
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          # Sanitize key (strip CR + blank lines)
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Write SSH config (same options as deploy job)
-          cat > ~/.ssh/config <<SSHCFG
-          Host ${SSH_HOST}
-            HostName ${SSH_HOST}
-            User ${SSH_USER}
-            Port ${SSH_PORT}
-            IdentityFile ~/.ssh/deploy_key
-            IdentitiesOnly yes
-            AddressFamily inet
-            BatchMode yes
-            ConnectTimeout 30
-            ServerAliveInterval 5
-            ServerAliveCountMax 3
-            GSSAPIAuthentication no
-            GSSAPIDelegateCredentials no
-            PasswordAuthentication no
-            PubkeyAuthentication yes
-            PreferredAuthentications publickey
-            StrictHostKeyChecking accept-new
-            UserKnownHostsFile ~/.ssh/known_hosts
-          SSHCFG
-          chmod 600 ~/.ssh/config
-          if ! ssh-keyscan -4 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-            echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
-            exit 1
-          fi
-          echo "✅ SSH configured for ${SSH_HOST}:${SSH_PORT}"
-
-      - name: ⏪ Execute rollback on server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh "${SSH_HOST}" \
-            "bash '${APP_ROOT}/scripts/deploy/rollback.sh' \
-              '${APP_ROOT}' \
-              'manual-rollback' \
-              '\$HOME/lnkicks-releases' \
-              '${NODEVENV_PATH}'"
-
-      - name: 🩺 Post-rollback health check
-        env:
-          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
-        run: |
-          bash scripts/deploy/health-check.sh "$PRODUCTION_DOMAIN" 60
-
-  # ---------------------------------------------------------------------------
-  # 3. DEPLOY — Upload artifact, install deps, restart, verify health
-  # ---------------------------------------------------------------------------
-  deploy:
-    name: 🚀 Deploy to cPanel
-    needs: quality-gate
-    # Skip deploy when the user triggered a manual rollback. Secret presence
-    # is verified inside the "Verify all required secrets are set" step below,
-    # which fails with a clear, actionable error message listing any missing
-    # secrets. That step runs in a standards-compliant context (env: + run:).
-    #
-    # NOTE: The `secrets` context is NOT allowed in job-level `if:` per the
-    # GitHub Actions spec — only `github`, `inputs`, `needs`, and `vars` are.
-    # GitHub's parser is currently lenient and accepts `secrets.*` here, but
-    # actionlint and the official docs flag it as invalid. We therefore moved
-    # the presence-check out of `if:` and into the step-level verify step.
-    if: |
-      (github.event_name != 'workflow_dispatch' || inputs.force_rollback == false)
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      # `environment.url` does NOT support the `secrets` context — only
-      # `github`, `inputs`, and `vars` are allowed here. Referencing
-      # `secrets.PRODUCTION_DOMAIN` causes GitHub's parser to fail with:
-      #     "Unrecognized named-value: 'secrets'"
-      # Workaround: use `vars.PRODUCTION_DOMAIN` (a non-secret repository
-      # Variable — URLs are public information, not secrets) with a hardcoded
-      # fallback so the workflow runs even if the Variable is not set. The
-      # deployment URL is also echoed in the final "Deployment summary" step.
-      url: ${{ vars.PRODUCTION_DOMAIN || 'https://lnkicks.in' }}
-    timeout-minutes: 20
-    steps:
-      - name: 📥 Checkout (for deployment scripts)
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: 🔍 Verify all required secrets are set (fail fast with clear message)
-        env:
-          # Pass secrets via env to avoid bash injection from secret values.
-          # Bash sees only env var references; values never touch the script.
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
-          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-        run: |
-          set -euo pipefail
-          MISSING=0
-          # Check each secret via env var reference (NOT direct interpolation).
-          for kv in \
-            "SSH_HOST=${SSH_HOST}" \
-            "SSH_PORT=${SSH_PORT}" \
-            "SSH_USER=${SSH_USER}" \
-            "SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY}" \
-            "APP_ROOT=${APP_ROOT}" \
-            "NODEVENV_PATH=${NODEVENV_PATH}" \
-            "PRODUCTION_DOMAIN=${PRODUCTION_DOMAIN}" \
-            "NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}" \
-            "NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}" \
-            "DATABASE_URL=${DATABASE_URL}" \
-            "DIRECT_URL=${DIRECT_URL}" \
-            "JWT_SECRET=${JWT_SECRET}" \
-            "ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}" \
-            "SESSION_SECRET=${SESSION_SECRET}"; do
-            name="${kv%%=*}"
-            value="${kv#*=}"
-            if [[ -z "$value" ]]; then
-              echo "❌ $name is missing"
-              MISSING=$((MISSING+1))
-            else
-              echo "✅ $name is set (length: ${#value})"
-            fi
-          done
-          if [[ "$MISSING" -gt 0 ]]; then
-            echo ""
-            echo "=========================================="
-            echo "❌ $MISSING / 14 required secrets are MISSING."
-            echo "=========================================="
-            echo "Add them in: Repo → Settings → Secrets and variables → Actions → New repository secret"
-            echo "Once added, re-run this workflow OR push a new commit."
-            echo ""
-            echo "Reference values:"
-            echo "  SSH_HOST              = s1-nnvp.crazzydns.com"
-            echo "  SSH_PORT              = 2244"
-            echo "  SSH_USER              = aqualit1"
-            echo "  SSH_PRIVATE_KEY       = (output of: cat ~/.ssh/id_rsa)"
-            echo "  APP_ROOT              = /home/aqualit1/lnkicks"
-            echo "  NODEVENV_PATH         = /home/aqualit1/nodevenv/lnkicks/22/bin/activate"
-            echo "  PRODUCTION_DOMAIN     = https://lnkicks.in"
-            echo "  NEXT_PUBLIC_SITE_URL  = https://lnkicks.in"
-            echo "  NEXT_PUBLIC_WHATSAPP_NUMBER = 918881286267"
-            echo "  DATABASE_URL          = postgresql://...@...neon.tech/...?sslmode=require (pooled)"
-            echo "  DIRECT_URL            = postgresql://...@...neon.tech/...?sslmode=require (direct)"
-            echo "  JWT_SECRET            = (generate: openssl rand -base64 48)"
-            echo "  ADMIN_JWT_SECRET      = (generate: openssl rand -base64 48)"
-            echo "  SESSION_SECRET        = (generate: openssl rand -base64 48)"
-            exit 1
-          fi
-          echo ""
-          echo "✅ All 14 required secrets are present."
-
-      - name: 📦 Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: production-build
-          path: .
-
-      - name: 📋 Verify artifact contents
-        run: |
-          echo "=== Artifact contents ==="
-          ls -lah
-          echo "=== .next/ exists? ==="
-          test -d .next && echo "OK: .next/ present" || { echo "FAIL: .next/ missing"; exit 1; }
-          echo "=== cpanel/app.js exists? ==="
-          test -f cpanel/app.js && echo "OK: cpanel/app.js present" || { echo "FAIL: cpanel/app.js missing"; exit 1; }
-          echo "=== package.json exists? ==="
-          test -f package.json && echo "OK: package.json present" || { echo "FAIL: package.json missing"; exit 1; }
-          echo "=== prisma/schema.prisma exists? ==="
-          test -f prisma/schema.prisma && echo "OK: prisma/schema.prisma present" || { echo "FAIL: prisma/schema.prisma missing"; exit 1; }
-          echo "=== Standalone server file in .next? ==="
-          ls .next/BUILD_ID && echo "OK: BUILD_ID present (build succeeded)" || exit 1
-
-      - name: 🔐 Load SSH key & verify connection
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-
-          # ── Write the SSH private key (SANITIZED) ──────────────────────
-          # Strip CR characters (Windows \r\n line endings) that corrupt
-          # the key and cause "error in libcrypto" / "Permission denied".
-          # Also strip leading/trailing blank lines. printf '%s\n' preserves
-          # internal newlines and adds exactly one trailing newline.
-          printf '%s\n' "$SSH_PRIVATE_KEY" \
-            | tr -d '\r' \
-            | sed '/^$/d' \
-            > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
-          # ── Diagnostics: verify the key file is well-formed ───────────
-          echo "→ SSH key file diagnostics:"
-          echo "  File size: $(wc -c < ~/.ssh/deploy_key) bytes"
-          echo "  Line count: $(wc -l < ~/.ssh/deploy_key)"
-          echo "  First line: $(head -1 ~/.ssh/deploy_key)"
-          echo "  Last line:  $(tail -1 ~/.ssh/deploy_key)"
-          if command -v ssh-keygen >/dev/null 2>&1; then
-            echo "  Key fingerprint:"
-            ssh-keygen -lf ~/.ssh/deploy_key 2>&1 | sed 's/^/    /' || echo "    ⚠️ ssh-keygen could not read the key"
-          fi
-
-          # ── Write ~/.ssh/config (SINGLE source of truth for SSH flags) ─
-          # Every ssh and rsync command in this workflow reads this file
-          # automatically — no need to repeat -o flags on every command.
-          #
-          # Why each option:
-          #   AddressFamily=inet         → force IPv4. Eliminates the most
-          #                               common "ssh-keyscan works but ssh
-          #                               times out" failure mode where ssh
-          #                               tries IPv6 first.
-          #   ConnectTimeout=30          → 15s was too short for some shared-
-          #                               hosting SSH daemons that do reverse-
-          #                               DNS lookups on connect.
-          #   ServerAliveInterval=5      → keep the connection alive through
-          #   ServerAliveCountMax=3         stateful firewalls with short idle
-          #                               timeouts (common on shared hosting).
-          #   GSSAPIAuthentication=no    → skip slow GSSAPI auth round-trips.
-          #   PreferredAuthentications   → try ONLY publickey (the deploy key).
-          #   StrictHostKeyChecking=accept-new → auto-add new host keys without
-          #                               prompting (BatchMode-safe).
-          cat > ~/.ssh/config <<SSHCFG
-          Host ${SSH_HOST}
-            HostName ${SSH_HOST}
-            User ${SSH_USER}
-            Port ${SSH_PORT}
-            IdentityFile ~/.ssh/deploy_key
-            IdentitiesOnly yes
-            AddressFamily inet
-            BatchMode yes
-            ConnectTimeout 30
-            ServerAliveInterval 5
-            ServerAliveCountMax 3
-            GSSAPIAuthentication no
-            GSSAPIDelegateCredentials no
-            PasswordAuthentication no
-            PubkeyAuthentication yes
-            PreferredAuthentications publickey
-            StrictHostKeyChecking accept-new
-            UserKnownHostsFile ~/.ssh/known_hosts
-          SSHCFG
-          chmod 600 ~/.ssh/config
-          echo "✅ ~/.ssh/config written for host ${SSH_HOST}:${SSH_PORT}"
-
-          # ── Scan host key (IPv4, matching AddressFamily=inet) ─────────
-          echo "→ Scanning server host key (${SSH_HOST}:${SSH_PORT})..."
-          if ! ssh-keyscan -4 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-            echo "❌ ssh-keyscan failed — host '${SSH_HOST}' unreachable or port ${SSH_PORT} closed."
-            exit 1
-          fi
-          echo "✅ Host key added to known_hosts."
-
-          # ── Verify SSH login (with retry + verbose for debugging) ─────
-          # Retry up to 3 times with 5s gap. Transient TCP issues and
-          # server-side connection rate limits are common on shared hosting.
-          echo "→ Verifying SSH login (verbose, up to 3 attempts)..."
-          SSH_VERIFY_OK=0
-          for attempt in 1 2 3; do
-            echo "─── Attempt $attempt/3 ───"
-            if ssh -v "${SSH_HOST}" \
-              "echo SSH_OK; whoami; pwd; test -d '${APP_ROOT}' && echo APP_ROOT_OK || echo APP_ROOT_MISSING"; then
-              SSH_VERIFY_OK=1
-              break
-            fi
-            echo "⚠️ Attempt $attempt failed. Waiting 5s before retry..."
-            sleep 5
-          done
-          if [[ "$SSH_VERIFY_OK" -ne 1 ]]; then
-            echo "❌ SSH login failed after 3 attempts."
-            echo "   Verbose output above shows the exact failure point."
-            echo "   Common causes:"
-            echo "     1. SSH_PRIVATE_KEY has Windows line endings (\r\n) — already fixed by tr -d '\r'"
-            echo "     2. SSH_PRIVATE_KEY is passphrase-protected — regenerate WITHOUT passphrase"
-            echo "     3. SSH_PRIVATE_KEY doesn't match the authorized_keys on the server"
-            echo "     4. Server firewall blocking GitHub Actions IPs"
-            echo "   Diagnostics:"
-            echo "     - Key file: ~/.ssh/deploy_key ($(wc -c < ~/.ssh/deploy_key) bytes)"
-            echo "     - Key type: $(head -1 ~/.ssh/deploy_key)"
-            echo "     - Config:   ~/.ssh/config ($(wc -l < ~/.ssh/config) lines)"
-            echo "     - Known hosts: $(wc -l < ~/.ssh/known_hosts 2>/dev/null || echo 0) entries"
-            exit 1
-          fi
-          echo "✅ SSH login verified."
-
-      - name: 📦 Ensure remote directories exist
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # SSH options are read from ~/.ssh/config (created in the
-          # "Load SSH key & verify connection" step).
-          ssh "${SSH_HOST}" \
-            "mkdir -p '${APP_ROOT}' \
-             \$HOME/lnkicks-releases \
-             '${APP_ROOT}/tmp' \
-             '${APP_ROOT}/scripts/deploy'"
-
-      - name: 📤 Upload deployment scripts to server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # rsync picks up SSH options from ~/.ssh/config automatically.
-          rsync -azP --delete \
-            -e "ssh" \
-            scripts/deploy/ \
-            "${SSH_HOST}:${APP_ROOT}/scripts/deploy/"
-          # Make scripts executable
-          ssh "${SSH_HOST}" \
-            "chmod +x '${APP_ROOT}/scripts/deploy/'*.sh"
-
-      - name: 💾 Backup current production (for rollback)
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          GIT_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh "${SSH_HOST}" \
-            "bash '${APP_ROOT}/scripts/deploy/backup-current.sh' \
-              '${APP_ROOT}' \
-              '${GIT_SHA}' \
-              '\$HOME/lnkicks-releases'"
-
-      - name: 📤 Upload production files via rsync
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Upload ONLY the files cPanel needs to run the app. Code is placed
-          # DIRECTLY in $APP_ROOT (no /current subdir) — matches the cPanel
-          # app root configured by the user.
-          #
-          # Files included:
-          #   .next/           — compiled build
-          #   public/          — static assets
-          #   next.config.js   — Next.js config
-          #   package.json     — for npm ci
-          #   package-lock.json— for npm ci
-          #   cpanel/app.js    — Passenger entry point
-          #
-          # We deliberately EXCLUDE:
-          #   node_modules/   — installed on server via npm ci --omit=dev
-          #   .git/           — not needed in production
-          #   prototypes/     — dev-only HTML mockups
-          #   docs/           — not needed at runtime
-          #   agent-ctx/      — dev-only context files
-          #   scripts/        — deployed separately (deploy scripts)
-          #   releases/       — backups live OUTSIDE app root now
-          #   tmp/            — Passenger restart dir, do not overwrite
-          #   *.md            — not needed at runtime
-          #   .github/        — CI config, not needed at runtime
-          #   .env*           — env vars managed via nodevenv etc/envvars
-          #
-          # rsync picks up SSH options (port, key, BatchMode, etc.) from
-          # ~/.ssh/config created in the "Load SSH key" step.
-          rsync -azP --delete \
-            --exclude='node_modules' \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='prototypes' \
-            --exclude='docs' \
-            --exclude='agent-ctx' \
-            --exclude='scripts' \
-            --exclude='releases' \
-            --exclude='tmp' \
-            --exclude='*.md' \
-            --exclude='.env*' \
-            --exclude='.vscode' \
-            --exclude='.idea' \
-            --exclude='tsconfig.json' \
-            --exclude='next-env.d.ts' \
-            --exclude='.eslintrc*' \
-            --exclude='.gitignore' \
-            --exclude='.gitattributes' \
-            --exclude='tsconfig.tsbuildinfo' \
-            --exclude='bun.lock' \
-            --exclude='vercel.json' \
-            --exclude='.editorconfig' \
-            --exclude='.npmrc' \
-            --exclude='.yarnrc' \
-            -e "ssh" \
-            ./ \
-            "${SSH_HOST}:${APP_ROOT}/"
-
-      - name: 🔐 Write .env file on server (from GitHub Secrets)
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-          NODE_ENV: production
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Write .env on the server. cpanel/app.js loads this via dotenv
-          # because Passenger does NOT source nodevenv etc/envvars.
-          # We pipe via SSH to avoid writing secrets to disk on the runner.
-          ssh "${SSH_HOST}" "cat > '${APP_ROOT}/.env' && chmod 600 '${APP_ROOT}/.env'" <<EOF
-          # LN KICKS production .env — auto-generated by GitHub Actions deploy
-          # DO NOT EDIT MANUALLY — re-run the deploy workflow to update.
-          DATABASE_URL=${DATABASE_URL}
-          DIRECT_URL=${DIRECT_URL}
-          NODE_ENV=${NODE_ENV}
-          NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
-          NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}
-          JWT_SECRET=${JWT_SECRET}
-          ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
-          SESSION_SECRET=${SESSION_SECRET}
+          cat <<EOF > .env
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DIRECT_URL=${{ secrets.DIRECT_URL }}
+          NODE_ENV=production
+          NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP_NUMBER=${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          ADMIN_JWT_SECRET=${{ secrets.ADMIN_JWT_SECRET }}
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
           EOF
-          echo "✅ .env written to ${APP_ROOT}/.env (permissions: 600)"
 
-      - name: 📦 Install production dependencies on server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
+      - name: 🔄 Create App Restart Trigger
         run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Sources the nodevenv activate script (sets PATH to Node 22 + npm)
-          # before running npm ci. Without this, cPanel's default Node would
-          # be used and the install would fail.
-          ssh "${SSH_HOST}" \
-            "bash '${APP_ROOT}/scripts/deploy/install-deps.sh' \
-              '${APP_ROOT}' \
-              '${NODEVENV_PATH}'"
+          mkdir -p tmp
+          touch tmp/restart.txt
 
-      - name: 🗄️ Run Prisma migrations on server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
+      - name: 📂 Prepare Files for FTP Transfer
         run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Runs `prisma generate` (regenerate the query engine for the
-          # deployed schema) and `prisma migrate deploy` (apply any pending
-          # migrations in order). Sources the nodevenv activate script first
-          # so that DATABASE_URL + DIRECT_URL from etc/envvars are available.
-          ssh "${SSH_HOST}" \
-            "bash '${APP_ROOT}/scripts/deploy/migrate.sh' \
-              '${APP_ROOT}' \
-              '${NODEVENV_PATH}'"
+          mkdir deploy-folder
+          cp -r .next deploy-folder/
+          cp -r public deploy-folder/
+          cp next.config.js deploy-folder/
+          cp package.json deploy-folder/
+          cp package-lock.json deploy-folder/
+          cp .env deploy-folder/
+          cp -r tmp deploy-folder/
+          
+          # Optional files (ignore if not present)
+          cp cpanel/app.js deploy-folder/ || true
+          cp -r prisma deploy-folder/ || true
 
-      - name: 🔴 Restart Node.js application (Passenger)
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # Touches tmp/restart.txt inside app root — Passenger watches this
-          # file and gracefully restarts on next request.
-          ssh "${SSH_HOST}" \
-            "bash '${APP_ROOT}/scripts/deploy/restart.sh' \
-              '${APP_ROOT}' \
-              '${NODEVENV_PATH}'"
+      - name: 📤 Upload to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy-folder/
+          server-dir: / # Make sure this FTP account points directly to your app's root folder in cPanel
 
-      - name: 🩺 Health check (post-deploy verification)
-        id: health
-        env:
-          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
-        run: |
-          bash scripts/deploy/health-check.sh "$PRODUCTION_DOMAIN" 90
-        continue-on-error: true
-
-      - name: ⏪ Auto-rollback if health check failed
-        if: steps.health.outcome == 'failure'
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          APP_ROOT: ${{ secrets.APP_ROOT }}
-          NODEVENV_PATH: ${{ secrets.NODEVENV_PATH }}
-          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
-          GIT_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' | sed '/^$/d' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "❌ Health check FAILED after deployment. Initiating automatic rollback..."
-          ssh "${SSH_HOST}" \
-            "bash '${APP_ROOT}/scripts/deploy/rollback.sh' \
-              '${APP_ROOT}' \
-              '${GIT_SHA}' \
-              '\$HOME/lnkicks-releases' \
-              '${NODEVENV_PATH}'"
-
-          echo "⏳ Waiting 20s for rollback to take effect..."
-          sleep 20
-
-          echo "🩺 Re-checking health after rollback..."
-          if bash scripts/deploy/health-check.sh "$PRODUCTION_DOMAIN" 60; then
-            echo "✅ Rollback successful — production is healthy again with previous version."
-          else
-            echo "🚨 CRITICAL: Rollback ALSO failed. Production is BROKEN. Manual intervention required."
-            echo "Check server logs at: /home/${SSH_USER}/logs/"
-            exit 1
-          fi
-          exit 1   # fail the workflow so the team knows deploy failed
-
-      - name: ✅ Deployment summary
+      - name: ✅ Deployment Summary
         if: success()
-        env:
-          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY <<EOF
-          ## ✅ Deployment Successful
-
-          | Field | Value |
-          |-------|-------|
-          | Commit | \`${{ needs.quality-gate.outputs.commit_short }}\` |
-          | Branch | \`main\` |
-          | Environment | production |
-          | URL | ${PRODUCTION_DOMAIN} |
-          | Deployed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
-
-          ### Verified
-          - ✅ Type-check passed
-          - ✅ Lint passed
-          - ✅ Production build succeeded
-          - ✅ Files uploaded via rsync
-          - ✅ Production dependencies installed (\`npm ci --omit=dev\`)
-          - ✅ Node.js app restarted
-          - ✅ Health check passed (HTTP 200 on homepage)
-
-          ### Rollback
-          Previous version backed up to \`$HOME/lnkicks-releases/\`.
-          To roll back manually, run the workflow with **force_rollback=true**.
+          ## ✅ FTP Deployment Successful
+          - ✅ Build Successful
+          - ✅ Files Uploaded via FTP
+          - ✅ .env File Generated and Uploaded
+          - ✅ Passenger Restart Triggered
           EOF
