@@ -1,0 +1,64 @@
+# Defense-in-depth ignore list for FTP uploads.
+# SamKirkland/FTP-Deploy-Action honors .ftpignore files in the local-dir.
+# We already stage ONLY needed files into ./deploy-folder/, but this file
+# adds a safety net in case staging logic regresses.
+
+# VCS
+.git
+.gitignore
+.gitattributes
+.github/
+
+# Dependencies (installed on the server via npm ci --omit=dev, never uploaded)
+node_modules/
+
+# Build cache (not needed at runtime)
+.next/cache/
+
+# Source-only files (not needed in production)
+prototypes/
+docs/
+agent-ctx/
+scripts/
+download/
+tool-results/
+upload/
+skills/
+
+# TypeScript / lint config (build-time only)
+tsconfig.json
+tsconfig.tsbuildinfo
+next-env.d.ts
+.eslintrc*
+.editorconfig
+
+# Lockfiles / alternative package managers (we upload package-lock.json only)
+bun.lock
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc deploy artifacts
+deploy-folder/
+
+# cPanel-specific: never overwrite the runtime tmp/ dir on the server (Passenger owns it)
+# (we DO want tmp/restart.txt uploaded once, but exclude the rest)
+tmp/*
+!tmp/restart.txt
+
+# Never upload .env.example or template files (server .env is generated from secrets)
+.env.example
+.env.production.example
+.env.*.template

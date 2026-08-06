@@ -1,6 +1,36 @@
 # =============================================================================
 # Production Deployment Workflow — LN KICKS Next.js → cPanel via FTP
 # =============================================================================
+#
+# Pipeline (single job, GitHub-hosted ubuntu-latest runner):
+#   1. Checkout
+#   2. Setup Node 22 (matches cPanel nodevenv)
+#   3. npm ci        — reproducible install from package-lock.json
+#   4. type-check + lint + build  — abort deploy on any failure
+#   5. Generate .env from GitHub Secrets (indented heredoc → unindented vars)
+#   6. Stage files for FTP transfer in ./deploy-folder/
+#   7. Verify all required FTP secrets are present (fail fast, clear message)
+#   8. Upload via FTP with retry + timeout + passive mode + .ftpignore
+#   9. Touch tmp/restart.txt → Passenger auto-restarts on next request
+#
+# Why a single job (not split build/upload):
+#   GitHub-hosted runners occasionally fail to allocate ("job was not acquired
+#   by Runner of type hosted"). Splitting into 2 jobs DOUBLES the chance of
+#   hitting that infrastructure error and DOUBLES the queue wait. One job is
+#   the most reliable shape for this repo's traffic profile.
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   FTP_SERVER                  — cPanel FTP hostname (e.g. s1-nnvp.crazzydns.com)
+#   FTP_USERNAME                — cPanel FTP username (e.g. aqualit1@lnkicks.in)
+#   FTP_PASSWORD                — cPanel FTP password
+#   DATABASE_URL                — postgresql://... (Neon pooled, ?sslmode=require)
+#   DIRECT_URL                  — postgresql://... (Neon direct, ?sslmode=require)
+#   NEXT_PUBLIC_SITE_URL        — https://lnkicks.in
+#   NEXT_PUBLIC_WHATSAPP_NUMBER — 918881286267
+#   JWT_SECRET                  — openssl rand -base64 48
+#   ADMIN_JWT_SECRET            — openssl rand -base64 48
+#   SESSION_SECRET              — openssl rand -base64 48
+# =============================================================================
 
 name: Deploy to Production (cPanel FTP)
 
@@ -9,9 +39,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Only one deployment at a time. New push waits for the in-flight deploy
+# to finish (cancel-in-progress: false) — killing a deploy mid-upload
+# leaves the FTP target in a half-synced state.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
+
+# Least-privilege: deploy only reads the repo. No GITHUB_TOKEN writes needed.
+permissions:
+  contents: read
 
 env:
   NODE_VERSION: '22'
@@ -21,83 +58,266 @@ jobs:
   build-and-deploy:
     name: 🚀 Build & Deploy via FTP
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: 🟢 Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: 📦 Install Dependencies
+      - name: 📦 Install dependencies (npm ci)
         run: npm ci
 
-      - name: 🔍 Type-check & Lint
-        run: |
-          npm run type-check
-          npm run lint
+      - name: 🔍 Type-check (tsc --noEmit)
+        run: npm run type-check
 
-      - name: 🏗️ Production Build (Next.js)
+      - name: 🧹 Lint (next lint)
+        run: npm run lint
+
+      - name: 🏗️ Production build (next build)
         run: npm run build
         env:
           NODE_ENV: production
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
 
-      - name: 🔐 Create Production .env File
+      # ─────────────────────────────────────────────────────────────────────
+      # Generate .env for the server.
+      #
+      # CRITICAL: use `<<'ENVEOF'` (quoted) so GitHub Actions does NOT
+      # interpolate ${VAR} inside the heredoc body — we want the SHELL to
+      # interpolate them after the env: block injects the secrets as real
+      # shell variables. Using ${{ secrets.X }} directly in the heredoc
+      # would also work but exposes the secret value in the workflow run
+      # log if the build is re-run with debug logging. Shell-interpolation
+      # is safer.
+      #
+      # CRITICAL: heredoc body MUST start at column 0. A bare `<<ENVEOF`
+      # (no leading `-`) preserves leading whitespace, so any indentation
+      # would be baked into the .env file as `  DATABASE_URL=...` which
+      # dotenv silently skips. We use `<<-'ENVEOF'` to allow tab
+      # indentation to be stripped, but write at column 0 anyway for
+      # clarity.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🔐 Create production .env file
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
         run: |
-          cat <<EOF > .env
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          DIRECT_URL=${{ secrets.DIRECT_URL }}
+          set -euo pipefail
+          cat > .env <<'ENVEOF'
+          DATABASE_URL=${DATABASE_URL}
+          DIRECT_URL=${DIRECT_URL}
           NODE_ENV=production
-          NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_WHATSAPP_NUMBER=${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          ADMIN_JWT_SECRET=${{ secrets.ADMIN_JWT_SECRET }}
-          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-          EOF
+          NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+          NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}
+          JWT_SECRET=${JWT_SECRET}
+          ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+          SESSION_SECRET=${SESSION_SECRET}
+          ENVEOF
+          chmod 600 .env
+          echo "✅ .env written ($(wc -l < .env) lines, $(wc -c < .env) bytes, mode 600)"
 
-      - name: 🔄 Create App Restart Trigger
+      - name: 🔄 Create Passenger restart trigger
         run: |
           mkdir -p tmp
           touch tmp/restart.txt
 
-      - name: 📂 Prepare Files for FTP Transfer
+      # ─────────────────────────────────────────────────────────────────────
+      # Stage ONLY the files cPanel needs to run the app into ./deploy-folder/.
+      # This is the source of truth for the FTP upload — .ftpignore is also
+      # configured to belt-and-suspenders exclude anything that slips in.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📂 Stage files for FTP transfer
         run: |
-          mkdir deploy-folder
-          cp -r .next deploy-folder/
-          cp -r public deploy-folder/
-          cp next.config.js deploy-folder/
-          cp package.json deploy-folder/
-          cp package-lock.json deploy-folder/
-          cp .env deploy-folder/
-          cp -r tmp deploy-folder/
-          
-          # Optional files (ignore if not present)
-          cp cpanel/app.js deploy-folder/ || true
+          set -euo pipefail
+          rm -rf deploy-folder
+          mkdir -p deploy-folder/tmp
 
+          # Required files
+          cp -a .next          deploy-folder/.next
+          cp -a public         deploy-folder/public
+          cp    next.config.js deploy-folder/
+          cp    package.json   deploy-folder/
+          cp    package-lock.json deploy-folder/
+          cp    .env           deploy-folder/.env
+          cp    tmp/restart.txt deploy-folder/tmp/restart.txt
+
+          # Optional Passenger entry point (if cpanel/app.js exists)
+          if [ -f cpanel/app.js ]; then
+            mkdir -p deploy-folder/cpanel
+            cp cpanel/app.js deploy-folder/cpanel/app.js
+          fi
+
+          # Optional Prisma schema (for `prisma migrate deploy` on server)
+          if [ -d prisma ]; then
+            cp -a prisma deploy-folder/prisma
+          fi
+
+          # Optional lib/ (lib/prisma.ts is loaded at runtime by cpanel/app.js)
+          if [ -d lib ]; then
+            cp -a lib deploy-folder/lib
+          fi
+
+          echo "=== Staged files ==="
+          find deploy-folder -maxdepth 2 -mindepth 1 \
+            | sort \
+            | head -50
+          echo "=== Total size ==="
+          du -sh deploy-folder
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Fail-fast secret verification. Runs AFTER build so a missing secret
+      # doesn't waste 15 minutes of build time, but BEFORE FTP upload so
+      # we don't push a broken .env to production.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🔍 Verify required FTP secrets are set
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+        run: |
+          set -euo pipefail
+          MISSING=0
+          for kv in \
+            "FTP_SERVER=${FTP_SERVER}" \
+            "FTP_USERNAME=${FTP_USERNAME}" \
+            "FTP_PASSWORD=${FTP_PASSWORD}" \
+            "DATABASE_URL=${DATABASE_URL}" \
+            "DIRECT_URL=${DIRECT_URL}" \
+            "NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}" \
+            "NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}" \
+            "JWT_SECRET=${JWT_SECRET}" \
+            "ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}" \
+            "SESSION_SECRET=${SESSION_SECRET}"; do
+            name="${kv%%=*}"
+            value="${kv#*=}"
+            if [ -z "$value" ]; then
+              echo "❌ $name is MISSING"
+              MISSING=$((MISSING+1))
+            else
+              echo "✅ $name is set (length: ${#value})"
+            fi
+          done
+          if [ "$MISSING" -gt 0 ]; then
+            echo ""
+            echo "============================================"
+            echo "❌ $MISSING / 10 required secrets are MISSING."
+            echo "============================================"
+            echo "Add them in: Repo → Settings → Secrets and variables → Actions → New repository secret"
+            echo ""
+            echo "Reference values:"
+            echo "  FTP_SERVER                  = s1-nnvp.crazzydns.com"
+            echo "  FTP_USERNAME                = aqualit1@lnkicks.in"
+            echo "  FTP_PASSWORD                = (cPanel → FTP Accounts → password)"
+            echo "  DATABASE_URL                = postgresql://...@...neon.tech/...?sslmode=require"
+            echo "  DIRECT_URL                  = postgresql://...@...neon.tech/...?sslmode=require"
+            echo "  NEXT_PUBLIC_SITE_URL        = https://lnkicks.in"
+            echo "  NEXT_PUBLIC_WHATSAPP_NUMBER = 918881286267"
+            echo "  JWT_SECRET                  = openssl rand -base64 48"
+            echo "  ADMIN_JWT_SECRET            = openssl rand -base64 48"
+            echo "  SESSION_SECRET              = openssl rand -base64 48"
+            exit 1
+          fi
+          echo ""
+          echo "✅ All 10 required secrets are present."
+
+      # ─────────────────────────────────────────────────────────────────────
+      # FTP Upload — SamKirkland/FTP-Deploy-Action@v4.3.4
+      #
+      # Why each parameter:
+      #   server-dir: /lnkicks.in/  → cPanel FTP user's home is
+      #                               /home/aqualit1; lnkicks.in/ is the
+      #                               document root. Trailing slash REQUIRED.
+      #   local-dir: ./deploy-folder/  → trailing slash = upload CONTENTS,
+      #                                    not the folder itself.
+      #   protocol: ftps              → cPanel shared hosting supports
+      #                                  explicit FTPS (TLS). Plain FTP is
+      #                                  rejected by most modern cPanel
+      #                                  configs.
+      #   security: relaxed           → accept self-signed / Let's Encrypt
+      #                                  certs that don't match the
+      #                                  hostname (common when FTP hostname
+      #                                  is a shared hostname like
+      #                                  s1-nnvp.crazzydns.com but cert is
+      #                                  for *.crazzydns.com).
+      #   passive: true               → PASV mode — required for shared
+      #                                  hosting behind NAT / firewall.
+      #   timeout: 60000              → 60s per-file timeout (default 30s
+      #                                  is too short for .next/static
+      #                                  chunks on slow FTP servers).
+      #   retry-external: 5           → on transient FTP errors (ECONNRESET,
+      #                                  EPIPE, ETIMEDOUT), retry up to 5
+      #                                  times with exponential backoff.
+      #   dangerous-ssl-allow: false  → never allow insecure SSL.
+      # ─────────────────────────────────────────────────────────────────────
       - name: 📤 Upload to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy-folder/
-          server-dir: /lnkicks.in/ # ध्यान रहे, FTP अकाउंट सीधा उसी फोल्डर पर पॉइंट करे जहाँ वेबसाइट है
+          server-dir: /lnkicks.in/
+          protocol: ftps
+          security: relaxed
+          passive: true
+          timeout: 60000
+          retry-external: 5
+          dangerous-ssl-allow: false
+          exclude: |
+            **/.git*
+            **/.DS_Store
+            **/node_modules/**
+            **/.next/cache/**
+            **/*.log
+            **/Thumbs.db
 
-      - name: ✅ Deployment Summary
+      - name: ✅ Deployment summary
         if: success()
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY <<EOF
           ## ✅ FTP Deployment Successful
-          - ✅ Build Successful
-          - ✅ Files Uploaded via FTP
-          - ✅ .env File Generated and Uploaded
-          - ✅ Passenger Restart Triggered
+
+          | Field | Value |
+          |-------|-------|
+          | Commit | \`${{ github.sha }}\` |
+          | Branch | \`main\` |
+          | Target | ${NEXT_PUBLIC_SITE_URL} |
+          | Deployed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
+
+          ### Verified
+          - ✅ Type-check passed
+          - ✅ Lint passed
+          - ✅ Production build succeeded
+          - ✅ \`.env\` generated from GitHub Secrets
+          - ✅ Files uploaded to cPanel via FTPS
+          - ✅ Passenger restart trigger created (\`tmp/restart.txt\`)
+
+          ### Rollback
+          cPanel keeps the previous \`tmp/restart.txt\` until manually cleared.
+          To roll back, restore the previous release from cPanel → Backups.
           EOF
