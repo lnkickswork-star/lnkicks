@@ -1,364 +1,183 @@
-# 🔐 Environment Variables Guide
+# LN KICKS — Environment Variable Deployment Report
 
-> Complete reference for all environment variables used by LN KICKS. Explains **where** to set each one (GitHub Secrets vs cPanel) and **why**.
-
-> **📋 UPDATE (2026-08-05):** You no longer need to set cPanel env vars manually in the UI. Run this script on the server:
+> **Auto-generated** from a complete static audit of every `process.env.*` and
+> Prisma `env("...")` reference in the codebase.
 >
+> **Audit command:**
 > ```bash
-> ssh -p 22 aqualit1@your-host.com
-> bash /home/aqualit1/lnkicks/scripts/deploy/setup-env-vars.sh
+> grep -rEoh "process\.env\.[A-Za-z_][A-Za-z0-9_]*" \
+>   --include="*.ts" --include="*.tsx" --include="*.js" \
+>   --exclude-dir=node_modules --exclude-dir=.next \
+>   --exclude-dir=scripts --exclude-dir=docs --exclude-dir=prototypes
 > ```
->
-> The script interactively prompts for each value (with sensible defaults), then writes them to BOTH:
-> 1. `/home/aqualit1/nodevenv/lnkicks/22/etc/envvars` (sourced by `bin/activate` — main mechanism)
-> 2. `/home/aqualit1/lnkicks/.env` (Next.js .env file — backup mechanism)
->
-> For non-interactive setup, fill in `scripts/deploy/.env.production.template` and run:
-> ```bash
-> bash setup-env-vars.sh /path/to/.env.production
-> ```
+> Combined with a manual read of `prisma/schema.prisma` for `env("...")` refs.
 
 ---
 
-## The Two Places Variables Live
+## Executive Summary
 
-Next.js has a quirk: environment variables are read at **two different times**, depending on whether they're prefixed with `NEXT_PUBLIC_` or not. This affects where you must set them.
+The LN KICKS codebase reads **9 distinct environment variables**. Of those,
+**4 are user-configurable** (set in cPanel) and **5 are auto-set** by the
+runtime (Next.js / LiteSpeed / OS) and require no manual configuration.
 
-### Build-time variables (`NEXT_PUBLIC_*` prefix)
-
-- **Read by:** `next build` during the production build
-- **Baked into:** the client-side JavaScript bundle (visible to anyone)
-- **Set in:** **GitHub Secrets** (so the build in GitHub Actions can read them)
-- **Example:** `NEXT_PUBLIC_SITE_URL` — needed in the browser to construct absolute URLs
-
-### Runtime variables (no `NEXT_PUBLIC_` prefix)
-
-- **Read by:** the Node.js server when handling requests
-- **Baked into:** nothing — they're read from `process.env` at runtime
-- **Set in:** **cPanel → Setup Node.js App → Environment variables**
-- **Example:** `STRIPE_SECRET_KEY` — server-side only, must never leak to the browser
-
-### Variables that are BOTH
-
-Some variables are read by both build-time code (e.g. a server component's render) AND runtime code (e.g. an API route). For these, set them in **both** places with the same value.
-
-- `NEXT_PUBLIC_SITE_URL` — typically needed at build (for metadata) and runtime (for absolute redirects)
-- `NEXT_PUBLIC_WHATSAPP_NUMBER` — needed at build (for click-to-chat links in static pages)
+Previous versions of `.env.production.example` listed **20+ additional
+variables** (JWT_SECRET, SMTP_*, STRIPE_*, RAZORPAY_*, CLOUDINARY_*,
+MYSQL_*, CORS_ORIGIN, etc.) that the code **does not actually read**.
+They have been removed to eliminate confusion. When the corresponding
+features are implemented in code, the matching env vars should be added
+back here at that time.
 
 ---
 
-## Required Variables
+## Complete Environment Variable Inventory
 
-These MUST be set or the app will not function correctly.
+### User-Configurable Variables (set in cPanel)
 
-### GitHub Secrets
+| # | Variable Name | Required | Example Value | Description | Where it is used |
+|---|---------------|----------|---------------|-------------|------------------|
+| 1 | `DATABASE_URL` | **YES** | `postgresql://user:pass@ep-cool-name-123456.us-east-2.aws.neon.tech/lnkicks?sslmode=require&pgbouncer=true` | PostgreSQL pooled connection string. Used by the app at runtime for DB queries. Must include `?sslmode=require`. If using Neon's pooler endpoint, also append `&pgbouncer=true`. | `app.js` (line 167 — boot check, exits with code 1 if missing)<br>`cpanel/app.js` (line 104 — boot check)<br>`prisma/schema.prisma` (line 42 — `url = env("DATABASE_URL")`)<br>`lib/prisma.ts` (loaded by `@prisma/client` at import time) |
+| 2 | `DIRECT_URL` | **YES** | `postgresql://user:pass@ep-cool-name-123456.us-east-2.aws.neon.tech/lnkicks?sslmode=require` | PostgreSQL direct connection string (bypasses pooler). Used by Prisma CLI for migrations and `prisma db pull`. Must include `?sslmode=require`. On Neon: this is the non-pooler hostname (no `-pooler` suffix). | `prisma/schema.prisma` (line 43 — `directUrl = env("DIRECT_URL")`)<br>Used by `npx prisma migrate deploy` and `npx prisma db pull` |
+| 3 | `NEXT_PUBLIC_SITE_URL` | RECOMMENDED | `https://lnkicks.in` | Public site URL (no trailing slash). Currently used only for startup diagnostics logging in `app.js`. Not consumed for app behavior (metadata uses hardcoded values). Set it so startup logs are clean (`✅` instead of `❌`) and future code can read it. | `app.js` (line 142 — diagnostic presence check)<br>`cpanel/app.js` (line 75 — diagnostic presence check)<br>`.cpanel.yml` (line 88 — appends default `https://lnkicks.in` to .env if missing) |
+| 4 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | RECOMMENDED | `918881286267` | WhatsApp business number (country code + number, no `+`, no spaces). Currently used only for startup diagnostics logging in `app.js`. **NOTE:** The actual click-to-chat link in `app/help-support/page.tsx` (line 185) uses a hardcoded number — setting this env var does NOT change that link. | `app.js` (line 143 — diagnostic presence check)<br>`cpanel/app.js` (line 76 — diagnostic presence check) |
 
-Set these in: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+### Auto-Set Variables (DO NOT configure manually)
 
-| Secret name | Example value | Purpose |
-|---|---|---|
-| `SSH_HOST` | `sharedXX.hosting.com` | cPanel server hostname for SSH/rsync |
-| `SSH_PORT` | `22` | SSH port (some hosts use 2222, 2200, etc.) |
-| `SSH_USER` | `aqualit1` | cPanel username |
-| `SSH_PRIVATE_KEY` | `-----BEGIN OPENSSH PRIVATE KEY-----\n...` | Full contents of `~/.ssh/id_rsa` from the server |
-| `APP_ROOT` | `/home/aqualit1/lnkicks` | Absolute path on server where app lives (NO `/current` subdir) |
-| `NODEVENV_PATH` | `/home/aqualit1/nodevenv/lnkicks/22/bin/activate` | Path to cPanel nodevenv activate script (sourced before npm/node) |
-| `PRODUCTION_DOMAIN` | `https://lnkicks.com` | Full URL with `https://` (no trailing slash) |
-| `NEXT_PUBLIC_SITE_URL` | `https://lnkicks.com` | Same as `PRODUCTION_DOMAIN` |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `918881286267` | WhatsApp business number (country code + number, no +) |
+These are set automatically by the runtime environment. They are documented
+here for completeness and debugging — **do NOT add them to cPanel Environment
+Variables** unless you have a specific reason to override the defaults.
 
-### cPanel Environment Variables
-
-Set these in: **cPanel → Software → Setup Node.js App → your app → "Environment variables" section**
-
-> **💡 EASIER METHOD:** Run `bash /home/aqualit1/lnkicks/scripts/deploy/setup-env-vars.sh` on the server. It interactively prompts for each value (with sensible defaults) and writes to BOTH the nodevenv `etc/envvars` file AND the app's `.env` file. Much faster than adding vars one-by-one in the cPanel UI.
-
-| Variable | Example value | Purpose |
-|---|---|---|
-| `NODE_ENV` | `production` | Enables Next.js production mode |
-| `PORT` | `3000` | HTTP port (Passenger usually overrides, set for safety) |
-| `HOSTNAME` | `0.0.0.0` | Bind to all interfaces |
-| `NEXT_PUBLIC_SITE_URL` | `https://lnkicks.com` | (Same as GitHub Secret — needed at runtime too) |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `918881286267` | (Same as GitHub Secret) |
+| # | Variable Name | Required | Default / Source | Description | Where it is used |
+|---|---------------|----------|------------------|-------------|------------------|
+| 5 | `NODE_ENV` | YES (auto) | `production` (set by `next build` / `next start`) | Controls Next.js build mode, React dev warnings, Prisma logging level. Next.js automatically sets this to `production` when running `next start`. | `lib/prisma.ts` (line 41 — sets Prisma log level)<br>`lib/prisma.ts` (line 46 — gates globalThis singleton cache)<br>`components/mobile/MobileServiceWorkerRegister.tsx` (line 26 — gates SW registration)<br>`public/sw.js` (comment only)<br>`app.js` (implicit via Next.js) |
+| 6 | `PORT` | NO (auto) | `3000` (fallback in app.js) | TCP port for the Node.js server. Set by cPanel/Passenger when using TCP mode. Ignored when `LSNODE_SOCKET` is set (LiteSpeed LSAPI mode). | `app.js` (line 188 — `parseInt(process.env.PORT, 10) || 3000`)<br>`cpanel/app.js` (line 128 — same) |
+| 7 | `HOSTNAME` | NO (auto) | `0.0.0.0` (fallback in app.js) | TCP bind hostname. Defaults to `0.0.0.0` (all interfaces) — correct for cPanel shared hosting behind LiteSpeed. | `app.js` (line 189 — `process.env.HOSTNAME || '0.0.0.0'`)<br>`cpanel/app.js` (line 129 — same) |
+| 8 | `LSNODE_SOCKET` | NO (auto) | Set by LiteSpeed LSAPI to a UNIX socket path (e.g. `/tmp/lsnode_XXXX`) | LiteSpeed LSAPI UNIX socket. When set, `app.js` listens on this socket instead of a TCP port. This is how LiteSpeed/lsnode communicates with the Node.js app on cPanel shared hosting. | `app.js` (line 187 — `process.env.LSNODE_SOCKET`)<br>`app.js` (line 212 — `if (socketPath)` branch listens on socket) |
+| 9 | `HOME` | NO (auto) | Set by the OS to the user's home directory (e.g. `/home/aqualit1`) | User home directory. Used by `app.js` to locate the cPanel nodevenv `etc/envvars` file at `$HOME/nodevenv/<app>/<ver>/etc/envvars`. | `app.js` (line 72 — `process.env.HOME || path.resolve(APP_ROOT, '..')`) |
 
 ---
 
-## Optional Variables
+## Variables That Are NOT Used (and why they were removed)
 
-Add these only if your app uses the corresponding features.
+The following variables were listed in the **previous** version of
+`.env.production.example` but are **NOT read anywhere in the codebase**.
+They have been removed to avoid confusion. Each one is annotated with the
+reason it is not needed today.
 
-### Analytics
+| Removed Variable | Reason |
+|------------------|--------|
+| `JWT_SECRET` | Auth is currently localStorage-backed (`lib/auth/authService.ts`). No JWT signing/verification code exists. |
+| `ADMIN_JWT_SECRET` | Same as above. No admin JWT code exists. |
+| `SESSION_SECRET` | Same as above. Sessions are stored in localStorage. |
+| `MYSQL_HOST`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` | Project uses PostgreSQL (Prisma schema `provider = "postgresql"`). No MySQL code. |
+| `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No Stripe SDK import or payment code in the codebase. |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | No Razorpay SDK import or payment code. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | No SMTP/nodemailer import or email-sending code. |
+| `WHATSAPP_BUSINESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | No WhatsApp Business API client code. The admin/whatsapp page is UI-only mock. |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | No Cloudinary SDK. Images use Google CDN + ZAI OSS URLs (see `lib/images.ts`). |
+| `BLOB_READ_WRITE_TOKEN` | No Vercel Blob usage. |
+| `CORS_ORIGIN` | No CORS configuration code (Next.js App Router handles CORS at the route level). |
+| `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS` | No rate-limiting middleware in the codebase. |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_FB_PIXEL_ID` | No Google Analytics or Facebook Pixel SDK in the codebase. |
+| `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL` | Listed in `README.md` only — not read by any code. Removed from README too. |
+| `APP_NAME`, `LOG_LEVEL`, `TZ` | Not read by any code. |
 
-#### Google Analytics 4
-
-Set in **GitHub Secrets** (build-time only — GA is client-side):
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | `G-XXXXXXXXXX` | Google Analytics 4 measurement ID |
-
-#### Facebook Pixel
-
-Set in **GitHub Secrets**:
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_FB_PIXEL_ID` | `123456789012345` | Facebook Pixel ID for conversion tracking |
-
----
-
-### Authentication
-
-Set in **cPanel** (runtime only — secrets must never be in GitHub):
-
-| Variable | How to generate | Purpose |
-|---|---|---|
-| `JWT_SECRET` | `openssl rand -base64 48` | Signs user JWTs |
-| `ADMIN_JWT_SECRET` | `openssl rand -base64 48` | Signs admin JWTs (use a DIFFERENT secret) |
-| `SESSION_SECRET` | `openssl rand -base64 48` | Encrypts session cookies |
-| `AUTH_SALT` | `openssl rand -base64 32` | Additional salt for password hashing |
-
-> **Generate secrets on the server** (not locally) so they never transit your machine:
-> ```bash
-> ssh -p 22 aqualit1@your-host.com
-> openssl rand -base64 48
-> # Copy the output, paste into cPanel env var field
-> ```
+> **When you implement any of these features**, add the matching env vars
+> back to `.env.production.example` AND to this report. Until then, do not
+> set them in cPanel — they will have no effect.
 
 ---
 
-### Database — PostgreSQL (production DB for LN KICKS)
+## Where to Set Environment Variables in cPanel
 
-LN KICKS uses **PostgreSQL** in production. Recommended hosted providers:
-**Supabase**, **Neon**, **Railway**, **Render**, or a self-hosted Postgres instance.
-cPanel's bundled MySQL is **not** used — see "Legacy MySQL" below only if you
-explicitly switch away from Postgres.
+### Path
 
-Set in **cPanel** (runtime only — connection strings are server-side secrets
-and must never be in git or GitHub Secrets):
+```
+cPanel → Software → Setup Node.js App → Edit LNKICKS → Environment variables
+```
 
-#### PostgreSQL (required)
+### What cPanel does with them
 
-| Variable | Example | Purpose |
-|---|---|---|
-| `DATABASE_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` | Primary connection string (pooled — for app runtime queries) |
-| `DIRECT_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` | Direct connection (bypasses pooler — used by Prisma / migrations for DDL) |
+cPanel writes the vars to:
+```
+~/nodevenv/LNKICKS/22/etc/envvars
+```
+(in shell `export VAR=value` format)
 
-> **Always include `?sslmode=require`** for managed Postgres providers (Supabase, Neon, Render, Railway). Without it, the connection will be rejected.
->
-> **Two URLs?** Supabase and Neon expose a pooled URL (port 6543, via PgBouncer / Supavisor) and a direct URL (port 5432). Use the pooled URL as `DATABASE_URL` for runtime queries, and the direct URL as `DIRECT_URL` for migrations. On providers without a pooler (Railway, Render), both can be the same value.
+### How the app reads them
 
-#### Legacy MySQL (only if you switch away from Postgres)
+LiteSpeed/lsnode **does NOT source** the `bin/activate` script, so the
+`etc/envvars` file is NOT automatically loaded into `process.env`. The
+`app.js` startup file handles this in two ways:
 
-| Variable | Example | Purpose |
-|---|---|---|
-| `MYSQL_HOST` | `localhost` | Usually localhost on cPanel shared hosting |
-| `MYSQL_DATABASE` | `aqualit1_lnkicks` | DB name (prefixed with cPanel username) |
-| `MYSQL_USER` | `aqualit1_lnkicks` | DB user (prefixed with cPanel username) |
-| `MYSQL_PASSWORD` | (strong password) | DB user password |
+1. **Direct parse** — `app.js` reads `~/nodevenv/LNKICKS/22/etc/envvars`
+   itself, parses shell `export` syntax, and sets `process.env` (lines
+   65–114 of `app.js`).
+2. **`.env` fallback** — `.cpanel.yml` Step 4 converts `etc/envvars` to
+   `.env` format and writes it to the app root. `app.js` then loads it
+   via `dotenv` (lines 116–130 of `app.js`).
 
-> Create the MySQL DB in cPanel → **MySQL Databases**. The user must have ALL PRIVILEGES on the database. **Not recommended** — Postgres is the chosen DB for LN KICKS.
+Both paths use `override: false`, so if a var is set in both places, the
+`etc/envvars` value wins.
 
----
+### Required minimum to start the app
 
-### Payment Gateways
+```
+DATABASE_URL=postgresql://...?sslmode=require
+DIRECT_URL=postgresql://...?sslmode=require
+```
 
-Set in **cPanel** (runtime only — secret keys must never be in git):
-
-#### Stripe
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `STRIPE_SECRET_KEY` | `sk_live_xxx` | Server-side Stripe API key |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_xxx` | Verifies Stripe webhook signatures |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_xxx` | Client-side Stripe.js key (set in BOTH GitHub Secrets AND cPanel) |
-
-#### Razorpay (India)
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `RAZORPAY_KEY_ID` | `rzp_live_xxx` | Server-side Razorpay key ID |
-| `RAZORPAY_KEY_SECRET` | `xxx` | Server-side Razorpay key secret |
-| `RAZORPAY_WEBHOOK_SECRET` | `xxx` | Verifies Razorpay webhook signatures |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | `rzp_live_xxx` | Client-side Razorpay Checkout key (set in BOTH) |
+Without `DATABASE_URL`, `app.js` exits with code 1 at boot (line 167–179)
+and prints an actionable error message.
 
 ---
 
-### Email / SMTP
+## Verification
 
-Set in **cPanel** (runtime only):
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `SMTP_HOST` | `smtp.your-provider.com` | SMTP server hostname |
-| `SMTP_PORT` | `587` | SMTP port (587 = TLS, 465 = SSL, 25 = unencrypted) |
-| `SMTP_USER` | `postmaster@your-domain.com` | SMTP username |
-| `SMTP_PASSWORD` | (strong password) | SMTP password |
-| `SMTP_FROM` | `"LN KICKS <noreply@your-domain.com>"` | From: header for outgoing emails |
-
-> On cPanel shared hosting, you can usually use the built-in mail server:
-> - `SMTP_HOST=localhost`
-> - `SMTP_PORT=25`
-> - `SMTP_USER=` (empty — no auth needed for local mail)
-> - Create the mailbox in cPanel → **Email Accounts**
-
----
-
-### WhatsApp Business API
-
-Set in **cPanel** (runtime only — used for order confirmations, shipping updates):
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `WHATSAPP_BUSINESS_TOKEN` | `EAABxxx` | Permanent access token from Meta Business |
-| `WHATSAPP_PHONE_NUMBER_ID` | `1234567890` | Phone number ID from WhatsApp Business API |
-| `WHATSAPP_BUSINESS_ID` | `1234567890` | Business ID from Meta Business |
-
-> The `NEXT_PUBLIC_WHATSAPP_NUMBER` (for click-to-chat links) is different — it's the regular WhatsApp number, not the Business API token.
-
----
-
-### File Uploads / CDN
-
-Set in **cPanel** (runtime) + **GitHub Secrets** (build-time, for `NEXT_PUBLIC_*`):
-
-#### Cloudinary
-
-| Variable | Where to set | Purpose |
-|---|---|---|
-| `CLOUDINARY_CLOUD_NAME` | cPanel | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | cPanel | API key |
-| `CLOUDINARY_API_SECRET` | cPanel | API secret (NEVER in git) |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | GitHub Secrets + cPanel | Cloud name (public, needed in client bundle) |
-
-#### AWS S3
-
-| Variable | Where to set | Purpose |
-|---|---|---|
-| `AWS_ACCESS_KEY_ID` | cPanel | IAM user access key |
-| `AWS_SECRET_ACCESS_KEY` | cPanel | IAM user secret key |
-| `AWS_REGION` | cPanel | e.g. `ap-south-1` |
-| `AWS_S3_BUCKET` | cPanel | S3 bucket name |
-| `NEXT_PUBLIC_AWS_S3_BUCKET` | GitHub Secrets + cPanel | Public bucket name (for client-side URL construction) |
-
----
-
-### Rate Limiting / Security
-
-Set in **cPanel** (runtime only):
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `RATE_LIMIT_MAX` | `100` | Max requests per window per IP |
-| `RATE_LIMIT_WINDOW_MS` | `900000` | Window duration in ms (15 min default) |
-| `CORS_ORIGIN` | `https://your-domain.com` | Allowed origin for CORS (use production domain) |
-| `BCRYPT_ROUNDS` | `12` | Bcrypt cost factor (higher = slower but safer) |
-
----
-
-### Application Metadata
-
-Set in **cPanel** (runtime):
-
-| Variable | Example | Purpose |
-|---|---|---|
-| `APP_NAME` | `LN KICKS` | Display name in logs and emails |
-| `APP_VERSION` | `2.0.0` | (auto-set by build, but useful as fallback) |
-| `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
-| `TZ` | `Asia/Kolkata` | Timezone for date operations (matches user timezone setting) |
-
----
-
-## How to Verify Variables Are Set
-
-### On the server (runtime vars)
+To verify env vars are loaded correctly after deployment, check the
+startup log:
 
 ```bash
-ssh -p 22 aqualit1@your-host.com
-
-# Method 1: cat the .env file cPanel creates
-cat /home/aqualit1/lnkicks/current/.env
-
-# Method 2: print all env vars seen by the Node.js process
-# (run from the app directory)
-cd /home/aqualit1/lnkicks/current
-node -e "console.log(Object.keys(process.env).filter(k => !k.startsWith('_')).sort().join('\n'))"
-
-# Method 3: check a specific var
-node -e "console.log('STRIPE_SECRET_KEY is set:', !!process.env.STRIPE_SECRET_KEY)"
+tail -f ~/logs/lnkicks.in.log
 ```
 
-### In GitHub Actions (build-time vars)
+You should see:
 
-Add a temporary debug step in the workflow:
-```yaml
-- name: Debug env vars (REMOVE after debugging)
-  run: |
-    echo "NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}"
-    echo "NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.NEXT_PUBLIC_WHATSAPP_NUMBER }}"
+```
+[app.js] ─── Startup diagnostics ───
+[app.js] Node.js version: v22.x.x
+[app.js] Process pid: 12345
+[app.js] Working directory: /home/aqualit1/LNKICKS
+[app.js] App root: /home/aqualit1/LNKICKS
+[app.js]   ✅ PORT = (set, X chars)
+[app.js]   ❌ LSNODE_SOCKET = (NOT SET)         ← OK if using TCP mode
+[app.js]   ✅ NODE_ENV = (set, 10 chars)
+[app.js]   ✅ DATABASE_URL = (set, 95 chars)
+[app.js]   ✅ DIRECT_URL = (set, 87 chars)
+[app.js]   ✅ NEXT_PUBLIC_SITE_URL = (set, 23 chars)
+[app.js]   ✅ NEXT_PUBLIC_WHATSAPP_NUMBER = (set, 12 chars)
+[app.js]   ❌ JWT_SECRET = (NOT SET)            ← OK (auth uses localStorage)
+[app.js]   ❌ ADMIN_JWT_SECRET = (NOT SET)      ← OK (same)
+[app.js] ──────────────────────────────────────
+[app.js] Starting Next.js production server...
+[app.js] ✅ Next.js ready on UNIX socket: /tmp/lsnode_XXXX
 ```
 
-> **⚠️ REMOVE this debug step before merging** — never leave secrets printing in logs.
+**Note:** `JWT_SECRET` and `ADMIN_JWT_SECRET` will show `❌` — that's
+expected, because the code doesn't use them yet. They are listed in the
+diagnostic check for future use.
 
 ---
 
-## Secret Rotation
-
-Rotate these secrets periodically (every 6–12 months) or immediately if compromised:
-
-| Secret | How to rotate |
-|---|---|
-| `JWT_SECRET` | Generate new value, update in cPanel, restart app (all existing sessions invalidated) |
-| `ADMIN_JWT_SECRET` | Same as above (all admin sessions invalidated) |
-| `STRIPE_SECRET_KEY` | Roll the key in Stripe Dashboard, update in cPanel |
-| `RAZORPAY_KEY_SECRET` | Reset in Razorpay Dashboard, update in cPanel |
-| `MYSQL_PASSWORD` | Legacy only. Change in cPanel → MySQL Databases, update DB user password, update env var |
-| `DATABASE_URL` / `DIRECT_URL` | Rotate the database password in your Postgres provider dashboard (Supabase / Neon / etc.), then update both URLs in cPanel and restart the app |
-| `SSH_PRIVATE_KEY` | Generate new keypair on server (`ssh-keygen`), update `~/.ssh/authorized_keys`, update GitHub Secret |
-
----
-
-## Common Mistakes
-
-### ❌ Mistake 1: Putting server secrets in GitHub Secrets
-
-**Wrong:** Putting `STRIPE_SECRET_KEY` in GitHub Secrets.
-
-**Why it's wrong:** GitHub Secrets are visible to the build process. While GitHub encrypts them at rest, they could leak via build logs or a compromised workflow. Server-only secrets belong ONLY on the server (cPanel env vars).
-
-**Fix:** Remove from GitHub Secrets. Set in cPanel only.
-
-### ❌ Mistake 2: Putting `NEXT_PUBLIC_*` vars only in cPanel
-
-**Wrong:** Setting `NEXT_PUBLIC_SITE_URL` only in cPanel, not in GitHub Secrets.
-
-**Why it's wrong:** `next build` runs in GitHub Actions. It reads `NEXT_PUBLIC_*` vars from `process.env` at build time and inlines them into the client bundle. If the var isn't in GitHub Secrets, the build won't see it, and the client bundle will have `undefined` for that var.
-
-**Fix:** Set all `NEXT_PUBLIC_*` vars in BOTH GitHub Secrets (for build) AND cPanel (for runtime).
-
-### ❌ Mistake 3: Committing `.env.production` to git
-
-**Wrong:** Creating a real `.env.production` file with secrets and committing it.
-
-**Why it's wrong:** Even if you delete it later, it's in git history forever. Anyone with repo access can `git log -p` and find it.
-
-**Fix:** Use the `.env.production.example` template (already in repo) as a reference. Set real values only in cPanel UI. The `.gitignore` already excludes `.env*` files (except the example).
-
-### ❌ Mistake 4: Using different values in GitHub Secrets vs cPanel
-
-**Wrong:** `NEXT_PUBLIC_SITE_URL=https://staging.lnkicks.com` in GitHub Secrets, but `https://lnkicks.com` in cPanel.
-
-**Why it's wrong:** The build bakes in the staging URL. Even though cPanel has the production URL, the client bundle already has staging URLs hardcoded.
-
-**Fix:** Keep `NEXT_PUBLIC_*` vars IDENTICAL in GitHub Secrets and cPanel. Use a separate GitHub Environment (e.g. `staging`) for non-production deploys.
-
----
-
-## Reference: `.env.production.example`
-
-The repo contains a template at `.env.production.example` with every possible variable commented out. Use it as a checklist when setting up a new environment.
+## Quick Reference
 
 ```bash
-cat .env.production.example
-# Copy any vars you need, paste into cPanel env var field with real values
+# Minimum required to boot:
+DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
+DIRECT_URL=postgresql://user:pass@host:5432/db?sslmode=require
+
+# Recommended (for clean logs + future code):
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+NEXT_PUBLIC_WHATSAPP_NUMBER=918881286267
 ```
+
+**That's all.** Four variables. No more, no less.

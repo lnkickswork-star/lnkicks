@@ -70,10 +70,21 @@ npm start
 
 ## ⚙️ Environment Variables
 
-Copy the template variables into your local configuration (`.env.local`):
+The application reads **4 user-configurable env vars** (plus 5 auto-set by
+the runtime). See [`.env.production.example`](.env.production.example) and
+[docs/deployment/ENVIRONMENT-VARIABLES.md](docs/deployment/ENVIRONMENT-VARIABLES.md)
+for the full audit and deployment report.
+
+Minimum required to boot:
 ```env
-NEXT_PUBLIC_API_URL=https://api.lnkicks.com
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
+DIRECT_URL=postgresql://user:pass@host:5432/db?sslmode=require
+```
+
+Recommended (for clean startup logs):
+```env
+NEXT_PUBLIC_SITE_URL=https://your-production-domain.com
+NEXT_PUBLIC_WHATSAPP_NUMBER=918881286267
 ```
 
 ---
