@@ -55,12 +55,64 @@ for (let i = 0; i < 5; i++) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Step 2: Load .env from app root BEFORE requiring next/@prisma/client.
+// Step 2: Load env vars from nodevenv etc/envvars, then .env, then process.env.
 // ─────────────────────────────────────────────────────────────────────
-// LiteSpeed/lsnode does NOT source the nodevenv `etc/envvars` file, so
-// env vars set there are NOT in process.env when the app starts. We load
-// .env explicitly as a fallback. cPanel UI env vars still win
-// (override: false).
+// LiteSpeed/lsnode does NOT source the nodevenv `bin/activate` script, so
+// env vars set via cPanel UI (which are written to nodevenv/etc/envvars)
+// do NOT reach process.env. We parse that file ourselves.
+//
+// Precedence (highest first):
+//   1. process.env (set by parent process — wins, override:false everywhere)
+//   2. .env file in APP_ROOT (written by deploy script, contains secrets)
+//   3. nodevenv/etc/envvars (written by cPanel UI)
+const __loadNodevenvEnvvars = () => {
+  // Try to locate the nodevenv etc/envvars file.
+  // Path pattern: /home/<user>/nodevenv/<app>/<version>/etc/envvars
+  // We derive candidates from APP_ROOT's parent directory.
+  const home = process.env.HOME || path.resolve(APP_ROOT, '..');
+  const candidates = [
+    // Common patterns — try both LNKICKS and lnkicks, versions 22/24/20
+    path.join(home, 'nodevenv', 'LNKICKS', '22', 'etc', 'envvars'),
+    path.join(home, 'nodevenv', 'LNKICKS', '24', 'etc', 'envvars'),
+    path.join(home, 'nodevenv', 'LNKICKS', '20', 'etc', 'envvars'),
+    path.join(home, 'nodevenv', 'lnkicks', '22', 'etc', 'envvars'),
+    path.join(home, 'nodevenv', 'lnkicks', '24', 'etc', 'envvars'),
+    path.join(home, 'nodevenv', 'lnkicks', '20', 'etc', 'envvars'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      try {
+        const content = fs.readFileSync(p, 'utf8');
+        // Parse shell-style `export VAR=value` or `VAR=value` lines.
+        let count = 0;
+        for (const line of content.split('\n')) {
+          const m = line.match(/^\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)=(.*)$/);
+          if (m) {
+            const key = m[1];
+            let val = m[2];
+            // Strip surrounding quotes.
+            if ((val.startsWith('"') && val.endsWith('"')) ||
+                (val.startsWith("'") && val.endsWith("'"))) {
+              val = val.slice(1, -1);
+            }
+            // Only set if not already in process.env (override:false).
+            if (!(key in process.env)) {
+              process.env[key] = val;
+              count++;
+            }
+          }
+        }
+        console.log(`[app.js] nodevenv envvars loaded from ${p} (${count} vars)`);
+        return;
+      } catch (e) {
+        console.warn(`[app.js] WARNING: Could not read ${p}: ${e.message}`);
+      }
+    }
+  }
+  console.warn('[app.js] No nodevenv etc/envvars file found (checked 6 paths).');
+};
+__loadNodevenvEnvvars();
+
 try {
   const dotenv = require('dotenv');
   const envPath = path.join(APP_ROOT, '.env');
@@ -69,7 +121,7 @@ try {
     console.log('[app.js] .env loaded from:', envPath);
   } else {
     console.warn('[app.js] WARNING: .env not found at:', envPath);
-    console.warn('[app.js] DATABASE_URL must be set via cPanel env vars or .env');
+    console.warn('[app.js] Relying on nodevenv envvars or process.env for DATABASE_URL.');
   }
 } catch (err) {
   console.error('[app.js] FATAL: Failed to load .env:', err.message);

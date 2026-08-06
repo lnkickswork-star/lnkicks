@@ -1,0 +1,134 @@
+# =============================================================================
+# cPanel Git Version Control — Deployment Configuration
+# =============================================================================
+# This file is executed by cPanel when you click "Deploy HEAD Commit" in
+# cPanel → Git Version Control. It replaces SSH/Terminal-based deployment.
+#
+# HOW TO USE:
+#   1. Ensure DATABASE_URL and DIRECT_URL are set in:
+#      cPanel → Software → Setup Node.js App → Edit LNKICKS →
+#      Environment variables
+#      (These are written to ~/nodevenv/LNKICKS/22/etc/envvars and read
+#       by app.js at startup.)
+#   2. Ensure Node.js version is 22 (or 24) in Setup Node.js App.
+#   3. Ensure Application startup file is `app.js` (NOT cpanel/app.js).
+#   4. Go to cPanel → Git Version Control → your repo → click
+#      "Deploy HEAD Commit".
+#
+# This file is safe for a PUBLIC repo — it contains NO secrets.
+# =============================================================================
+---
+deployment:
+  tasks:
+    # ── Step 1: Define paths (adjust APP_ROOT if your app lives elsewhere) ──
+    - export DEPLOYPATH=/home/aqualit1/LNKICKS
+    - export APPROOT_LNKICKS=/home/aqualit1/lnkicks
+    # Use whichever exists — prefer LNKICKS, fall back to lnkicks.
+    - |
+      if [ -d "$DEPLOYPATH" ]; then
+        TARGET=$DEPLOYPATH
+      elif [ -d "$APPROOT_LNKICKS" ]; then
+        TARGET=$APPROOT_LNKICKS
+      else
+        TARGET=$DEPLOYPATH
+        mkdir -p "$TARGET"
+      fi
+      echo "[deploy] Target app root: $TARGET"
+
+    # ── Step 2: Sync files from git checkout to app root ──
+    # rsync is preferred over cp -a for incremental syncs (faster).
+    - |
+      if command -v rsync >/dev/null 2>&1; then
+        rsync -a --delete --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='.env' ./ "$TARGET/"
+      else
+        cp -aR . "$TARGET/"
+        rm -rf "$TARGET/.git" "$TARGET/node_modules" "$TARGET/.next"
+      fi
+      echo "[deploy] Files synced to $TARGET"
+
+    # ── Step 3: Source nodevenv (Node 22 + npm on PATH) ──
+    # Try LNKICKS first, then lnkicks, versions 22 → 24 → 20.
+    - |
+      NODEVENV=""
+      for app in LNKICKS lnkicks; do
+        for ver in 22 24 20; do
+          if [ -f "/home/aqualit1/nodevenv/$app/$ver/bin/activate" ]; then
+            NODEVENV="/home/aqualit1/nodevenv/$app/$ver/bin/activate"
+            break 2
+          fi
+        done
+      done
+      if [ -n "$NODEVENV" ]; then
+        source "$NODEVENV"
+        echo "[deploy] Sourced nodevenv: $NODEVENV (Node $(node -v))"
+      else
+        echo "[deploy] WARNING: No nodevenv activate script found. Using system node: $(node -v 2>/dev/null || echo 'none')"
+      fi
+
+    # ── Step 4: Write .env from nodevenv envvars (if envvars exists) ──
+    # This creates .env in the app root from the env vars set in cPanel UI.
+    # app.js will read it at startup. If envvars doesn't exist, skip (app.js
+    # will read process.env or nodevenv envvars directly).
+    - |
+      ENVVARS=""
+      for app in LNKICKS lnkicks; do
+        for ver in 22 24 20; do
+          if [ -f "/home/aqualit1/nodevenv/$app/$ver/etc/envvars" ]; then
+            ENVVARS="/home/aqualit1/nodevenv/$app/$ver/etc/envvars"
+            break 2
+          fi
+        done
+      done
+      if [ -n "$ENVVARS" ]; then
+        # Convert envvars (shell export syntax) to .env format
+        sed -E 's/^export ([A-Z_][A-Z0-9_]*)=/\1=/' "$ENVVARS" > "$TARGET/.env"
+        # Append NODE_ENV if not present
+        grep -q '^NODE_ENV=' "$TARGET/.env" || echo 'NODE_ENV=production' >> "$TARGET/.env"
+        # Append NEXT_PUBLIC_SITE_URL if not present
+        grep -q '^NEXT_PUBLIC_SITE_URL=' "$TARGET/.env" || echo 'NEXT_PUBLIC_SITE_URL=https://lnkicks.in' >> "$TARGET/.env"
+        chmod 600 "$TARGET/.env"
+        echo "[deploy] .env written from $ENVVARS ($(wc -l < "$TARGET/.env") lines)"
+      else
+        echo "[deploy] WARNING: No envvars file found. .env NOT written."
+        echo "[deploy] Set DATABASE_URL + DIRECT_URL in cPanel UI → Setup Node.js App → Environment variables"
+      fi
+
+    # ── Step 5: Install dependencies ──
+    - |
+      cd "$TARGET"
+      echo "[deploy] Installing dependencies..."
+      npm install --no-audit --no-fund 2>&1 | tail -10
+      if [ ! -d "node_modules/next" ]; then
+        echo "[deploy] FATAL: npm install failed — node_modules/next missing"
+        exit 1
+      fi
+      echo "[deploy] Dependencies OK — next $(node -p "require('next/package.json').version")"
+
+    # ── Step 6: Generate Prisma client ──
+    - |
+      cd "$TARGET"
+      echo "[deploy] Generating Prisma client..."
+      npx prisma generate 2>&1 | tail -5 || echo "[deploy] prisma generate failed (may be OK if schema has no models)"
+
+    # ── Step 7: Build ──
+    - |
+      cd "$TARGET"
+      echo "[deploy] Cleaning previous build..."
+      rm -rf .next
+      echo "[deploy] Running npm run build..."
+      npm run build 2>&1 | tail -30
+      if [ ! -f ".next/BUILD_ID" ]; then
+        echo "[deploy] FATAL: Build failed — .next/BUILD_ID missing"
+        exit 1
+      fi
+      echo "[deploy] BUILD SUCCEEDED — BUILD_ID: $(cat .next/BUILD_ID)"
+
+    # ── Step 8: Restart app (touch tmp/restart.txt for Passenger-style) ──
+    # Also try cPanel's restart mechanism via touch.
+    - |
+      cd "$TARGET"
+      mkdir -p tmp
+      touch tmp/restart.txt
+      echo "[deploy] Restart signal sent (tmp/restart.txt touched)"
+      echo "[deploy] If app doesn't restart, go to cPanel → Setup Node.js App → STOP → START"
+    - echo "[deploy] === DEPLOYMENT COMPLETE ==="
