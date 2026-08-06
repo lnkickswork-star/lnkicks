@@ -89,7 +89,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy-folder/
-          server-dir: / # ध्यान रहे, FTP अकाउंट सीधा उसी फोल्डर पर पॉइंट करे जहाँ वेबसाइट है
+          server-dir: /lnkicks.in/ # ध्यान रहे, FTP अकाउंट सीधा उसी फोल्डर पर पॉइंट करे जहाँ वेबसाइट है
 
       - name: ✅ Deployment Summary
         if: success()
