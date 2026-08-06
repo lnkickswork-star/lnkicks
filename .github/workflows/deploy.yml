@@ -81,7 +81,6 @@ jobs:
           
           # Optional files (ignore if not present)
           cp cpanel/app.js deploy-folder/ || true
-          cp -r prisma deploy-folder/ || true
 
       - name: 📤 Upload to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -90,7 +89,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy-folder/
-          server-dir: / # Make sure this FTP account points directly to your app's root folder in cPanel
+          server-dir: / # ध्यान रहे, FTP अकाउंट सीधा उसी फोल्डर पर पॉइंट करे जहाँ वेबसाइट है
 
       - name: ✅ Deployment Summary
         if: success()
