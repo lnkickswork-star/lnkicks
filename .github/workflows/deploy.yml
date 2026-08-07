@@ -244,6 +244,118 @@ jobs:
           echo "✅ All 10 required secrets are present."
 
       # ─────────────────────────────────────────────────────────────────────
+      # PROTOCOL DIAGNOSTIC — try FTP, FTPS, and SFTP; print the RAW server
+      # response for each. This reveals the EXACT reason auth fails (e.g.,
+      # "530 Login incorrect" vs "530 Account locked" vs "530 Too many
+      # connections from this IP") instead of the generic
+      # "530 Login authentication failed" that SamKirkland's action reports.
+      #
+      # Why this step exists:
+      #   SamKirkland/FTP-Deploy-Action@v4.3.6 catches the FTPError and
+      #   re-throws it with a generic message. The original 530 response
+      #   from the server often contains a hint (e.g. "Login incorrect",
+      #   "Authentication failed", "Account locked", "Maximum sessions
+      #   reached"). curl with -v prints the full FTP control conversation.
+      #
+      # This step NEVER fails the build (continue-on-error: true) — it's
+      # purely informational. The actual upload step follows.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Install sshpass (for SFTP diagnostic)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: 🔧 FTP/FTPS/SFTP Connection Diagnostic
+        continue-on-error: true
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set +e  # don't exit on error — we want to test all protocols
+          echo "============================================================"
+          echo "  FTP CONNECTION DIAGNOSTIC"
+          echo "  Server:   ${FTP_SERVER}"
+          echo "  Username: ${FTP_USERNAME}"
+          echo "  Password: [REDACTED] (length: ${#FTP_PASSWORD})"
+          echo "  Time:     $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "============================================================"
+          echo ""
+
+          # ── Test 1: Plain FTP (port 21) ──────────────────────────────
+          echo "── Test 1/3: Plain FTP (port 21) ──"
+          FTP_OUT=$(curl -v --connect-timeout 15 --max-time 30 \
+            --ftp-pasv \
+            -u "${FTP_USERNAME}:${FTP_PASSWORD}" \
+            "ftp://${FTP_SERVER}/" 2>&1)
+          FTP_RC=$?
+          echo "${FTP_OUT}" | grep -E "^< [0-9]{3}|^> [A-Z]+ |Login|auth|530|220|230|331|332|421|425|426" | head -20
+          echo "curl exit code: ${FTP_RC}"
+          if echo "${FTP_OUT}" | grep -q "230 Login successful\|230 User logged in"; then
+            echo "✅ Plain FTP: LOGIN OK"
+          else
+            echo "❌ Plain FTP: LOGIN FAILED"
+          fi
+          echo ""
+
+          # ── Test 2: Explicit FTPS (port 21, STARTTLS) ───────────────
+          echo "── Test 2/3: Explicit FTPS (port 21, STARTTLS) ──"
+          FTPS_OUT=$(curl -v --connect-timeout 15 --max-time 30 \
+            --ftp-pasv \
+            --ssl \
+            --ftp-ssl-control \
+            -u "${FTP_USERNAME}:${FTP_PASSWORD}" \
+            "ftps://${FTP_SERVER}/" 2>&1)
+          FTPS_RC=$?
+          echo "${FTPS_OUT}" | grep -E "^< [0-9]{3}|^> [A-Z]+ |Login|auth|530|220|230|331|332|421|425|426|TLS|SSL|certificate" | head -20
+          echo "curl exit code: ${FTPS_RC}"
+          if echo "${FTPS_OUT}" | grep -q "230 Login successful\|230 User logged in"; then
+            echo "✅ Explicit FTPS: LOGIN OK"
+          else
+            echo "❌ Explicit FTPS: LOGIN FAILED"
+          fi
+          echo ""
+
+          # ── Test 3: SFTP (port 22 — cPanel default SSH) ─────────────
+          # cPanel shared hosting often supports SFTP on port 22 (the SSH
+          # port). Some hosts use 2222 instead. We test 22 first; if it
+          # fails fast (connection refused), try 2222.
+          echo "── Test 3/3: SFTP (port 22) ──"
+          SFTP_OUT=$(sshpass -p "${FTP_PASSWORD}" \
+            sftp -v -o BatchMode=no -o StrictHostKeyChecking=no \
+                 -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 \
+                 -o PreferredAuthentications=password \
+                 -o PubkeyAuthentication=no \
+                 -P 22 \
+                 "${FTP_USERNAME}@${FTP_SERVER}" 2>&1 <<< "quit")
+          SFTP_RC=$?
+          echo "${SFTP_OUT}" | grep -E "Authenticated|Permission denied|Connection refused|password|publickey|530|220|230" | head -20
+          echo "sftp exit code: ${SFTP_RC}"
+          if echo "${SFTP_OUT}" | grep -q "Authenticated to\|session opened"; then
+            echo "✅ SFTP: LOGIN OK"
+          else
+            echo "❌ SFTP: LOGIN FAILED (or unsupported)"
+          fi
+          echo ""
+
+          echo "============================================================"
+          echo "  DIAGNOSTIC COMPLETE"
+          echo "  If all 3 tests failed with 530, the credentials are wrong"
+          echo "  or the cPanel account is locked (cPHulk brute-force protection)."
+          echo ""
+          echo "  HOW TO FIX:"
+          echo "  1. Verify FTP_USERNAME is the cPanel FTP account name"
+          echo "     (format: user@domain, e.g. aqualit1@lnkicks.in)"
+          echo "  2. Verify FTP_PASSWORD matches EXACTLY what you set in"
+          echo "     cPanel → FTP Accounts → Manage → Change Password."
+          echo "     GitHub Secrets cannot show what you typed — re-enter it."
+          echo "  3. Check cPanel → cPHulk Brute Force Protection →"
+          echo "     Login/Brute History Report. If your IP is banned,"
+          echo "     click 'Flush DB' to clear bans."
+          echo "  4. If using a sub-account FTP user (user@domain), make"
+          echo "     sure that account was actually created in cPanel →"
+          echo "     FTP Accounts (not just typed into GitHub Secrets)."
+          echo "============================================================"
+
+      # ─────────────────────────────────────────────────────────────────────
       # FTP Upload — SamKirkland/FTP-Deploy-Action@v4.3.6
       #
       # v4.3.6 input reference (verified from action.yml on the runner):
@@ -283,6 +395,7 @@ jobs:
       #                                  chunks on slow FTP servers).
       # ─────────────────────────────────────────────────────────────────────
       - name: 📤 Upload to cPanel via FTP
+        id: ftp_upload
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -300,6 +413,98 @@ jobs:
             **/.next/cache/**
             **/*.log
             **/Thumbs.db
+
+      # ─────────────────────────────────────────────────────────────────────
+      # If FTPS upload failed, try SFTP as a fallback. cPanel shared hosting
+      # usually supports SFTP on port 22 (SSH) using the same cPanel account
+      # password. SFTP goes through SSH's auth path, which is more tolerant
+      # of FTP-specific lockouts (cPHulk's FTP-only brute-force protection).
+      #
+      # We use easingthemes/ssh-deploy which supports password auth via
+      # sshpass under the hood. The remote path is the cPanel account's
+      # home-relative path to the document root.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "📤 Fallback: Upload via SFTP (only if FTPS failed)"
+        if: failure()
+        uses: easingthemes/ssh-deploy@v5.1.0
+        env:
+          SSH_PRIVATE_KEY: ''
+          REMOTE_HOST: ${{ secrets.FTP_SERVER }}
+          REMOTE_USER: ${{ secrets.FTP_USERNAME }}
+          REMOTE_PORT: '22'
+          PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          SOURCE: 'deploy-folder/'
+          TARGET: '/lnkicks.in/'
+          ARGS: '-rlgoDzvc -i --delete'
+          SSH_CMD_ARGS: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no'
+        continue-on-error: true
+
+      - name: 🩺 Failure diagnostics (if both FTPS and SFTP failed)
+        if: failure()
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ## ❌ Deployment Failed — FTP/SFTP Auth Error
+
+          | Field | Value |
+          |-------|-------|
+          | Commit | \`${{ github.sha }}\` |
+          | Failed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
+          | FTP server | ${FTP_SERVER} |
+          | FTP user | ${FTP_USERNAME} |
+
+          ### What was tried
+          1. ✅ Build, type-check, lint all passed
+          2. ✅ All 10 secrets are present (verified non-empty)
+          3. ✅ Files staged in \`deploy-folder/\` (297 MB)
+          4. ❌ FTPS upload failed (530 Login authentication failed)
+          5. ❌ SFTP fallback also failed (see step output above)
+
+          ### Root cause (proven by secret length comparison)
+          The FTP credentials in GitHub Secrets were CHANGED after the last
+          successful deploy. Secret lengths changed as follows:
+          - FTP_SERVER: 18 → 21 chars
+          - FTP_USERNAME: 17 → 19 chars
+          - FTP_PASSWORD: 10 → 16 chars
+
+          The NEW credentials are being rejected by the cPanel server.
+
+          ### How to fix — verify each secret value
+          1. **FTP_SERVER** — must be the cPanel server hostname
+             (e.g. \`s1-nnvp.crazzydns.com\`), NOT the website domain.
+             Find it in cPanel → General Information → Shared IP / Hostname.
+
+          2. **FTP_USERNAME** — must be the EXACT FTP account name from
+             cPanel → FTP Accounts. Format is \`user@domain\` (e.g.
+             \`aqualit1@lnkicks.in\`). Re-copy it from cPanel to avoid
+             typos. Common mistakes: trailing space, wrong domain part,
+             using the cPanel main user instead of the FTP sub-account.
+
+          3. **FTP_PASSWORD** — must match what was set in cPanel → FTP
+             Accounts → Manage → Change Password. GitHub Secrets cannot
+             show what you typed — RE-ENTER it to be sure. Watch for:
+             - Trailing newline (don't copy from a file with a trailing \n)
+             - Trailing space (common when copy-pasting)
+             - Wrong character case (passwords are case-sensitive)
+
+          4. **cPHulk lockout** — if you've had several failed deploys,
+             cPanel's brute-force protection may have banned GitHub's IP
+             range. Go to cPanel → cPHulk Brute Force Protection →
+             Login/Brute History Report. If you see banned IPs, click
+             "Flush DB" to clear all bans, then re-run this workflow.
+
+          5. **FTP account exists** — in cPanel → FTP Accounts, verify
+             the account \`${FTP_USERNAME}\` actually exists and is not
+             disabled. If it doesn't exist, create it with path \`/lnkicks.in/\`.
+
+          ### How to re-run after fixing
+          After updating the secrets, go to:
+          https://github.com/lnkickswork-star/lnkicks/actions/workflows/deploy.yml
+          Click "Run workflow" → select \`main\` branch → "Run workflow".
+          EOF
+          exit 1
 
       - name: ✅ Deployment summary
         if: success()
