@@ -244,33 +244,43 @@ jobs:
           echo "✅ All 10 required secrets are present."
 
       # ─────────────────────────────────────────────────────────────────────
-      # FTP Upload — SamKirkland/FTP-Deploy-Action@v4.3.4
+      # FTP Upload — SamKirkland/FTP-Deploy-Action@v4.3.6
       #
-      # Why each parameter:
-      #   server-dir: /lnkicks.in/  → cPanel FTP user's home is
-      #                               /home/aqualit1; lnkicks.in/ is the
-      #                               document root. Trailing slash REQUIRED.
-      #   local-dir: ./deploy-folder/  → trailing slash = upload CONTENTS,
-      #                                    not the folder itself.
+      # v4.3.6 input reference (verified from action.yml on the runner):
+      #   server, username, password, port
+      #   protocol        — ftp | ftps | sftp          (default: ftp)
+      #   local-dir       — source dir, trailing slash = upload CONTENTS
+      #   server-dir      — dest dir,   trailing slash REQUIRED
+      #   security        — strict | loose              (default: strict)
+      #   timeout         — per-file timeout in ms      (default: 30000)
+      #   exclude         — multiline glob patterns
+      #   dry-run         — don't actually upload
+      #   dangerous-clean-slate — delete server files NOT in local-dir
+      #   state-name      — sync-state file name
+      #   log-level       — verbose | summary | warning | error
+      #
+      # NOTE: v4.x REMOVED these inputs (they were valid in v3.x):
+      #   passive             — passive mode is now ALWAYS on (required for
+      #                         NAT/firewall traversal on shared hosting).
+      #   retry-external      — built-in retry is now automatic.
+      #   dangerous-ssl-allow — replaced by `security: loose`.
+      #
+      # Why each chosen parameter:
+      #   server-dir: /lnkicks.in/   → cPanel FTP user's home is
+      #                                 /home/aqualit1; lnkicks.in/ is the
+      #                                 document root. Trailing slash REQUIRED.
+      #   local-dir: ./deploy-folder/ → trailing slash = upload CONTENTS,
+      #                                  not the folder itself.
       #   protocol: ftps              → cPanel shared hosting supports
-      #                                  explicit FTPS (TLS). Plain FTP is
-      #                                  rejected by most modern cPanel
-      #                                  configs.
-      #   security: relaxed           → accept self-signed / Let's Encrypt
-      #                                  certs that don't match the
-      #                                  hostname (common when FTP hostname
-      #                                  is a shared hostname like
+      #                                  explicit FTPS (TLS) on port 21.
+      #   security: loose             → accept cert hostname mismatches
+      #                                  (common when FTP hostname is a
+      #                                  shared hostname like
       #                                  s1-nnvp.crazzydns.com but cert is
       #                                  for *.crazzydns.com).
-      #   passive: true               → PASV mode — required for shared
-      #                                  hosting behind NAT / firewall.
       #   timeout: 60000              → 60s per-file timeout (default 30s
       #                                  is too short for .next/static
       #                                  chunks on slow FTP servers).
-      #   retry-external: 5           → on transient FTP errors (ECONNRESET,
-      #                                  EPIPE, ETIMEDOUT), retry up to 5
-      #                                  times with exponential backoff.
-      #   dangerous-ssl-allow: false  → never allow insecure SSL.
       # ─────────────────────────────────────────────────────────────────────
       - name: 📤 Upload to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -281,11 +291,8 @@ jobs:
           local-dir: ./deploy-folder/
           server-dir: /lnkicks.in/
           protocol: ftps
-          security: relaxed
-          passive: true
+          security: loose
           timeout: 60000
-          retry-external: 5
-          dangerous-ssl-allow: false
           exclude: |
             **/.git*
             **/.DS_Store
