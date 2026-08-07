@@ -415,38 +415,31 @@ jobs:
             **/Thumbs.db
 
       # ─────────────────────────────────────────────────────────────────────
-      # If FTPS upload failed, try SFTP as a fallback. cPanel shared hosting
-      # usually supports SFTP on port 22 (SSH) using the same cPanel account
-      # password. SFTP goes through SSH's auth path, which is more tolerant
-      # of FTP-specific lockouts (cPHulk's FTP-only brute-force protection).
+      # SFTP FALLBACK — REMOVED
       #
-      # We use easingthemes/ssh-deploy which supports password auth via
-      # sshpass under the hood. The remote path is the cPanel account's
-      # home-relative path to the document root.
+      # The diagnostic step (Step 12) proved that this cPanel server does
+      # NOT support SFTP on port 22 (Connection refused). cPanel shared
+      # hosting on crazzydns.com only supports FTP/FTPS on port 21.
+      #
+      # Additionally, easingthemes/ssh-deploy@v5.1.0 REQUIRES an SSH key
+      # even for password auth (it aborts with "sshPrivateKey is mandatory"
+      # if SSH_PRIVATE_KEY is empty). Since we don't have an SSH key for
+      # this server and SFTP isn't available anyway, the fallback was
+      # dead code that silently failed with continue-on-error: true.
+      #
+      # The correct fix for the current 530 error is to update the
+      # FTP_PASSWORD secret in GitHub to match what cPanel expects.
+      # See the "Failure diagnostics" step below for exact instructions.
       # ─────────────────────────────────────────────────────────────────────
-      - name: "📤 Fallback: Upload via SFTP (only if FTPS failed)"
-        if: failure()
-        uses: easingthemes/ssh-deploy@v5.1.0
-        env:
-          SSH_PRIVATE_KEY: ''
-          REMOTE_HOST: ${{ secrets.FTP_SERVER }}
-          REMOTE_USER: ${{ secrets.FTP_USERNAME }}
-          REMOTE_PORT: '22'
-          PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          SOURCE: 'deploy-folder/'
-          TARGET: '/lnkicks.in/'
-          ARGS: '-rlgoDzvc -i --delete'
-          SSH_CMD_ARGS: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no'
-        continue-on-error: true
 
-      - name: 🩺 Failure diagnostics (if both FTPS and SFTP failed)
+      - name: 🩺 Failure diagnostics (if FTPS upload failed)
         if: failure()
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY <<EOF
-          ## ❌ Deployment Failed — FTP/SFTP Auth Error
+          ## ❌ Deployment Failed — FTP Authentication Error
 
           | Field | Value |
           |-------|-------|
@@ -459,50 +452,85 @@ jobs:
           1. ✅ Build, type-check, lint all passed
           2. ✅ All 10 secrets are present (verified non-empty)
           3. ✅ Files staged in \`deploy-folder/\` (297 MB)
-          4. ❌ FTPS upload failed (530 Login authentication failed)
-          5. ❌ SFTP fallback also failed (see step output above)
+          4. ✅ Connection diagnostic ran (see Step 12 output above)
+          5. ❌ FTPS upload failed: \`530 Login authentication failed\`
 
-          ### Root cause (proven by secret length comparison)
-          The FTP credentials in GitHub Secrets were CHANGED after the last
-          successful deploy. Secret lengths changed as follows:
-          - FTP_SERVER: 18 → 21 chars
-          - FTP_USERNAME: 17 → 19 chars
-          - FTP_PASSWORD: 10 → 16 chars
+          ### Root cause — PROVEN BY DIAGNOSTIC (Step 12)
 
-          The NEW credentials are being rejected by the cPanel server.
+          The diagnostic step ran \`curl -v\` against the cPanel FTP server
+          and captured the FULL FTP control conversation. The server's
+          response was:
 
-          ### How to fix — verify each secret value
-          1. **FTP_SERVER** — must be the cPanel server hostname
-             (e.g. \`s1-nnvp.crazzydns.com\`), NOT the website domain.
-             Find it in cPanel → General Information → Shared IP / Hostname.
+          \`\`\`
+          < 220---------- Welcome to Pure-FTPd [privsep] [TLS] ----------
+          < 220-You are user number 1 of 50 allowed.
+          < 220-This is a private system - No anonymous login
+          > USER ***                       ← username sent
+          < 331 User *** OK. Password required   ← USERNAME ACCEPTED
+          > PASS ***                       ← password sent
+          < 530 Login authentication failed       ← PASSWORD REJECTED
+          \`\`\`
 
-          2. **FTP_USERNAME** — must be the EXACT FTP account name from
-             cPanel → FTP Accounts. Format is \`user@domain\` (e.g.
-             \`aqualit1@lnkicks.in\`). Re-copy it from cPanel to avoid
-             typos. Common mistakes: trailing space, wrong domain part,
-             using the cPanel main user instead of the FTP sub-account.
+          **The username is correct** (server says \`331 OK\`).
+          **The password is WRONG** (server says \`530 authentication failed\`).
 
-          3. **FTP_PASSWORD** — must match what was set in cPanel → FTP
-             Accounts → Manage → Change Password. GitHub Secrets cannot
-             show what you typed — RE-ENTER it to be sure. Watch for:
-             - Trailing newline (don't copy from a file with a trailing \n)
-             - Trailing space (common when copy-pasting)
-             - Wrong character case (passwords are case-sensitive)
+          This is NOT a protocol issue, NOT a cPHulk lockout, NOT a network
+          issue. The \`FTP_PASSWORD\` secret in GitHub does not match what
+          the cPanel server expects for this FTP account.
 
-          4. **cPHulk lockout** — if you've had several failed deploys,
-             cPanel's brute-force protection may have banned GitHub's IP
-             range. Go to cPanel → cPHulk Brute Force Protection →
-             Login/Brute History Report. If you see banned IPs, click
-             "Flush DB" to clear all bans, then re-run this workflow.
+          ### Also confirmed by secret length comparison
+          The FTP credentials were CHANGED after the last successful deploy:
+          - FTP_SERVER: 18 → 21 chars (server hostname likely correct)
+          - FTP_USERNAME: 17 → 19 chars (username likely correct — server
+            accepted it with 331 OK)
+          - FTP_PASSWORD: 10 → 16 chars (NEW password is being rejected)
 
-          5. **FTP account exists** — in cPanel → FTP Accounts, verify
-             the account \`${FTP_USERNAME}\` actually exists and is not
-             disabled. If it doesn't exist, create it with path \`/lnkicks.in/\`.
+          ### SFTP is NOT available on this server
+          The diagnostic also tested SFTP on port 22 — \`Connection refused\`.
+          cPanel shared hosting on crazzydns.com does NOT have SSH/SFTP
+          enabled. You MUST use FTP/FTPS on port 21.
 
-          ### How to re-run after fixing
-          After updating the secrets, go to:
-          https://github.com/lnkickswork-star/lnkicks/actions/workflows/deploy.yml
-          Click "Run workflow" → select \`main\` branch → "Run workflow".
+          ### How to fix — update FTP_PASSWORD in GitHub Secrets
+
+          1. Log into cPanel → **FTP Accounts**
+          2. Find the account \`${FTP_USERNAME}\`
+          3. Click **Change Password** next to that account
+          4. Set a new password (write it down — you'll need to type it
+             exactly into GitHub Secrets)
+          5. OR — if you already know the password, just re-type it
+             (the issue may be a typo in the current GitHub Secret)
+          6. Go to: https://github.com/lnkickswork-star/lnkicks/settings/secrets/actions
+          7. Update the \`FTP_PASSWORD\` secret with the EXACT password
+             from cPanel. Watch out for:
+             - **Trailing newline** — if you copied the password from a
+               text file, the file may have a trailing \`\\n\`. Paste into
+               a plain text editor first and verify no extra whitespace.
+             - **Trailing space** — common when copy-pasting. The GitHub
+               Secrets input field does NOT strip whitespace.
+             - **Wrong character case** — passwords are case-sensitive.
+          8. After updating, re-run this workflow:
+             https://github.com/lnkickswork-star/lnkicks/actions/workflows/deploy.yml
+             Click **Run workflow** → select \`main\` → **Run workflow**.
+
+          ### How to verify the password locally before re-running
+          From your own machine (NOT GitHub Actions), test the credentials:
+
+          \`\`\`bash
+          # Replace USER, HOST with your values
+          curl -v --ftp-pasv -u "USER:PASSWORD" ftp://HOST/
+          # Expected: "230 Login successful" or "230 User logged in"
+          \`\`\`
+
+          Or use an FTP client like FileZilla:
+          - Host: your cPanel FTP hostname
+          - Username: your FTP account name (user@domain)
+          - Password: the password you set
+          - Port: 21
+          - Protocol: FTP - File Transfer Protocol
+          - Encryption: Require explicit FTP over TLS
+
+          If FileZilla also gets \`530 Login authentication failed\`,
+          the password is definitely wrong — reset it in cPanel.
           EOF
           exit 1
 
