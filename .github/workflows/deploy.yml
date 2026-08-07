@@ -292,7 +292,7 @@ jobs:
           server-dir: /lnkicks.in/
           protocol: ftps
           security: loose
-          timeout: 60000
+          timeout: 120000
           exclude: |
             **/.git*
             **/.DS_Store
