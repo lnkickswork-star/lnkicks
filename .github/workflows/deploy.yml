@@ -266,7 +266,7 @@ jobs:
       #   dangerous-ssl-allow — replaced by `security: loose`.
       #
       # Why each chosen parameter:
-      #   server-dir: /lnkicks.in/   → cPanel FTP user's home is
+      #   server-dir:                 → cPanel FTP user's home is
       #                                 /home/aqualit1; lnkicks.in/ is the
       #                                 document root. Trailing slash REQUIRED.
       #   local-dir: ./deploy-folder/ → trailing slash = upload CONTENTS,
